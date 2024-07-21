@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Editar Categoria') }}
+            {{ __('Editar Jogo') }}
         </h2>
     </x-slot>
 
@@ -9,7 +9,6 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                   
                     <div class="container mx-auto p-4">
                         @if ($errors->any())
                             <div class="bg-red-500 text-white p-2 my-4">
@@ -20,26 +19,156 @@
                                 </ul>
                             </div>
                         @endif
-                        <form action="{{ route('categorias.update', $wpTermTaxonomy->term_taxonomy_id) }}" method="POST">
+                        <form id="event-form" action="{{ route('jogos.update', $jogo->ID) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
+
                             <div class="mb-4">
-                                <label for="name" class="block text-gray-700">CATEGORIA:</label>
-                                <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name', $wpTerm->name) }}">
+                                <label for="post_title" class="block text-gray-700">Título do evento *:</label>
+                                <input type="text" name="post_title" id="post_title" class="w-full border border-gray-300 p-2 rounded" value="{{ old('post_title', $jogo->post_title) }}" required>
                             </div>
+
                             <div class="mb-4">
-                                <label for="slug" class="block text-gray-700">SLUG:</label>
-                                <input type="text" name="slug" id="slug" class="w-full border border-gray-300 p-2 rounded" value="{{ old('slug', $wpTerm->slug) }}">
+                                <label for="event_type" class="block text-gray-700">Tipo de evento*:</label>
+                                <select name="event_type" id="event_type" class="w-full border border-gray-300 p-2 rounded" required>
+                                    <option value="">Selecione o Tipo de Evento</option>
+                                    @foreach ($eventTypes as $type)
+                                        <option value="{{ $type->term_id }}" {{ $jogo->eventTypes->contains('term_id', $type->term_id) ? 'selected' : '' }}>{{ $type->term->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+
                             <div class="mb-4">
-                                <label for="description" class="block text-gray-700">Descrição:</label>
-                                <textarea name="description" id="description" class="w-full border border-gray-300 p-2 rounded">{{ old('description', $wpTermTaxonomy->description)}}</textarea>
+                                <label for="event_category" class="block text-gray-700">Categoria do evento*:</label>
+                                <select name="event_category" id="event_category" class="w-full border border-gray-300 p-2 rounded" required>
+                                    <option value="">Selecione a Categoria do Evento</option>
+                                    @foreach ($eventCategories as $category)
+                                        <option value="{{ $category->term_id }}" {{ $jogo->eventCategories->contains('term_id', $category->term_id) ? 'selected' : '' }}>{{ $category->term->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                           
+
+                            <div class="mb-4">
+                                <label class="block text-gray-700">Evento on-line *:</label>
+                                <div class="flex flex-col items-start">
+                                    <div class="flex items-center mb-2">
+                                        <input type="radio" name="event_online" id="event_online_yes" value="yes" class="mr-2" {{ old('event_online', $jogo->getMetaValue('_event_online')) == 'yes' ? 'checked' : '' }} required>
+                                        <label for="event_online_yes" class="mr-4">SIM</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="radio" name="event_online" id="event_online_no" value="no" class="mr-2" {{ old('event_online', $jogo->getMetaValue('_event_online')) == 'no' ? 'checked' : '' }} required>
+                                        <label for="event_online_no">NÃO</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="offline-fields" class="mb-4">
+                                <div class="mb-4">
+                                    <label for="event_pincode" class="block text-gray-700">CEP *:</label>
+                                    <input type="text" name="event_pincode" id="event_pincode" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_pincode', $jogo->getMetaValue('_event_pincode')) }}" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="event_location" class="block text-gray-700">Local do evento *:</label>
+                                    <input type="text" name="event_location" id="event_location" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_location', $jogo->getMetaValue('_event_location')) }}" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="event_country" class="block text-gray-700">País do Evento *:</label>
+                                    <select name="event_country" id="event_country" class="w-full border border-gray-300 p-2 rounded" required>
+                                        <option value="br" {{ old('event_country', $jogo->getMetaValue('_event_country')) == 'br' ? 'selected' : '' }}>Brasil</option>
+                                        <!-- Adicione outras opções de países aqui se necessário -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="event_banner" class="block text-gray-700">Banner do evento *:</label>
+                                <input type="file" name="event_banner" id="event_banner" class="w-full border border-gray-300 p-2 rounded">
+                                @if($jogo->getMetaValue('_event_banner'))
+                                    <div class="mt-2">
+                                        <img src="{{ asset('storage/' . $jogo->getMetaValue('_event_banner')) }}" alt="Banner do Evento" class="w-32 h-32 object-cover">
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="post_content" class="block text-gray-700">Descrição *:</label>
+                                <textarea name="post_content" id="post_content" class="w-full border border-gray-300 p-2 rounded">{{ old('post_content', $jogo->post_content) }}</textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="registration_email_url" class="block text-gray-700">E-mail/URL de registro *:</label>
+                                <input type="text" name="registration_email_url" id="registration_email_url" class="w-full border border-gray-300 p-2 rounded" value="{{ old('registration_email_url', $jogo->getMetaValue('_registration')) }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="video_url" class="block text-gray-700">Video URL (opcional):</label>
+                                <input type="text" name="video_url" id="video_url" class="w-full border border-gray-300 p-2 rounded" value="{{ old('video_url', $jogo->getMetaValue('_event_video_url')) }}">
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="event_start_date" class="block text-gray-700">Data de início *:</label>
+                                <input type="date" name="event_start_date" id="event_start_date" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_start_date', $jogo->getMetaValue('_event_start_date')) }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="event_start_time" class="block text-gray-700">Início *:</label>
+                                <input type="time" name="event_start_time" id="event_start_time" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_start_time', $jogo->getMetaValue('_event_start_time')) }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="event_end_date" class="block text-gray-700">Data de encerramento *:</label>
+                                <input type="date" name="event_end_date" id="event_end_date" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_end_date', $jogo->getMetaValue('_event_end_date')) }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="event_end_time" class="block text-gray-700">Encerramento *:</label>
+                                <input type="time" name="event_end_time" id="event_end_time" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_end_time', $jogo->getMetaValue('_event_end_time')) }}" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="registration_deadline" class="block text-gray-700">Prazo de registro (opcional):</label>
+                                <input type="date" name="registration_deadline" id="registration_deadline" class="w-full border border-gray-300 p-2 rounded" value="{{ old('registration_deadline', $jogo->getMetaValue('_event_registration_deadline')) }}">
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="juiz_principal" class="block text-gray-700">Juiz Principal:</label>
+                                <select id="juiz_principal" name="juiz_principal" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value="">Selecione o Juiz Principal</option>
+                                    @foreach($juizes as $juiz)
+                                        <option value="{{ $juiz->id }}" {{ $juiz->id == old('juiz_principal', $jogo->getMetaValue('_juiz_principal')) ? 'selected' : '' }}>
+                                            {{ $juiz->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="juiz_linha1" class="block text-gray-700">Juiz de Linha 1:</label>
+                                <select id="juiz_linha1" name="juiz_linha1" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value="">Selecione o Juiz de Linha 1</option>
+                                    @foreach($juizes as $juiz)
+                                        <option value="{{ $juiz->id }}" {{ $juiz->id == old('juiz_linha1', $jogo->getMetaValue('_juiz_linha1')) ? 'selected' : '' }}>
+                                            {{ $juiz->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="juiz_linha2" class="block text-gray-700">Juiz de Linha 2:</label>
+                                <select id="juiz_linha2" name="juiz_linha2" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value="">Selecione o Juiz de Linha 2</option>
+                                    @foreach($juizes as $juiz)
+                                        <option value="{{ $juiz->id }}" {{ $juiz->id == old('juiz_linha2', $jogo->getMetaValue('_juiz_linha2')) ? 'selected' : '' }}>
+                                            {{ $juiz->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <div class="flex justify-between">
-                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Atualizar</button>
-                                
-                                <a href="{{ route('categorias.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
+                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Salvar</button>
+                                <a href="{{ route('jogos.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</a>
                             </div>
                         </form>
                     </div>
@@ -47,4 +176,31 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const eventOnlineYes = document.getElementById('event_online_yes');
+        const eventOnlineNo = document.getElementById('event_online_no');
+        const offlineFields = document.getElementById('offline-fields');
+
+        function toggleOfflineFields() {
+            if (eventOnlineNo.checked) {
+                offlineFields.style.display = 'block';
+                document.getElementById('event_pincode').required = true;
+                document.getElementById('event_location').required = true;
+                document.getElementById('event_country').required = true;
+            } else {
+                offlineFields.style.display = 'none';
+                document.getElementById('event_pincode').required = false;
+                document.getElementById('event_location').required = false;
+                document.getElementById('event_country').required = false;
+            }
+        }
+
+        eventOnlineYes.addEventListener('change', toggleOfflineFields);
+        eventOnlineNo.addEventListener('change', toggleOfflineFields);
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            toggleOfflineFields(); // Run on page load
+        });
+    </script>
 </x-app-layout>

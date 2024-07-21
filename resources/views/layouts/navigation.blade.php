@@ -6,13 +6,13 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+                        <img src="{{ asset('build/assets/images/LOGO_LRV-150x150.png') }}" style="height: 3.5rem; width: auto;" class="block" alt="Logo">
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    <x-nav-link :href="route('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
                 </div>
@@ -32,10 +32,12 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-
+                        
+                       
                             <x-dropdown-link :href="route('jogos.index')">
                                 {{ __('Jogos') }}
                             </x-dropdown-link>
+                      
                             <x-dropdown-link :href="route('users.index')">
                                 {{ __('Usuários') }}
                             </x-dropdown-link>
@@ -46,6 +48,18 @@
 
                             <x-dropdown-link :href="route('categorias.index')">
                                 {{ __('Categorias') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('profile_user.index')">
+                                {{ __('Vincular Usuário Perfil') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('profiles.index')">
+                                {{ __('Perfil de Usuários') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('role-permission.index')">
+                                {{ __('Funções e Permissões') }}
                             </x-dropdown-link>
     
                             <!-- Authentication -->
@@ -77,7 +91,7 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            {{ __('Dados Pessoais') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -87,7 +101,7 @@
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                                {{ __('Sair') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>

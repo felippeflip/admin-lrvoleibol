@@ -9,7 +9,9 @@
         "laravel/breeze": "^2.1",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
-        "nesbot/carbon": "^3.6"
+        "league/csv": "^9.16",
+        "nesbot/carbon": "^3.6",
+        "spatie/laravel-permission": "^6.9"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -24,7 +26,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -63,10 +68,5 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-
-    "files": [
-        "app/Helpers/helpers.php"
-    ]
-    
+    "prefer-stable": true    
 }

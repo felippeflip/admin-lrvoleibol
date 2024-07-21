@@ -108,6 +108,37 @@
                                 <label for="registration_deadline" class="block text-gray-700">Prazo de registro (opcional):</label>
                                 <input type="date" name="registration_deadline" id="registration_deadline" class="w-full border border-gray-300 p-2 rounded" value="{{ old('registration_deadline') }}">
                             </div>
+
+                            <div class="mb-4">
+                                <label for="juiz_principal" class="block text-gray-700 text-sm font-bold mb-2">Juiz Principal:</label>
+                                <select id="juiz_principal" name="juiz_principal" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value=""></option>
+                                    @foreach($juizes as $juiz)
+                                        <option value="{{ $juiz->id }}">{{ $juiz->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="juiz_linha1" class="block text-gray-700 text-sm font-bold mb-2">Juiz de Linha 1:</label>
+                                <select id="juiz_linha1" name="juiz_linha1" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value=""></option>
+                                    @foreach($juizes as $juiz)
+                                        <option value="{{ $juiz->id }}">{{ $juiz->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="juiz_linha2" class="block text-gray-700 text-sm font-bold mb-2">Juiz de Linha 2:</label>
+                                <select id="juiz_linha2" name="juiz_linha2" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value=""></option>
+                                    @foreach($juizes as $juiz)
+                                        <option value="{{ $juiz->id }}">{{ $juiz->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
                             <div class="flex justify-between">
                                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Adicionar</button>
                                 <a href="{{ route('jogos.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</a>
@@ -119,34 +150,7 @@
         </div>
     </div>
 
-     <!-- Incluir CDN do TinyMCE -->
-    <!-- Place the first <script> tag in your HTML's <head> -->
-<script src="https://cdn.tiny.cloud/1/4eszw6d7q83yo4b0iq0njv1uoni1hd837un44zf33z4r085v/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-
-<!-- Place the following <script> and <textarea> tags your HTML's <body> -->
     <script>
-        tinymce.init({
-            selector: 'textarea#post_content',
-            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage advtemplate ai mentions tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss markdown',
-            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-            tinycomments_mode: 'embedded',
-            tinycomments_author: 'Author name',
-            mergetags_list: [
-                { value: 'First.Name', title: 'First Name' },
-                { value: 'Email', title: 'Email' },
-            ],
-            ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant")),
-        });
-
-        document.querySelector('form').addEventListener('submit', function(event) {
-            tinymce.triggerSave();
-            const postContent = document.getElementById('post_content').value;
-            if (!postContent.trim()) {
-                alert('Por favor, preencha o campo Descrição.');
-                event.preventDefault();
-            }
-        });
-
         const eventOnlineYes = document.getElementById('event_online_yes');
         const eventOnlineNo = document.getElementById('event_online_no');
         const offlineFields = document.getElementById('offline-fields');
