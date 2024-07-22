@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use League\Csv\Reader;
 
 
@@ -487,9 +487,9 @@ public function update(Request $request, $id)
                         ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => $record['pais_evento']],
                         ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => $record['email_url_registro']],
                         ['post_id' => $postId, 'meta_key' => '_event_video_url', 'meta_value' => $record['video_url'] ?? ''],
-                        ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'] . ':00')->format('Y-m-d H:i:s')],
+                        ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->format('Y-m-d H:i:s')],
                         ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $record['inicio']],
-                        ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_encerramento'] . ' ' . $record['encerramento'] . ':00')->format('Y-m-d H:i:s')],
+                        ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_encerramento'] . ' ' . $record['encerramento'])->format('Y-m-d H:i:s')],
                         ['post_id' => $postId, 'meta_key' => '_event_end_time', 'meta_value' => $record['encerramento']],
                         ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => $record['prazo_registro']],
                         ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
@@ -516,7 +516,7 @@ public function update(Request $request, $id)
             }
         }
 
-        return back()->with('success', 'Jogos importados com sucesso.');
+        return view('jogos.index')->with('success', 'Jogos importados com sucesso.');
     }
 
 
