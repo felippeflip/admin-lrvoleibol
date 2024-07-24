@@ -520,5 +520,24 @@ public function update(Request $request, $id)
     }
 
 
+     /**
+     * Projeto Futuro: Inserir mais de um jogo no mesmo submit
+     */
+
+    /*
+    public function createMulti()
+    {
+
+        $juizes = \App\Models\User::where('is_arbitro', true)->get();
+
+        $eventTypes = Wp_Term_Taxonomy::with('term')->where('taxonomy', 'event_listing_type')->get();
+
+        $eventCategorys = Wp_Term_Taxonomy::with('term')->where('taxonomy', 'event_listing_category')->get();
+
+        return view('jogos.multi-insert', compact('eventTypes', 'eventCategorys', 'juizes'));
+        
+    }
+    */
+
 
 }
