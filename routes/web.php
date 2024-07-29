@@ -45,10 +45,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('profiles', UserProfileController::class);
 
     Route::resource('profile_user', ProfileUserController::class);
-
     Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
     Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
-
     Route::get('/resultados/import', [FuncoesController::class, 'showImport'])->name('resultados.showImportForm');
     Route::post('/resultados/upload', [FuncoesController::class, 'upload'])->name('resultados.upload');
 
@@ -58,5 +56,7 @@ Route::middleware('auth')->group(function () {
    // Route::get('/multi-insert', [JogosController::class, 'createMulti'])->name('multi.insert');
    // Route::post('/multi-insert', 'MultiInsertController@store')->name('multi.insert.store');
 });
+
+
 
 require __DIR__.'/auth.php';

@@ -110,7 +110,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="juiz_principal" class="block text-gray-700 text-sm font-bold mb-2">Juiz Principal:</label>
+                                <label for="juiz_principal" class="block text-gray-700 text-sm font-bold mb-2">Juiz 1:</label>
                                 <select id="juiz_principal" name="juiz_principal" class="w-full border border-gray-300 p-2 rounded">
                                     <option value=""></option>
                                     @foreach($juizes as $juiz)
@@ -120,7 +120,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="juiz_linha1" class="block text-gray-700 text-sm font-bold mb-2">Juiz de Linha 1:</label>
+                                <label for="juiz_linha1" class="block text-gray-700 text-sm font-bold mb-2">Juiz 2:</label>
                                 <select id="juiz_linha1" name="juiz_linha1" class="w-full border border-gray-300 p-2 rounded">
                                     <option value=""></option>
                                     @foreach($juizes as $juiz)
@@ -130,7 +130,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="juiz_linha2" class="block text-gray-700 text-sm font-bold mb-2">Juiz de Linha 2:</label>
+                                <label for="juiz_linha2" class="block text-gray-700 text-sm font-bold mb-2">Apontador:</label>
                                 <select id="juiz_linha2" name="juiz_linha2" class="w-full border border-gray-300 p-2 rounded">
                                     <option value=""></option>
                                     @foreach($juizes as $juiz)

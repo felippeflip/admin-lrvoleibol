@@ -14,12 +14,14 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Carbon;
 use League\Csv\Reader;
+use App\Models\User;
 
 
 class JogosController extends Controller
 {
     public function index()
 {
+
     $jogos = DB::table('wp_posts')
                 ->where('post_type', 'event_listing')
                 ->get()

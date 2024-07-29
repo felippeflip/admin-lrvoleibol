@@ -133,7 +133,7 @@
                             <div class="mb-4">
                                 <label for="juiz_principal" class="block text-gray-700">Juiz Principal:</label>
                                 <select id="juiz_principal" name="juiz_principal" class="w-full border border-gray-300 p-2 rounded">
-                                    <option value="">Selecione o Juiz Principal</option>
+                                    <option value="">Selecione o Juiz 1</option>
                                     @foreach($juizes as $juiz)
                                         <option value="{{ $juiz->id }}" {{ $juiz->id == old('juiz_principal', $jogo->getMetaValue('_juiz_principal')) ? 'selected' : '' }}>
                                             {{ $juiz->name }}
@@ -145,7 +145,7 @@
                             <div class="mb-4">
                                 <label for="juiz_linha1" class="block text-gray-700">Juiz de Linha 1:</label>
                                 <select id="juiz_linha1" name="juiz_linha1" class="w-full border border-gray-300 p-2 rounded">
-                                    <option value="">Selecione o Juiz de Linha 1</option>
+                                    <option value="">Selecione o Juiz 2</option>
                                     @foreach($juizes as $juiz)
                                         <option value="{{ $juiz->id }}" {{ $juiz->id == old('juiz_linha1', $jogo->getMetaValue('_juiz_linha1')) ? 'selected' : '' }}>
                                             {{ $juiz->name }}
@@ -157,7 +157,7 @@
                             <div class="mb-4">
                                 <label for="juiz_linha2" class="block text-gray-700">Juiz de Linha 2:</label>
                                 <select id="juiz_linha2" name="juiz_linha2" class="w-full border border-gray-300 p-2 rounded">
-                                    <option value="">Selecione o Juiz de Linha 2</option>
+                                    <option value="">Selecione o apontador</option>
                                     @foreach($juizes as $juiz)
                                         <option value="{{ $juiz->id }}" {{ $juiz->id == old('juiz_linha2', $jogo->getMetaValue('_juiz_linha2')) ? 'selected' : '' }}>
                                             {{ $juiz->name }}

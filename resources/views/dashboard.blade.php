@@ -40,13 +40,13 @@
                                         Hora
                                     </th>
                                     <th scope="col" class="px-6 py-3">
-                                        Juiz Principal
+                                        Juiz 1
                                     </th>
                                     <th scope="col" class="px-6 py-3">
-                                        Juiz de Linha 1
+                                        Juiz 2
                                     </th>
                                     <th scope="col" class="px-6 py-3">
-                                        Juiz de Linha 2
+                                        Apontador
                                     </th>
                                 </tr>
                             </thead>

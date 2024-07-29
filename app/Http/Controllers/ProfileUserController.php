@@ -5,53 +5,60 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Profile;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 class ProfileUserController extends Controller
 {
     public function index()
     {
-        $profiles = Profile::with('roles')->get();
-        $users = User::with('profile')->get();
-        return view('profile_user.index', compact('profiles', 'users'));
+        $users = User::with('roles')->get();
+        return view('profile_user.index', compact('users'));
     }
 
     public function create()
     {
-        $profiles = Profile::all();
         $users = User::all();
-        return view('profile_user.create', compact('profiles', 'users'));
+        $roles = Role::all();
+        return view('profile_user.create', compact('users', 'roles'));
     }
 
     public function store(Request $request)
     {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'role' => 'required|exists:roles,name',
+        ]);
+
         $user = User::findOrFail($request->user_id);
-        $profile = Profile::findOrFail($request->profile_id);
-        $user->profile()->associate($profile);
-        $user->save();
+        $user->assignRole($request->role);
 
-        return redirect()->route('profile_user.index')->with('success', 'Perfil associado ao usuário com sucesso!');
+        return redirect()->route('profile_user.index')->with('success', 'Perfil associado ao usuário com sucesso.');
     }
 
-    public function edit(User $user)
+    public function edit($id)
     {
-        $profiles = Profile::all();
-        return view('profile_user.edit', compact('user', 'profiles'));
+        $user = User::findOrFail($id);
+        $roles = Role::all();
+        return view('profile_user.edit', compact('user', 'roles'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
-        $profile = Profile::findOrFail($request->profile_id);
-        $user->profile()->associate($profile);
-        $user->save();
+        $request->validate([
+            'role' => 'required|exists:roles,name',
+        ]);
 
-        return redirect()->route('profile_user.index')->with('success', 'Perfil atualizado com sucesso!');
+        $user = User::findOrFail($id);
+        $user->syncRoles([$request->role]);
+
+        return redirect()->route('profile_user.index')->with('success', 'Perfil atualizado com sucesso.');
     }
 
-    public function destroy(User $user)
+    public function destroy($id)
     {
-        $user->profile()->dissociate();
-        $user->save();
+        $user = User::findOrFail($id);
+        $user->roles()->detach();
 
-        return redirect()->route('profile_user.index')->with('success', 'Perfil removido do usuário com sucesso!');
+        return redirect()->route('profile_user.index')->with('success', 'Perfil removido do usuário com sucesso.');
     }
 }

@@ -11,7 +11,9 @@
                 </div>
 
                 <!-- Navigation Links -->
-                
+
+                @if (auth()->user()->hasRole('Administrador'))
+                                                
                 <div class="hidden space-x-8 sm:flex sm:items-center sm:ms-6">
                     <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
@@ -44,10 +46,6 @@
                                 {{ __('Categorias') }}
                             </x-dropdown-link>
 
-                            <x-dropdown-link :href="route('profile_user.index')">
-                                {{ __('Vincular Usuário Perfil') }}
-                            </x-dropdown-link>
-
                             <x-dropdown-link :href="route('profiles.index')">
                                 {{ __('Perfil de Usuários') }}
                             </x-dropdown-link>
@@ -61,6 +59,9 @@
                         </x-slot>
                     </x-dropdown>
                 </div>
+            
+                @endif
+           
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')">
@@ -68,6 +69,8 @@
                     </x-nav-link>
                 </div>
 
+
+                @if (auth()->user()->hasRole('Administrador'))
                 <div class="hidden space-x-8 sm:flex sm:items-center sm:ms-6">
                     <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
@@ -93,7 +96,10 @@
 
                     </x-dropdown>
                 </div>
+                @endif
             </div>
+
+           
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">

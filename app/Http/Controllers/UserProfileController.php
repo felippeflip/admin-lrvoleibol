@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
-use App\Models\User; // Certifique-se de importar o modelo User
+use App\Models\User;
 use Spatie\Permission\Models\Role; 
 use Illuminate\Http\Request;
 

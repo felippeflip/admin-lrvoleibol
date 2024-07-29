@@ -11,11 +11,16 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
                     <div class="flex justify-between inline-flex space-x-2 mb-4">
-
-                                    <!--jogos.create multi.insert-->
                         <a href="{{ route('jogos.create') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO</a>
                         <a href="{{ route('jogos.showImportForm') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">IMPORTAR JOGOS</a>
                     </div>
+
+                    <!-- Mensagem de sucesso -->
+                    @if (session('success'))
+                        <div class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
                     <!-- Table List -->
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -31,35 +36,19 @@
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">
-                                        Título
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Tipo
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Local
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Data
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Hora
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Status
-                                    </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Ações
-                                    </th>
+                                    <th scope="col" class="px-6 py-3">Título</th>
+                                    <th scope="col" class="px-6 py-3">Tipo</th>
+                                    <th scope="col" class="px-6 py-3">Local</th>
+                                    <th scope="col" class="px-6 py-3">Data</th>
+                                    <th scope="col" class="px-6 py-3">Hora</th>
+                                    <th scope="col" class="px-6 py-3">Status</th>
+                                    <th scope="col" class="px-6 py-3">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($jogos as $jogo)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <th scope="row" class="px-6 py-4">
-                                            {{ $jogo->meta['_event_title']->meta_value ?? 'N/A' }}
-                                        </th>
+                                        <th scope="row" class="px-6 py-4">{{ $jogo->meta['_event_title']->meta_value ?? 'N/A' }}</th>
                                         <td class="px-6 py-4">
                                             @php
                                                 $eventType = 'N/A';
@@ -74,24 +63,18 @@
                                             @endphp
                                             {{ $eventType }}
                                         </td>
-                                        <td class="px-6 py-4">
-                                            {{ $jogo->meta['_event_location']->meta_value ?? 'N/A' }}
-                                        </td>
+                                        <td class="px-6 py-4">{{ $jogo->meta['_event_location']->meta_value ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">
                                             @php
                                                 $startDate = isset($jogo->meta['_event_start_date']) ? Carbon\Carbon::parse($jogo->meta['_event_start_date']->meta_value)->format('d/m/Y') : 'N/A';
                                             @endphp
                                             {{ $startDate }}
                                         </td>
-                                        <td class="px-6 py-4">
-                                            {{ $jogo->meta['_event_start_time']->meta_value ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ $jogo->post_status }}
-                                        </td>
+                                        <td class="px-6 py-4">{{ $jogo->meta['_event_start_time']->meta_value ?? 'N/A' }}</td>
+                                        <td class="px-6 py-4">{{ $jogo->post_status }}</td>
                                         <td class="px-6 py-4 flex space-x-2">
                                             <a href="{{ route('jogos.edit', $jogo->ID) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
-                                            <form action="{{ route('jogos.destroy', $jogo->ID) }}" method="POST" class="inline">
+                                            <form action="{{ route('jogos.destroy', $jogo->ID) }}" method="POST" class="inline" onsubmit="return confirmDelete()">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Deletar</button>
@@ -107,4 +90,11 @@
             </div>
         </div>
     </div>
+
+    <!-- Script para confirmação -->
+    <script>
+        function confirmDelete() {
+            return confirm('Tem certeza que deseja remover este jogo?');
+        }
+    </script>
 </x-app-layout>
