@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Perfil') }}
+            {{ __('Funções e Permissões') }}
         </h2>
     </x-slot>
 
@@ -11,11 +11,31 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="container mx-auto p-4">
                         <h1 class="text-2xl font-bold mb-4">Funções e Permissões</h1>
+
+                        <!-- Mensagem de sucesso -->
+                        @if (session('success'))
+                            <div class="bg-green-500 text-white p-2 mb-4 rounded">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        <!-- Mensagem de erro -->
+                        @if ($errors->any())
+                            <div class="bg-red-500 text-white p-2 mb-4 rounded">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="mb-4">
                             <a href="{{ route('role-permission.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                 Criar Nova Função
                             </a>
                         </div>
+                        
                         @foreach($roles as $role)
                             <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow-md">
                                 <div class="flex justify-between items-center mb-4">

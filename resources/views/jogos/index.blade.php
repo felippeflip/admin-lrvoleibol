@@ -33,7 +33,7 @@
                                 </ul>
                             </div>
                         @endif
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <table id="jogos-table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Título</th>
@@ -96,5 +96,26 @@
         function confirmDelete() {
             return confirm('Tem certeza que deseja remover este jogo?');
         }
+    </script>
+
+    <!-- Scripts do DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#jogos-table').DataTable({
+                "order": [[3, "desc"]],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                },
+                "columnDefs": [
+                    {
+                        "targets": 3, // Index of the 'Data' column
+                        "type": "date-eu" // Define the date format for sorting
+                    }
+                ]
+            });
+        });
     </script>
 </x-app-layout>

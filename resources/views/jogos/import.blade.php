@@ -10,6 +10,25 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1>Importar Jogos</h1>
+
+                    <!-- Mensagem de sucesso -->
+                    @if (session('success'))
+                        <div class="bg-green-500 text-white p-2 mb-4 rounded">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    <!-- Mensagem de erro -->
+                    @if ($errors->any())
+                        <div class="bg-red-500 text-white p-2 mb-4 rounded">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form action="{{ route('jogos.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-4">

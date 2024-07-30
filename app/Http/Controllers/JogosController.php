@@ -21,7 +21,6 @@ class JogosController extends Controller
 {
     public function index()
 {
-
     $jogos = DB::table('wp_posts')
                 ->where('post_type', 'event_listing')
                 ->get()
@@ -60,11 +59,15 @@ class JogosController extends Controller
                     $jogo->term_relationships = $termRelationships;
 
                     return $jogo;
+                })
+                ->sortByDesc(function ($jogo) {
+                    return isset($jogo->meta['_event_start_date']) ? strtotime($jogo->meta['_event_start_date']->meta_value) : 0;
                 });
-   // dd($jogos->toArray()); die;
 
     return view('jogos.index', compact('jogos'));
 }
+
+    
 
 
 // index para apresentar no dashboard -> Para os Luizes verem quais jogos irão participar
@@ -403,7 +406,7 @@ public function update(Request $request, $id)
         $request->validate([
             'csv_file' => 'required|mimes:csv,txt',
         ]);
-
+    
         // Caminho do arquivo
         $path = $request->file('csv_file')->getRealPath();
         $reader = Reader::createFromPath($path, 'r');
@@ -413,37 +416,37 @@ public function update(Request $request, $id)
         $expectedColumns = [
             'titulo_evento', 'id_event', 'tipo_evento', 'ID_CATEGORY', 'categoria_evento', 'evento_on-line', 'CEP', 'local_evento', 'pais_evento',
             'descricao', 'email_url_registro', 'video_url', 'data_inicio', 'inicio', 'data_encerramento', 'encerramento', 'prazo_registro', 'ID_USERS',
-            'juiz_principal', 'ID_USERS_1', 'juiz_linha1', 'ID_USERS_2', 'juiz_linha2'
+            'juiz_1', 'ID_USERS_1', 'juiz_2', 'ID_USERS_2', 'apontador'
         ];
-
+    
         // Iterar sobre os registros e filtrar linhas vazias
         foreach ($records as $index => $record) {
             // Verificar se o registro contém informações além de apenas delimitadores
             if (isset($record['titulo_evento']) && !empty(trim($record['titulo_evento']))) {
-
+    
                 // Verificar se o número de colunas corresponde ao esperado
                 if (count($record) !== count($expectedColumns)) {
                     return back()->withErrors(['error' => "Erro na linha $index: número de colunas incorreto."]);
                 }
-
+    
                 // Convertendo os dados para UTF-8
                 foreach ($record as $key => $value) {
                     $record[$key] = utf8_encode(trim($value));
                 }
-
+    
                 try {
                     // Preparando dados para inserção na tabela wp_posts
                     $post_title = $record['titulo_evento'];
                     $post_name = Str::slug($post_title);
-
+    
                     // Verifica se já existe um post com o mesmo post_name
                     $existingPost = DB::table('wp_posts')->where('post_name', $post_name)->first();
                     if ($existingPost) {
                         $post_name .= '-'. (DB::table('wp_posts')->where('post_name', 'like', "$post_name%")->count() + 1);
                     }
-
+    
                     $post_date = Carbon::now();
-
+    
                     $wpPostData = [
                         'post_author' => 2,
                         'post_date' => $post_date,
@@ -468,13 +471,13 @@ public function update(Request $request, $id)
                         'post_mime_type' => '',
                         'comment_count' => 0,
                     ];
-
+    
                     // Inserindo na tabela wp_posts e obtendo o ID inserido
                     $postId = DB::table('wp_posts')->insertGetId($wpPostData);
-
+    
                     // Atualizando o campo guid com o ID do post
                     DB::table('wp_posts')->where('ID', $postId)->update(['guid' => url("/event_listing?p=$postId")]);
-
+    
                     // Preparando dados para inserção na tabela wp_postmeta
                     $metaData = [
                         ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
@@ -499,16 +502,16 @@ public function update(Request $request, $id)
                         ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $record['ID_USERS_1']],
                         ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $record['ID_USERS_2']],
                     ];
-
+    
                     // Inserindo os metadados na tabela wp_postmeta
                     DB::table('wp_postmeta')->insert($metaData);
-
+    
                     // Preparando dados para inserção na tabela wp_term_relationships
                     $termRelationships = [
                         ['object_id' => $postId, 'term_taxonomy_id' => $record['id_event'], 'term_order' => 0],
                         ['object_id' => $postId, 'term_taxonomy_id' => $record['ID_CATEGORY'], 'term_order' => 0],
                     ];
-
+    
                     // Inserindo os dados na tabela wp_term_relationships
                     DB::table('wp_term_relationships')->insert($termRelationships);
                 } catch (Exception $e) {
@@ -517,9 +520,11 @@ public function update(Request $request, $id)
                 }
             }
         }
-
-        return view('jogos.index')->with('success', 'Jogos importados com sucesso.');
+    
+        // Redireciona com mensagem de sucesso
+        return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
     }
+    
 
 
      /**
