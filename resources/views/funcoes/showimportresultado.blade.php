@@ -40,13 +40,13 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="pdf" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Selecione o PDF</label>
+                            <label for="pdf" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Selecione o HTML</label>
                             <input id="pdf" name="pdf" type="file" accept=".pdf" class="form-input mt-1 block w-full" required>
                         </div>
 
                         <div class="flex items-center justify-end">
                             <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                                {{ __('Importar PDF') }}
+                                {{ __('Importar HTML') }}
                             </button>
                         </div>
                     </form>
