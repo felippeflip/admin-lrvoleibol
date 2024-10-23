@@ -40,8 +40,8 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="pdf" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Selecione o HTML</label>
-                            <input id="pdf" name="pdf" type="file" accept=".pdf" class="form-input mt-1 block w-full" required>
+                            <label for="html" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Selecione o HTML</label>
+                            <input id="html" name="html" type="file" accept=".html" class="form-input mt-1 block w-full" required>
                         </div>
 
                         <div class="flex items-center justify-end">
