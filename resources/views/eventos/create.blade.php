@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Adicionar Novo Evento') }}
+            {{ __('Adicionar Novo Campeonato') }}
         </h2>
     </x-slot>
 
@@ -22,7 +22,7 @@
                         <form action="{{ route('eventos.store') }}" method="POST">
                             @csrf
                             <div class="mb-4">
-                                <label for="name" class="block text-gray-700">EVENTOS:</label>
+                                <label for="name" class="block text-gray-700">CAMPEONATO:</label>
                                 <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name') }}">
                             </div>
                             <div class="mb-4">
@@ -39,8 +39,21 @@
                                 
                                 <a href="{{ route('eventos.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
                             </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    document.getElementById('name').addEventListener('input', function() {
+        var name = this.value;
+        var slug = name.toLowerCase()
+            .replace(/ /g, '-') // Substitui espaços por hífens
+            .replace(/[^\w-]+/g, ''); // Remove caracteres especiais
+
+        document.getElementById('slug').value = slug;
+    });
+</script>

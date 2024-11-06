@@ -39,7 +39,7 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Apelido</th>
                                     <th scope="col" class="px-6 py-3">Nome Completo</th>
-                                    <th scope="col" class="px-6 py-3">CREF</th>
+                                    <th scope="col" class="px-6 py-3">REGISTRO</th>
                                     <th scope="col" class="px-6 py-3">Categoria</th>
                                     <th scope="col" class="px-6 py-3">Telefone</th>
                                     <th scope="col" class="px-6 py-3">Ação</th>

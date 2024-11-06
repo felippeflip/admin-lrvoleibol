@@ -52,7 +52,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="cref" class="block text-gray-700">CREF:</label>
+                                <label for="cref" class="block text-gray-700">REGISTRO:</label>
                                 <input type="text" name="cref" id="cref" class="w-full border border-gray-300 p-2 rounded" value="{{ $user->cref }}">
                             </div>
 

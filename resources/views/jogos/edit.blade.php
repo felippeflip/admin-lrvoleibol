@@ -24,14 +24,14 @@
                             @method('PUT')
 
                             <div class="mb-4">
-                                <label for="post_title" class="block text-gray-700">Título do evento *:</label>
+                                <label for="post_title" class="block text-gray-700">Adversários *:</label>
                                 <input type="text" name="post_title" id="post_title" class="w-full border border-gray-300 p-2 rounded" value="{{ old('post_title', $jogo->post_title) }}" required>
                             </div>
 
                             <div class="mb-4">
-                                <label for="event_type" class="block text-gray-700">Tipo de evento*:</label>
+                                <label for="event_type" class="block text-gray-700">Campeonato *:</label>
                                 <select name="event_type" id="event_type" class="w-full border border-gray-300 p-2 rounded" required>
-                                    <option value="">Selecione o Tipo de Evento</option>
+                                    <option value="">Selecione o Campeonato</option>
                                     @foreach ($eventTypes as $type)
                                         <option value="{{ $type->term_id }}" {{ $jogo->eventTypes->contains('term_id', $type->term_id) ? 'selected' : '' }}>{{ $type->term->name }}</option>
                                     @endforeach
@@ -39,15 +39,16 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="event_category" class="block text-gray-700">Categoria do evento*:</label>
+                                <label for="event_category" class="block text-gray-700">Categoria*:</label>
                                 <select name="event_category" id="event_category" class="w-full border border-gray-300 p-2 rounded" required>
-                                    <option value="">Selecione a Categoria do Evento</option>
+                                    <option value="">Selecione a Categoria</option>
                                     @foreach ($eventCategories as $category)
                                         <option value="{{ $category->term_id }}" {{ $jogo->eventCategories->contains('term_id', $category->term_id) ? 'selected' : '' }}>{{ $category->term->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
+                            <!--
                             <div class="mb-4">
                                 <label class="block text-gray-700">Evento on-line *:</label>
                                 <div class="flex flex-col items-start">
@@ -61,25 +62,30 @@
                                     </div>
                                 </div>
                             </div>
+                            -->
 
                             <div id="offline-fields" class="mb-4">
+                                <!--
                                 <div class="mb-4">
                                     <label for="event_pincode" class="block text-gray-700">CEP *:</label>
                                     <input type="text" name="event_pincode" id="event_pincode" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_pincode', $jogo->getMetaValue('_event_pincode')) }}" required>
                                 </div>
+                                -->
                                 <div class="mb-4">
-                                    <label for="event_location" class="block text-gray-700">Local do evento *:</label>
+                                    <label for="event_location" class="block text-gray-700">Local do Jogo *:</label>
                                     <input type="text" name="event_location" id="event_location" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_location', $jogo->getMetaValue('_event_location')) }}" required>
                                 </div>
+                                <!--
                                 <div class="mb-4">
                                     <label for="event_country" class="block text-gray-700">País do Evento *:</label>
                                     <select name="event_country" id="event_country" class="w-full border border-gray-300 p-2 rounded" required>
                                         <option value="br" {{ old('event_country', $jogo->getMetaValue('_event_country')) == 'br' ? 'selected' : '' }}>Brasil</option>
-                                        <!-- Adicione outras opções de países aqui se necessário -->
+                                        
                                     </select>
                                 </div>
+                                -->
                             </div>
-
+                            <!--
                             <div class="mb-4">
                                 <label for="event_banner" class="block text-gray-700">Banner do evento *:</label>
                                 <input type="file" name="event_banner" id="event_banner" class="w-full border border-gray-300 p-2 rounded">
@@ -89,6 +95,7 @@
                                     </div>
                                 @endif
                             </div>
+
 
                             <div class="mb-4">
                                 <label for="post_content" class="block text-gray-700">Descrição *:</label>
@@ -104,6 +111,7 @@
                                 <label for="video_url" class="block text-gray-700">Video URL (opcional):</label>
                                 <input type="text" name="video_url" id="video_url" class="w-full border border-gray-300 p-2 rounded" value="{{ old('video_url', $jogo->getMetaValue('_event_video_url')) }}">
                             </div>
+                            -->
 
                             <div class="mb-4">
                                 <label for="event_start_date" class="block text-gray-700">Data de início *:</label>
@@ -111,10 +119,10 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="event_start_time" class="block text-gray-700">Início *:</label>
+                                <label for="event_start_time" class="block text-gray-700">Horário *:</label>
                                 <input type="time" name="event_start_time" id="event_start_time" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_start_time', $jogo->getMetaValue('_event_start_time')) }}" required>
                             </div>
-
+                            <!--
                             <div class="mb-4">
                                 <label for="event_end_date" class="block text-gray-700">Data de encerramento *:</label>
                                 <input type="date" name="event_end_date" id="event_end_date" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_end_date', $jogo->getMetaValue('_event_end_date')) }}" required>
@@ -129,6 +137,8 @@
                                 <label for="registration_deadline" class="block text-gray-700">Prazo de registro (opcional):</label>
                                 <input type="date" name="registration_deadline" id="registration_deadline" class="w-full border border-gray-300 p-2 rounded" value="{{ old('registration_deadline', $jogo->getMetaValue('_event_registration_deadline')) }}">
                             </div>
+
+                            -->
 
                             <div class="mb-4">
                                 <label for="juiz_principal" class="block text-gray-700">Juiz Principal:</label>

@@ -39,7 +39,7 @@
                             </x-dropdown-link>
 
                             <x-dropdown-link :href="route('eventos.index')">
-                                {{ __('Tipos de Eventos') }}
+                                {{ __('Campeonatos') }}
                             </x-dropdown-link>
 
                             <x-dropdown-link :href="route('categorias.index')">

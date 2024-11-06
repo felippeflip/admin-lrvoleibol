@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Editar Evento') }}
+            {{ __('Editar Campeonato') }}
         </h2>
     </x-slot>
 
@@ -24,7 +24,7 @@
                             @csrf
                             @method('PUT')
                             <div class="mb-4">
-                                <label for="name" class="block text-gray-700">EVENTOS:</label>
+                                <label for="name" class="block text-gray-700">CAMPEONATO:</label>
                                 <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name', $wpTerm->name) }}">
                             </div>
                             <div class="mb-4">
@@ -32,7 +32,7 @@
                                 <input type="text" name="slug" id="slug" class="w-full border border-gray-300 p-2 rounded" value="{{ old('slug', $wpTerm->slug) }}">
                             </div>
                             <div class="mb-4">
-                                <label for="description" class="block text-gray-700">Descrição:</label>
+                                <label for="description" class="block text-gray-700">DESCRIÇÃO:</label>
                                 <textarea name="description" id="description" class="w-full border border-gray-300 p-2 rounded">{{ old('description', $wpTermTaxonomy->description)}}</textarea>
                             </div>
                            
@@ -48,3 +48,14 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    document.getElementById('name').addEventListener('input', function() {
+        var name = this.value;
+        var slug = name.toLowerCase()
+            .replace(/ /g, '-') // Substitui espaços por hífens
+            .replace(/[^\w-]+/g, ''); // Remove caracteres especiais
+
+        document.getElementById('slug').value = slug;
+    });
+</script>

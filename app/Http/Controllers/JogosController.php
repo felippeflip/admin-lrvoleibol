@@ -173,7 +173,9 @@ public function index_dashboard()
     public function store(Request $request)
     {
 
-    //dd($request->toArray()); die;
+    //dd($request->toArray()); die;5
+
+    $request['post_content'] = $request->post_title;
 
     // Validação dos dados do request
         $request->validate([
@@ -181,17 +183,17 @@ public function index_dashboard()
         'post_content' => 'required|string',
         'event_type' => 'required|integer',
         'event_category' => 'required|integer',
-        'event_online' => 'required|in:yes,no',
-        'event_pincode' => 'required_if:event_online,no|string',
+       // 'event_online' => 'required|in:yes,no',
+       // 'event_pincode' => 'required_if:event_online,no|string',
         'event_location' => 'required_if:event_online,no|string',
-        'event_country' => 'required_if:event_online,no|string',
-        'event_banner' => 'required|file|mimes:jpeg,png,jpg,gif,svg',
-        'registration_email_url' => 'required|string',
+       // 'event_country' => 'required_if:event_online,no|string',
+       // 'event_banner' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg',
+        //'registration_email_url' => 'required|string',
         'video_url' => 'nullable|string',
         'event_start_date' => 'required|date_format:Y-m-d',
         'event_start_time' => 'required|date_format:H:i',
-        'event_end_date' => 'required|date_format:Y-m-d',
-        'event_end_time' => 'required|date_format:H:i',
+       // 'event_end_date' => 'required|date_format:Y-m-d',
+       // 'event_end_time' => 'required|date_format:H:i',
         'registration_deadline' => 'nullable|date',
     ]);
 
@@ -238,6 +240,18 @@ public function index_dashboard()
     // Atualizando o campo guid com o ID do post
     DB::table('wp_posts')->where('ID', $postId)->update(['guid' => url("/event_listing?p=$postId")]);
 
+
+    // Cria um objeto DateTime com a data e hora de início
+    $startDateTime = new \DateTime($request->event_start_date . ' ' . $request->event_start_time);
+
+    // Adiciona 2 horas e 30 minutos ao horário de início
+    $endDateTime = clone $startDateTime;
+    $endDateTime->modify('+2 hours 30 minutes');
+
+// Formata a data e hora de término para o formato desejado
+$eventEndDate = $endDateTime->format('Y-m-d');
+$eventEndTime = $endDateTime->format('H:i:s');
+
     // Preparando dados para inserção na tabela wp_postmeta
     $metaData = [
         ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
@@ -246,18 +260,18 @@ public function index_dashboard()
         ['post_id' => $postId, 'meta_key' => '_view_count', 'meta_value' => '1'],
         ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => ''],
         ['post_id' => $postId, 'meta_key' => '_event_title', 'meta_value' => $post_title],
-        ['post_id' => $postId, 'meta_key' => '_event_online', 'meta_value' => $request->event_online],
-        ['post_id' => $postId, 'meta_key' => '_event_pincode', 'meta_value' => $request->event_pincode],
+        ['post_id' => $postId, 'meta_key' => '_event_online', 'meta_value' => 'no'],
+        ['post_id' => $postId, 'meta_key' => '_event_pincode', 'meta_value' => '00000-000'],
         ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $request->event_location],
-        ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => $request->event_country],
-        ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => $request->file('event_banner')->store('uploads', 'public')],
+        ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => 'Brasil'],
+        //['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => $request->file('event_banner')->store('uploads', 'public')],
         ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '3774'],
-        ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => $request->registration_email_url],
+        ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' =>'lrvoleibol@lrvoleibol.com'],
         ['post_id' => $postId, 'meta_key' => '_event_video_url', 'meta_value' => $request->video_url ?? ''],
-        ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => $request->event_start_date . ' ' . $request->event_start_time . ':00'],
-        ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $request->event_start_time],
-        ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => $request->event_end_date . ' ' . $request->event_end_time . ':00'],
-        ['post_id' => $postId, 'meta_key' => '_event_end_time', 'meta_value' => $request->event_end_time],
+        ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => $startDateTime->format('Y-m-d H:i:s')],
+        ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $startDateTime->format('H:i:s')],
+        ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => $eventEndDate . ' ' . $eventEndTime],
+        ['post_id' => $postId, 'meta_key' => '_event_end_time', 'meta_value' => $eventEndTime],
         ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => $request->registration_deadline],
         ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
         ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $request->juiz_principal],
@@ -308,24 +322,26 @@ public function edit($id)
 public function update(Request $request, $id)
 {
 
+    $request['post_content'] = $request->post_title;
+
      // Validação dos dados
      $request->validate([
         'post_title' => 'required|string|max:255',
         'event_type' => 'required|exists:wp_term_taxonomy,term_id',
         'event_category' => 'required|exists:wp_term_taxonomy,term_id',
-        'event_online' => 'required|in:yes,no',
-        'event_pincode' => 'required_if:event_online,no|string|max:10',
+       // 'event_online' => 'required|in:yes,no',
+       // 'event_pincode' => 'required_if:event_online,no|string|max:10',
         'event_location' => 'required_if:event_online,no|string|max:255',
-        'event_country' => 'required_if:event_online,no|string|max:2',
-        'event_banner' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
+       // 'event_country' => 'required_if:event_online,no|string|max:2',
+       // 'event_banner' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
         'post_content' => 'required|string',
-        'registration_email_url' => 'required|string',
-        'video_url' => 'nullable|string',
+      //  'registration_email_url' => 'required|string',
+      //  'video_url' => 'nullable|string',
         'event_start_date' => 'required|date_format:Y-m-d',
         'event_start_time' => 'required|date_format:H:i',
-        'event_end_date' => 'required|date_format:Y-m-d',
-        'event_end_time' => 'required|date_format:H:i',
-        'registration_deadline' => 'nullable|date_format:Y-m-d',
+      //  'event_end_date' => 'required|date_format:Y-m-d',
+      //  'event_end_time' => 'required|date_format:H:i',
+      //  'registration_deadline' => 'nullable|date_format:Y-m-d',
         'juiz_principal' => 'nullable|exists:users,id',
         'juiz_linha1' => 'nullable|exists:users,id',
         'juiz_linha2' => 'nullable|exists:users,id',
@@ -339,6 +355,17 @@ public function update(Request $request, $id)
         'post_content' => $request->post_content,
     ]);
 
+    // Cria um objeto DateTime com a data e hora de início
+    $startDateTime = new \DateTime($request->event_start_date . ' ' . $request->event_start_time);
+
+    // Adiciona 2 horas e 30 minutos ao horário de início
+    $endDateTime = clone $startDateTime;
+    $endDateTime->modify('+2 hours 30 minutes');
+
+    // Formata a data e hora de término para o formato desejado
+    $eventEndDate = $endDateTime->format('Y-m-d');
+    $eventEndTime = $endDateTime->format('H:i:s');
+
     // Atualizando wp_postmeta
     $meta_fields = [
         '_event_title' => $request->post_title,
@@ -348,10 +375,10 @@ public function update(Request $request, $id)
         '_event_country' => $request->event_country,
         '_registration' => $request->registration_email_url,
         '_event_video_url' => $request->video_url,
-        '_event_start_date' => $request->event_start_date . ' ' . $request->event_start_time . ':00',
-        '_event_end_date' => $request->event_end_date . ' ' . $request->event_end_time . ':00',
-        '_event_start_time' => $request->event_start_time,
-        '_event_end_time' => $request->event_end_time,
+        '_event_start_date' => $startDateTime->format('Y-m-d H:i:s'),
+        '_event_end_date' => $eventEndDate . ' ' . $eventEndTime,
+        '_event_start_time' => $startDateTime->format('H:i'),
+        '_event_end_time' => $eventEndTime,
         '_event_registration_deadline' => $request->registration_deadline,
         '_juiz_principal' => $request->juiz_principal,
         '_juiz_linha1' => $request->juiz_linha1,
