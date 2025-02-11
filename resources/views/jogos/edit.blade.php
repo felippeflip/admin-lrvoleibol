@@ -24,6 +24,11 @@
                             @method('PUT')
 
                             <div class="mb-4">
+                                <label for="event_number" class="block text-gray-700">Nº Jogo *:</label>
+                                <input type="text" name="event_number" id="event_number" class="border border-gray-300 p-2 rounded" value="{{ old('event_number', $eventNumber) }}" required style="width: 150px;">
+                            </div>
+
+                            <div class="mb-4">
                                 <label for="post_title" class="block text-gray-700">Adversários *:</label>
                                 <input type="text" name="post_title" id="post_title" class="w-full border border-gray-300 p-2 rounded" value="{{ old('post_title', $jogo->post_title) }}" required>
                             </div>
@@ -120,7 +125,7 @@
 
                             <div class="mb-4">
                                 <label for="event_start_time" class="block text-gray-700">Horário *:</label>
-                                <input type="time" name="event_start_time" id="event_start_time" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_start_time', $jogo->getMetaValue('_event_start_time')) }}" required>
+                                <input type="time" name="event_start_time" id="event_start_time" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_start_time', (new DateTime($jogo->getMetaValue('_event_start_time')))->format('H:i')) }}" required>
                             </div>
                             <!--
                             <div class="mb-4">

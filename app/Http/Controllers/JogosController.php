@@ -179,6 +179,7 @@ public function index_dashboard()
 
     // Validação dos dados do request
         $request->validate([
+        'event_number' => 'required|integer',
         'post_title' => 'required|string|max:100',
         'post_content' => 'required|string',
         'event_type' => 'required|integer',
@@ -235,10 +236,12 @@ public function index_dashboard()
     ];
 
     // Inserindo na tabela wp_posts e obtendo o ID inserido
+    
     $postId = DB::table('wp_posts')->insertGetId($wpPostData);
 
     // Atualizando o campo guid com o ID do post
-    DB::table('wp_posts')->where('ID', $postId)->update(['guid' => url("/event_listing?p=$postId")]);
+    // Ajustar o URL do guid deixar ela fixo para o site https://lrvoleibol.com.br/event_listing?p=ID
+    DB::table('wp_posts')->where('ID', $postId)->update(['guid' => "https://lrvoleibol.com.br/event_listing?p=$postId"]);
 
 
     // Cria um objeto DateTime com a data e hora de início
@@ -254,6 +257,7 @@ $eventEndTime = $endDateTime->format('H:i:s');
 
     // Preparando dados para inserção na tabela wp_postmeta
     $metaData = [
+        ['post_id' => $postId, 'meta_key' => '_event_number', 'meta_value' => $request->event_number],
         ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
         ['post_id' => $postId, 'meta_key' => '_edit_lock', 'meta_value' => '1720293949:2'],
         ['post_id' => $postId, 'meta_key' => '_edit_last', 'meta_value' => '2'],
@@ -273,6 +277,7 @@ $eventEndTime = $endDateTime->format('H:i:s');
         ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => $eventEndDate . ' ' . $eventEndTime],
         ['post_id' => $postId, 'meta_key' => '_event_end_time', 'meta_value' => $eventEndTime],
         ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => $request->registration_deadline],
+        ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => $startDateTime->modify('+1 month')->format('Y-m-d H:i:s')],
         ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
         ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $request->juiz_principal],
         ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $request->juiz_linha1],
@@ -302,19 +307,22 @@ public function edit($id)
     $eventCategories = Wp_Term_Taxonomy::with('term')->where('taxonomy', 'event_listing_category')->get();
     $juizes = \App\Models\User::where('is_arbitro', true)->get();
 
+    // Recupera o valor do event_number
+    $eventNumber = $jogo->getMetaValue('_event_number');
+
     // Recupera os IDs dos juízes do jogo
     $juizPrincipalId = $jogo->getMetaValue('_juiz_principal');
     $juizLinha1Id = $jogo->getMetaValue('_juiz_linha1');
     $juizLinha2Id = $jogo->getMetaValue('_juiz_linha2');
-
-    // dd($juizLinha1Id); die;
 
     // Recupera os detalhes dos juízes
     $juizPrincipal = $juizes->find($juizPrincipalId);
     $juizLinha1 = $juizes->find($juizLinha1Id);
     $juizLinha2 = $juizes->find($juizLinha2Id);
 
-    return view('jogos.edit', compact('jogo', 'eventTypes', 'eventCategories', 'juizes', 'juizPrincipal', 'juizLinha1', 'juizLinha2'));
+    //dd($eventNumber); die;
+
+    return view('jogos.edit', compact('jogo', 'eventTypes', 'eventCategories', 'juizes', 'juizPrincipal', 'juizLinha1', 'juizLinha2', 'eventNumber'));
 }
 
 
@@ -369,12 +377,12 @@ public function update(Request $request, $id)
     // Atualizando wp_postmeta
     $meta_fields = [
         '_event_title' => $request->post_title,
-        '_event_online' => $request->event_online,
-        '_event_pincode' => $request->event_pincode,
+       // '_event_online' => $request->event_online,
+       // '_event_pincode' => $request->event_pincode,
         '_event_location' => $request->event_location,
-        '_event_country' => $request->event_country,
-        '_registration' => $request->registration_email_url,
-        '_event_video_url' => $request->video_url,
+       // '_event_country' => $request->event_country,
+       // '_registration' => $request->registration_email_url,
+       // '_event_video_url' => $request->video_url,
         '_event_start_date' => $startDateTime->format('Y-m-d H:i:s'),
         '_event_end_date' => $eventEndDate . ' ' . $eventEndTime,
         '_event_start_time' => $startDateTime->format('H:i'),

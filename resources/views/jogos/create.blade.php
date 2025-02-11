@@ -22,6 +22,10 @@
                         <form id="event-form" action="{{ route('jogos.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-4">
+                                <label for="event_number" class="block text-gray-700">Nº Jogo *:</label>
+                                <input type="text" name="event_number" id="event_number" class="border border-gray-300 p-2 rounded" value="{{ old('event_number') }}" required style="width: 150px;">
+                            </div>
+                            <div class="mb-4">
                                 <label for="post_title" class="block text-gray-700">Adversários *:</label>
                                 <input type="text" name="post_title" id="post_title" class="w-full border border-gray-300 p-2 rounded" value="{{ old('event_title') }}" required>
                             </div>

@@ -17,9 +17,14 @@
 
                     <!-- Mensagem de sucesso -->
                     @if (session('success'))
-                        <div class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4">
+                        <div id="success-message" class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4">
                             {{ session('success') }}
                         </div>
+                        <script>
+                            setTimeout(function() {
+                                document.getElementById('success-message').style.display = 'none';
+                            }, 3000);
+                        </script>
                     @endif
 
                     <!-- Table List -->
@@ -36,6 +41,7 @@
                         <table id="jogos-table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
+                                    <th scope="col" class="px-6 py-3">Nº Jogo</th>
                                     <th scope="col" class="px-6 py-3">Título</th>
                                     <th scope="col" class="px-6 py-3">Tipo</th>
                                     <th scope="col" class="px-6 py-3">Local</th>
@@ -48,6 +54,7 @@
                             <tbody>
                                 @foreach ($jogos as $jogo)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <th scope="row" class="px-6 py-4">{{ $jogo->meta['_event_number']->meta_value ?? 'N/A' }}</th>
                                         <th scope="row" class="px-6 py-4">{{ $jogo->meta['_event_title']->meta_value ?? 'N/A' }}</th>
                                         <td class="px-6 py-4">
                                             @php
@@ -70,7 +77,12 @@
                                             @endphp
                                             {{ $startDate }}
                                         </td>
-                                        <td class="px-6 py-4">{{ $jogo->meta['_event_start_time']->meta_value ?? 'N/A' }}</td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $startTime = isset($jogo->meta['_event_start_time']) ? Carbon\Carbon::parse($jogo->meta['_event_start_time']->meta_value)->format('H:i') : 'N/A';
+                                            @endphp
+                                            {{ $startTime }}
+                                        </td>
                                         <td class="px-6 py-4">{{ $jogo->post_status }}</td>
                                         <td class="px-6 py-4 flex space-x-2">
                                             <a href="{{ route('jogos.edit', $jogo->ID) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
