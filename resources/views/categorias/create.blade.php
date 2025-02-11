@@ -35,7 +35,7 @@
                             </div>
                            
                             <div class="flex justify-between">
-                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Atualizar</button>
+                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Salvar</button>
                                 
                                 <a href="{{ route('categorias.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
                             </div>
@@ -43,4 +43,16 @@
             </div>
         </div>
     </div>
+
+    <!--  script para gerar o slug automaticamente -->
+    <script>
+        document.getElementById('name').addEventListener('input', function() {
+            var name = this.value;
+            var slug = name.toLowerCase()
+                .replace(/ /g, '-') // Substitui espaços por hífens
+                .replace(/[^\w-]+/g, ''); // Remove caracteres especiais
+        
+            document.getElementById('slug').value = slug;
+        });
+    </script>
 </x-app-layout>

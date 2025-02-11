@@ -25,6 +25,9 @@
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">
+                                        Nº jogo
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
                                         Adversários
                                     </th>
                                     <th scope="col" class="px-6 py-3">
@@ -53,6 +56,9 @@
                             <tbody>
                                 @foreach ($jogos as $jogo)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <th scope="row" class="px-6 py-4">
+                                            {{ $jogo->meta['_event_number']->meta_value ?? 'N/A' }}
+                                        </th>
                                         <th scope="row" class="px-6 py-4">
                                             {{ $jogo->meta['_event_title']->meta_value ?? 'N/A' }}
                                         </th>
@@ -110,7 +116,7 @@
 <script>
     $(document).ready(function() {
         $('#jogosTable').DataTable({
-            "order": [[3, "asc"], [4, "asc"]],
+            "order": [[0, "asc"], [4, "asc"]],
             "language": {
                 "decimal": "",
                 "emptyTable": "Nenhum dado disponível na tabela",

@@ -36,7 +36,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Criar</button>
-                                <a href="{{ route('role-permission.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</a>
+                                <a href="{{ route('role-permission.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
                             </div>
                         </form>
                     </div>

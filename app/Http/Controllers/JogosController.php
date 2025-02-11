@@ -15,6 +15,8 @@ use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Carbon;
 use League\Csv\Reader;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 
 class JogosController extends Controller
@@ -73,7 +75,7 @@ class JogosController extends Controller
 // index para apresentar no dashboard -> Para os Luizes verem quais jogos irão participar
 public function index_dashboard()
 {
-    $user = auth()->user();
+    $user = Auth::user();
     $isArbitro = $user->is_arbitro;
 
     $jogosQuery = DB::table('wp_posts')
@@ -133,6 +135,7 @@ public function index_dashboard()
 
                             // Fetch referees
                             $referees = [
+                                'eventNumber' => $meta['_event_number']->meta_value ?? null,
                                 'principal' => $meta['_juiz_principal']->meta_value ?? null,
                                 'line1' => $meta['_juiz_linha1']->meta_value ?? null,
                                 'line2' => $meta['_juiz_linha2']->meta_value ?? null,
@@ -437,149 +440,132 @@ public function update(Request $request, $id)
 
     public function import(Request $request)
     {
-        // Validação do arquivo
-        $request->validate([
-            'csv_file' => 'required|mimes:csv,txt',
-        ]);
+    // Validação do arquivo CSV
+    $request->validate([
+    'csv_file' => 'required|mimes:csv,txt',
+    ]);
     
-        // Caminho do arquivo
-        $path = $request->file('csv_file')->getRealPath();
-        $reader = Reader::createFromPath($path, 'r');
-        $reader->setDelimiter(';'); // Ajuste o delimitador se necessário
-        $reader->setHeaderOffset(0);
-        $records = $reader->getRecords();
-        $expectedColumns = [
-            'titulo_evento', 'id_event', 'tipo_evento', 'ID_CATEGORY', 'categoria_evento', 'evento_on-line', 'CEP', 'local_evento', 'pais_evento',
-            'descricao', 'email_url_registro', 'video_url', 'data_inicio', 'inicio', 'data_encerramento', 'encerramento', 'prazo_registro', 'ID_USERS',
-            'juiz_1', 'ID_USERS_1', 'juiz_2', 'ID_USERS_2', 'apontador'
-        ];
+    // Obtém o caminho do arquivo e cria o leitor CSV
+    $path = $request->file('csv_file')->getRealPath();
+    $reader = Reader::createFromPath($path, 'r');
     
-        // Iterar sobre os registros e filtrar linhas vazias
-        foreach ($records as $index => $record) {
-            // Verificar se o registro contém informações além de apenas delimitadores
-            if (isset($record['titulo_evento']) && !empty(trim($record['titulo_evento']))) {
+    // Configura o delimitador e o enclosure conforme o arquivo CSV
+    $reader->setDelimiter(';');
+    $reader->setEnclosure('"');
+    $reader->setHeaderOffset(0);
     
-                // Verificar se o número de colunas corresponde ao esperado
-                if (count($record) !== count($expectedColumns)) {
-                    return back()->withErrors(['error' => "Erro na linha $index: número de colunas incorreto."]);
-                }
+    // Define o array de colunas esperadas com "numero_jogo" como primeiro campo
+    $expectedColumns = [
+        'numero_jogo', 'titulo_evento', 'id_event', 'tipo_evento', 'ID_CATEGORY', 'categoria_evento',
+        'local_evento', 'data_inicio', 'inicio', 'ID_USERS', 'juiz_principal', 'ID_USERS_1', 'juiz_linha1', 'ID_USERS_2', 'apontador'
+    ];
     
-                // Convertendo os dados para UTF-8
-                foreach ($record as $key => $value) {
-                    $record[$key] = utf8_encode(trim($value));
-                }
+    // Obtém os registros do CSV
+    $records = iterator_to_array($reader->getRecords());
+    if (empty($records)) {
+        return back()->withErrors(['error' => 'O arquivo CSV está vazio.']);
+    }
     
-                try {
-                    // Preparando dados para inserção na tabela wp_posts
-                    $post_title = $record['titulo_evento'];
-                    $post_name = Str::slug($post_title);
-    
-                    // Verifica se já existe um post com o mesmo post_name
-                    $existingPost = DB::table('wp_posts')->where('post_name', $post_name)->first();
-                    if ($existingPost) {
-                        $post_name .= '-'. (DB::table('wp_posts')->where('post_name', 'like', "$post_name%")->count() + 1);
-                    }
-    
-                    $post_date = Carbon::now();
-    
-                    $wpPostData = [
-                        'post_author' => 2,
-                        'post_date' => $post_date,
-                        'post_date_gmt' => $post_date->copy()->setTimezone('GMT'),
-                        'post_content' => $record['descricao'],
-                        'post_title' => $post_title,
-                        'post_excerpt' => '',
-                        'post_status' => 'publish',
-                        'comment_status' => 'closed',
-                        'ping_status' => 'closed',
-                        'post_password' => '',
-                        'post_name' => $post_name,
-                        'to_ping' => '',
-                        'pinged' => '',
-                        'post_modified' => $post_date,
-                        'post_modified_gmt' => $post_date->copy()->setTimezone('GMT'),
-                        'post_content_filtered' => '',
-                        'post_parent' => 0,
-                        'guid' => '',
-                        'menu_order' => 0,
-                        'post_type' => 'event_listing',
-                        'post_mime_type' => '',
-                        'comment_count' => 0,
-                    ];
-    
-                    // Inserindo na tabela wp_posts e obtendo o ID inserido
-                    $postId = DB::table('wp_posts')->insertGetId($wpPostData);
-    
-                    // Atualizando o campo guid com o ID do post
-                    DB::table('wp_posts')->where('ID', $postId)->update(['guid' => url("/event_listing?p=$postId")]);
-    
-                    // Preparando dados para inserção na tabela wp_postmeta
-                    $metaData = [
-                        ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
-                        ['post_id' => $postId, 'meta_key' => '_edit_lock', 'meta_value' => '1720293949:2'],
-                        ['post_id' => $postId, 'meta_key' => '_edit_last', 'meta_value' => '2'],
-                        ['post_id' => $postId, 'meta_key' => '_view_count', 'meta_value' => '1'],
-                        ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => ''],
-                        ['post_id' => $postId, 'meta_key' => '_event_title', 'meta_value' => $post_title],
-                        ['post_id' => $postId, 'meta_key' => '_event_online', 'meta_value' => $record['evento_on-line']],
-                        ['post_id' => $postId, 'meta_key' => '_event_pincode', 'meta_value' => $record['CEP']],
-                        ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $record['local_evento']],
-                        ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => $record['pais_evento']],
-                        ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => $record['email_url_registro']],
-                        ['post_id' => $postId, 'meta_key' => '_event_video_url', 'meta_value' => $record['video_url'] ?? ''],
-                        ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->format('Y-m-d H:i:s')],
-                        ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $record['inicio']],
-                        ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_encerramento'] . ' ' . $record['encerramento'])->format('Y-m-d H:i:s')],
-                        ['post_id' => $postId, 'meta_key' => '_event_end_time', 'meta_value' => $record['encerramento']],
-                        ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => $record['prazo_registro']],
-                        ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
-                        ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $record['ID_USERS']],
-                        ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $record['ID_USERS_1']],
-                        ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $record['ID_USERS_2']],
-                    ];
-    
-                    // Inserindo os metadados na tabela wp_postmeta
-                    DB::table('wp_postmeta')->insert($metaData);
-    
-                    // Preparando dados para inserção na tabela wp_term_relationships
-                    $termRelationships = [
-                        ['object_id' => $postId, 'term_taxonomy_id' => $record['id_event'], 'term_order' => 0],
-                        ['object_id' => $postId, 'term_taxonomy_id' => $record['ID_CATEGORY'], 'term_order' => 0],
-                    ];
-    
-                    // Inserindo os dados na tabela wp_term_relationships
-                    DB::table('wp_term_relationships')->insert($termRelationships);
-                } catch (Exception $e) {
-                    // Log de erro ou tratamento de exceção aqui
-                    return back()->withErrors(['error' => $e->getMessage()]);
-                }
-            }
+    // Processa cada registro
+    foreach ($records as $index => $record) {
+        // Pula linhas sem dados válidos
+        if (empty(implode('', array_map('trim', $record)))) {
+            continue;
         }
     
-        // Redireciona com mensagem de sucesso
-        return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
+        if (isset($record['titulo_evento']) && !empty(trim($record['titulo_evento']))) {
+    
+            // Verifica se o número de colunas bate com o esperado
+            if (count($record) !== count($expectedColumns)) {
+                return back()->withErrors(['error' => "Erro na linha $index: número de colunas incorreto."]);
+            }
+    
+            // Para cada campo, remove espaços e, se houver, as aspas duplas. Em seguida, converte para UTF-8.
+            foreach ($record as $key => $value) {
+                $val = trim($value);
+                if (substr($val, 0, 1) === '"' && substr($val, -1) === '"') {
+                    $val = substr($val, 1, -1);
+                }
+                $detectedEncoding = mb_detect_encoding($val, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+                if ($detectedEncoding !== 'UTF-8') {
+                    $val = mb_convert_encoding($val, 'UTF-8', $detectedEncoding);
+                }
+                $record[$key] = $val;
+            }
+    
+            try {
+                $post_title = $record['titulo_evento'];
+                $post_name  = Str::slug($post_title);
+                $existingPost = DB::table('wp_posts')->where('post_name', $post_name)->first();
+                if ($existingPost) {
+                    $post_name .= '-' . (DB::table('wp_posts')->where('post_name', 'like', "$post_name%")->count() + 1);
+                }
+                $post_date = Carbon::now();
+                $wpPostData = [
+                    'post_author'           => 2,
+                    'post_date'             => $post_date,
+                    'post_date_gmt'         => $post_date->copy()->setTimezone('GMT'),
+                    'post_content'          => '',
+                    'post_title'            => $post_title,
+                    'post_excerpt'          => '',
+                    'post_status'           => 'publish',
+                    'comment_status'        => 'closed',
+                    'ping_status'           => 'closed',
+                    'post_password'         => '',
+                    'post_name'             => $post_name,
+                    'to_ping'               => '',
+                    'pinged'                => '',
+                    'post_modified'         => $post_date,
+                    'post_modified_gmt'     => $post_date->copy()->setTimezone('GMT'),
+                    'post_content_filtered' => '',
+                    'post_parent'           => 0,
+                    'guid'                  => '',
+                    'menu_order'            => 0,
+                    'post_type'             => 'event_listing',
+                    'post_mime_type'        => '',
+                    'comment_count'         => 0,
+                ];
+    
+                $postId = DB::table('wp_posts')->insertGetId($wpPostData);
+                if (!$postId) {
+                    return back()->withErrors(['error' => 'Falha ao inserir o post no banco de dados']);
+                }
+                DB::table('wp_posts')->where('ID', $postId)->update([
+                    'guid' => "https://lrvoleibol.com.br/event_listing?p=$postId"
+                ]);
+    
+                $metaData = [
+                    ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
+                    ['post_id' => $postId, 'meta_key' => '_edit_lock', 'meta_value' => '1720293949:2'],
+                    ['post_id' => $postId, 'meta_key' => '_edit_last', 'meta_value' => '2'],
+                    ['post_id' => $postId, 'meta_key' => '_view_count', 'meta_value' => '1'],
+                    ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => ''],
+                    ['post_id' => $postId, 'meta_key' => '_event_title', 'meta_value' => $post_title],
+                    ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $record['local_evento']],
+                    ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->format('Y-m-d H:i:s')],
+                    ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $record['inicio']],
+                    ['post_id' => $postId, 'meta_key' => '_event_number', 'meta_value' => $record['numero_jogo']],
+                    ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $record['ID_USERS']],
+                    ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $record['ID_USERS_1']],
+                    ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $record['ID_USERS_2']],
+                ];
+                DB::table('wp_postmeta')->insert($metaData);
+    
+                $termRelationships = [
+                    ['object_id' => $postId, 'term_taxonomy_id' => $record['id_event'], 'term_order' => 0],
+                    ['object_id' => $postId, 'term_taxonomy_id' => $record['ID_CATEGORY'], 'term_order' => 0],
+                ];
+                DB::table('wp_term_relationships')->insert($termRelationships);
+    
+            } catch (Exception $e) {
+                return back()->withErrors(['error' => $e->getMessage()]);
+            }
+        }
     }
     
-
-
-     /**
-     * Projeto Futuro: Inserir mais de um jogo no mesmo submit
-     */
-
-    /*
-    public function createMulti()
-    {
-
-        $juizes = \App\Models\User::where('is_arbitro', true)->get();
-
-        $eventTypes = Wp_Term_Taxonomy::with('term')->where('taxonomy', 'event_listing_type')->get();
-
-        $eventCategorys = Wp_Term_Taxonomy::with('term')->where('taxonomy', 'event_listing_category')->get();
-
-        return view('jogos.multi-insert', compact('eventTypes', 'eventCategorys', 'juizes'));
-        
+    return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
+    
     }
-    */
 
 
 }

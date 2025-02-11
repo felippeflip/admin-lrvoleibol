@@ -30,7 +30,10 @@
                             </select>
                         </div>
                         <div class="mb-4">
-                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Associar</button>
+                            <div class="flex justify-between">
+                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Associar</button>
+                                <a href="{{ route('profile_user.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
+                            </div>
                         </div>
                     </form>
                 </div>
