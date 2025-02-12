@@ -18,6 +18,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use App\Models\Wp_Term_Relationships;
+use Illuminate\Support\Facades\Http;
 
 
 class JogosController extends Controller
@@ -559,7 +560,7 @@ public function update(Request $request, $id)
                     ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
                     ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
                     // adicionar o metadata _event_banner
-                    ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'http://localhost/lrvoleibol/wp-content/uploads/2024/07/voleibol.jpg'],
+                    ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'http://lrvoleibol.develop/wp-content/uploads/2024/07/voleibol.jpg'],
                     // adionar o metadata _cancelled
                     ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
                     // adicionar o metadata __event_registration_deadline
@@ -580,7 +581,23 @@ public function update(Request $request, $id)
                 return back()->withErrors(['error' => $e->getMessage()]);
             }
         }
+        // Destacar a imagem do evento,
+        $response = Http::post('http://lrvoleibol.develop/wp-json/custom/v1/update_event_thumbnail', [
+            'post_id'       => $postId,    // ID do evento importado
+            'attachment_id' => 4132        // ID do attachment (imagem) que deseja ser destacado
+        ]);
+    
+        if (!$response->successful()) {
+            // inseir o erro no log do larael
+            Log::error('Erro ao destacar a imagem do evento', [
+                'post_id' => $postId,
+                'attachment_id' => 4132,
+                'response' => $response->json()
+            ]);
+        }
+
     }
+
     
     return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
     
