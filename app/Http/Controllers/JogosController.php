@@ -17,6 +17,7 @@ use League\Csv\Reader;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use App\Models\Wp_Term_Relationships;
 
 
 class JogosController extends Controller
@@ -271,20 +272,25 @@ $eventEndTime = $endDateTime->format('H:i:s');
         ['post_id' => $postId, 'meta_key' => '_event_pincode', 'meta_value' => '00000-000'],
         ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $request->event_location],
         ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => 'Brasil'],
-        //['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => $request->file('event_banner')->store('uploads', 'public')],
         ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '3774'],
-        ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' =>'lrvoleibol@lrvoleibol.com'],
         ['post_id' => $postId, 'meta_key' => '_event_video_url', 'meta_value' => $request->video_url ?? ''],
         ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => $startDateTime->format('Y-m-d H:i:s')],
         ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $startDateTime->format('H:i:s')],
         ['post_id' => $postId, 'meta_key' => '_event_end_date', 'meta_value' => $eventEndDate . ' ' . $eventEndTime],
         ['post_id' => $postId, 'meta_key' => '_event_end_time', 'meta_value' => $eventEndTime],
-        ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => $request->registration_deadline],
-        ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => $startDateTime->modify('+1 month')->format('Y-m-d H:i:s')],
+        ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => $startDateTime->copy()->modify('+1 month')->format('Y-m-d')],
         ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
         ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $request->juiz_principal],
         ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $request->juiz_linha1],
         ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $request->juiz_linha2],
+        ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
+        // adicionar o metadata _event_banner
+        ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'http://localhost/lrvoleibol/wp-content/uploads/2024/07/voleibol.jpg'],
+        // adionar o metadata _cancelled
+        ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
+                    // adicionar o metadata __event_registration_deadline
+        ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => ''],
+        ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => Auth::user()->email]
     ];
 
     // Inserindo os metadados na tabela wp_postmeta
@@ -429,6 +435,8 @@ public function update(Request $request, $id)
 
         WpPostmeta::where('post_id', $id)->delete();
 
+        Wp_Term_Relationships::where('object_id', $id)->delete();
+
         return redirect()->route('jogos.index')->with('success', 'Jogo deletado com sucesso');
     }
 
@@ -539,7 +547,6 @@ public function update(Request $request, $id)
                     ['post_id' => $postId, 'meta_key' => '_edit_lock', 'meta_value' => '1720293949:2'],
                     ['post_id' => $postId, 'meta_key' => '_edit_last', 'meta_value' => '2'],
                     ['post_id' => $postId, 'meta_key' => '_view_count', 'meta_value' => '1'],
-                    ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => ''],
                     ['post_id' => $postId, 'meta_key' => '_event_title', 'meta_value' => $post_title],
                     ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $record['local_evento']],
                     ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->format('Y-m-d H:i:s')],
@@ -548,6 +555,18 @@ public function update(Request $request, $id)
                     ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $record['ID_USERS']],
                     ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $record['ID_USERS_1']],
                     ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $record['ID_USERS_2']],
+                    ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->modify('+1 month')->format('Y-m-d')],
+                    ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
+                    ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
+                    // adicionar o metadata _event_banner
+                    ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'http://localhost/lrvoleibol/wp-content/uploads/2024/07/voleibol.jpg'],
+                    // adionar o metadata _cancelled
+                    ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
+                    // adicionar o metadata __event_registration_deadline
+                    ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => ''],
+                    ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => 'Brasil'],
+                    ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => Auth::user()->email]
+
                 ];
                 DB::table('wp_postmeta')->insert($metaData);
     
