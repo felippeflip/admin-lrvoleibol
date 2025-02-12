@@ -286,7 +286,7 @@ $eventEndTime = $endDateTime->format('H:i:s');
         ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $request->juiz_linha2],
         ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
         // adicionar o metadata _event_banner
-        ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'http://localhost/lrvoleibol/wp-content/uploads/2024/07/voleibol.jpg'],
+        ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'https://lrvoleibol.com.br/wp-content/uploads/2024/07/voleibol.jpg'],
         // adionar o metadata _cancelled
         ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
                     // adicionar o metadata __event_registration_deadline
@@ -305,6 +305,22 @@ $eventEndTime = $endDateTime->format('H:i:s');
 
     // Inserindo os dados na tabela wp_term_relationships
     DB::table('wp_term_relationships')->insert($termRelationships);
+
+
+    // Destacar a imagem do evento,
+    $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
+        'post_id'       => $postId,    // ID do evento importado
+        'attachment_id' => 4132        // ID do attachment (imagem) que deseja ser destacado
+    ]);
+
+    if (!$response->successful()) {
+        // inseir o erro no log do larael
+        Log::error('Erro ao destacar a imagem do evento', [
+            'post_id' => $postId,
+            'attachment_id' => 4132,
+            'response' => $response->json()
+        ]);
+    }
 
     // Redirecionando para a página de listagem de jogos com uma mensagem de sucesso
     return redirect()->route('jogos.index')->with('success', 'Jogo adicionado com sucesso!');
@@ -560,7 +576,7 @@ public function update(Request $request, $id)
                     ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
                     ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
                     // adicionar o metadata _event_banner
-                    ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'http://lrvoleibol.develop/wp-content/uploads/2024/07/voleibol.jpg'],
+                    ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'https://lrvoleibol.com.br/wp-content/uploads/2024/07/voleibol.jpg'],
                     // adionar o metadata _cancelled
                     ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
                     // adicionar o metadata __event_registration_deadline
@@ -582,7 +598,7 @@ public function update(Request $request, $id)
             }
         }
         // Destacar a imagem do evento,
-        $response = Http::post('http://lrvoleibol.develop/wp-json/custom/v1/update_event_thumbnail', [
+        $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
             'post_id'       => $postId,    // ID do evento importado
             'attachment_id' => 4132        // ID do attachment (imagem) que deseja ser destacado
         ]);
