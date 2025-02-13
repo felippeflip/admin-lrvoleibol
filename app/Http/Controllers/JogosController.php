@@ -360,6 +360,7 @@ public function update(Request $request, $id)
 
      // Validação dos dados
      $request->validate([
+        'event_number' => 'required|integer',
         'post_title' => 'required|string|max:255',
         'event_type' => 'required|exists:wp_term_taxonomy,term_id',
         'event_category' => 'required|exists:wp_term_taxonomy,term_id',
@@ -402,6 +403,7 @@ public function update(Request $request, $id)
 
     // Atualizando wp_postmeta
     $meta_fields = [
+        '_event_number' => $request->event_number,
         '_event_title' => $request->post_title,
        // '_event_online' => $request->event_online,
        // '_event_pincode' => $request->event_pincode,
