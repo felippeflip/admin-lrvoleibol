@@ -441,6 +441,21 @@ public function update(Request $request, $id)
 
     $jogo->eventTypes()->syncWithoutDetaching([$request->event_type]);
     $jogo->eventCategories()->syncWithoutDetaching([$request->event_category]);
+
+    // Destacar a imagem do evento,
+    $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
+        'post_id'       => $id,    // ID do evento importado
+        'attachment_id' => 4132        // ID do attachment (imagem) que deseja ser destacado
+    ]);
+
+    if (!$response->successful()) {
+        // inseir o erro no log do larael
+        Log::error('Erro ao destacar a imagem do evento', [
+            'post_id' => $id,
+            'attachment_id' => 4132,
+            'response' => $response->json()
+        ]);
+    }
     
 
     return redirect()->route('jogos.index')->with('success', 'Jogo atualizado com sucesso!');
