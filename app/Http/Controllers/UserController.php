@@ -80,4 +80,22 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('users.index')->with('success', 'Usuário deletado com sucesso.');
     }
+
+        /**
+     * Reset user password
+     */
+    public function resetPassword(Request $request, $id)
+    {
+    $request->validate([
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    $user = User::findOrFail($id);
+    $user->password = Hash::make($request->input('password'));
+    $user->save();
+
+    return redirect()->route('users.index', $id)->with('success', 'Senha redefinida com sucesso.');
+    }
+
+    
 }
