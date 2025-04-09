@@ -159,6 +159,8 @@ public function index_dashboard()
                             return $jogo;
                         });
 
+    // dd($jogos); die;// Para depuração, remova ou comente esta linha em produção
+
     return view('dashboard', compact('jogos'));
 }
 

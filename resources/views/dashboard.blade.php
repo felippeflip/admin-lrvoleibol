@@ -34,6 +34,9 @@
                                         Campeonato
                                     </th>
                                     <th scope="col" class="px-6 py-3">
+                                        Categoria
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
                                         Local
                                     </th>
                                     <th scope="col" class="px-6 py-3">
@@ -68,6 +71,20 @@
                                                 if (!empty($jogo->term_relationships)) {
                                                     foreach ($jogo->term_relationships as $relationship) {
                                                         if (isset($relationship->term_taxonomy) && $relationship->term_taxonomy->taxonomy == 'event_listing_type' && isset($relationship->term_taxonomy->term)) {
+                                                            $eventType = $relationship->term_taxonomy->term->name;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+                                            {{ $eventType }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $eventType = 'N/A';
+                                                if (!empty($jogo->term_relationships)) {
+                                                    foreach ($jogo->term_relationships as $relationship) {
+                                                        if (isset($relationship->term_taxonomy) && $relationship->term_taxonomy->taxonomy == 'event_listing_category' && isset($relationship->term_taxonomy->term)) {
                                                             $eventType = $relationship->term_taxonomy->term->name;
                                                             break;
                                                         }
