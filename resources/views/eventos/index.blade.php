@@ -38,20 +38,22 @@
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">CAMPEONATO</th>
-                                    <th scope="col" class="px-6 py-3">DESCRIÇÃO</th>
-                                    <th scope="col" class="px-6 py-3">SLUG</th>
+                                    <th scope="col" class="px-6 py-3">ANO</th>
+                                    <th scope="col" class="px-6 py-3">DATA INICIO</th>
+                                    <th scope="col" class="px-6 py-3">DATA FIM</th>
                                     <th scope="col" class="px-6 py-3">AÇÃO</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($eventos as $evento)
+                                @foreach ($campeonatos as $campeonato)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <th scope="row" class="px-6 py-4">{{ $evento->term->name }}</th>
-                                        <td class="px-6 py-4">{{ $evento->description }}</td>
-                                        <td class="px-6 py-4">{{ $evento->term->slug }}</td>
+                                        <th scope="row" class="px-6 py-4">{{ $campeonato->cpo_nome }}</th>
+                                        <td class="px-6 py-4">{{ $campeonato->cpo_ano }}</td>
+                                        <td class="px-6 py-4">{{ \Carbon\Carbon::parse($campeonato->cpo_dt_inicio)->format('d/m/Y') }}</td>
+                                        <td class="px-6 py-4">{{ \Carbon\Carbon::parse($campeonato->cpo_dt_fim)->format('d/m/Y') }}</td>
                                         <td class="px-6 py-4 flex space-x-2">
-                                            <a href="{{ route('eventos.edit', $evento->term->term_id) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
-                                            <form action="{{ route('eventos.destroy', $evento->term->term_id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover este evento?');">
+                                            <a href="{{ route('eventos.edit', $campeonato->cpo_id) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
+                                            <form action="{{ route('eventos.destroy', $campeonato->cpo_id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover este evento?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Deletar</button>

@@ -20,20 +20,38 @@
                                 </ul>
                             </div>
                         @endif
-                        <form action="{{ route('eventos.update', $wpTermTaxonomy->term_taxonomy_id) }}" method="POST">
+                        <form action="{{ route('eventos.update', $campeonato->cpo_id) }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="mb-4">
-                                <label for="name" class="block text-gray-700">CAMPEONATO:</label>
-                                <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name', $wpTerm->name) }}">
+                                <label for="cpo_nome" class="block text-gray-700">CAMPEONATO:</label>
+                                <input type="text" name="cpo_nome" id="cpo_nome" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_nome', $campeonato->cpo_nome) }}">
                             </div>
                             <div class="mb-4">
                                 <label for="slug" class="block text-gray-700">SLUG:</label>
                                 <input type="text" name="slug" id="slug" class="w-full border border-gray-300 p-2 rounded" value="{{ old('slug', $wpTerm->slug) }}">
                             </div>
                             <div class="mb-4">
-                                <label for="description" class="block text-gray-700">DESCRIÇÃO:</label>
-                                <textarea name="description" id="description" class="w-full border border-gray-300 p-2 rounded">{{ old('description', $wpTermTaxonomy->description)}}</textarea>
+                                <label for="cpo_ano" class="block text-gray-700">ANO:</label>
+                                <select name="cpo_ano" id="cpo_ano" class="w-full border border-gray-300 p-2 rounded">
+                                    <option value="">Selecione o ano</option>
+                                    @php
+                                        $selectedAno = old('cpo_ano', $campeonato->cpo_ano);
+                                    @endphp
+                                    @for ($year = date('Y') + 1; $year >= 2000; $year--)
+                                        <option value="{{ $year }}" {{ (string)$selectedAno === (string)$year ? 'selected' : '' }}>{{ $year }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="cpo_dt_inicio" class="block text-gray-700">DATA INICIO:</label>
+                                <input type="date" name="cpo_dt_inicio" id="cpo_dt_inicio" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_dt_inicio', $campeonato->cpo_dt_inicio) }}">
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="cpo_dt_fim" class="block text-gray-700">DATA FIM:</label>
+                                <input type="date" name="cpo_dt_fim" id="cpo_dt_fim" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_dt_fim', $campeonato->cpo_dt_fim) }}">
                             </div>
                            
                             <div class="flex justify-between">
@@ -50,7 +68,7 @@
 </x-app-layout>
 
 <script>
-    document.getElementById('name').addEventListener('input', function() {
+    document.getElementById('cpo_nome').addEventListener('input', function() {
         var name = this.value;
         var slug = name.toLowerCase()
             .replace(/ /g, '-') // Substitui espaços por hífens

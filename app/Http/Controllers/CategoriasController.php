@@ -5,17 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Wp_Term_Taxonomy;
 use App\Models\Wp_Terms;
+use App\Models\Categorias;
 
 class CategoriasController extends Controller
 {
     public function index()
     {
-
-        $categorias = Wp_Term_Taxonomy::with('term')
-                    ->where('taxonomy', 'event_listing_category')
-                    ->get();
-
-       // dd($categorias); die;
+        $categorias = Categorias::all();
    
         return view('categorias.index', compact('categorias'));
     }
@@ -33,6 +29,7 @@ class CategoriasController extends Controller
             'description' => 'nullable|string',
         ]);
 
+
         // Inserir dados na tabela wp_terms
         $wpTerm = Wp_Terms::create([
             'name' => $request->input('name'),
@@ -48,15 +45,22 @@ class CategoriasController extends Controller
             'count'         => 0,
         ]);
 
+        Categorias::create([
+            'cto_nome' => $request->input('name'),
+            'cto_slug' => $request->input('slug'),
+            'cto_term_tx_id' => $wpTerm->term_id,
+            'cto_descricao' => $request->input('description') ?? '',
+        ]);
+
         return redirect()->route('categorias.index')->with('success', 'Categoria criada com sucesso');
     }
 
     public function edit($id)
     {
-        $wpTermTaxonomy = Wp_Term_Taxonomy::with('term')->findOrFail($id);
-        $wpTerm = $wpTermTaxonomy->term;
 
-        return view('categorias.edit', compact('wpTermTaxonomy', 'wpTerm'));
+        $categoria = Categorias::findOrFail($id);
+
+        return view('categorias.edit', compact('categoria'));
     }
 
     public function update(Request $request, $id)
@@ -67,9 +71,17 @@ class CategoriasController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $request->description ? empty($request->description) : ' '; 
+        $request->description ? empty($request->description) : ' ';
 
-        $wpTermTaxonomy = Wp_Term_Taxonomy::findOrFail($id);
+        $categoria = Categorias::findOrFail($id);
+
+        $categoria->update([
+            'cto_nome' => $request->input('name'),
+            'cto_slug' => $request->input('slug'),
+            'cto_descricao' => $request->input('description') ?? '',
+        ]);
+
+        $wpTermTaxonomy = Wp_Term_Taxonomy::findOrFail($categoria->cto_term_tx_id);
         $wpTerm = $wpTermTaxonomy->term;
 
         // Atualize os dados de wp_terms
@@ -92,13 +104,25 @@ class CategoriasController extends Controller
 
     public function destroy($id)
     {
-        $taxonomy = Wp_Term_Taxonomy::findOrFail($id);
+        try {
+        $categoria = Categorias::findOrFail($id);
+
+        $taxonomy = Wp_Term_Taxonomy::findOrFail($categoria->cto_term_tx_id);
 
         // Primeiro, deletar o registro de wp_term_taxonomy
         $taxonomy->delete();
 
         // Depois, deletar o registro correspondente em wp_terms
         Wp_Terms::where('term_id', $taxonomy->term_id)->delete();
+
+        $categoria->delete();
+        
+        } catch (\Exception $e) {
+            logger()->error('Erro ao deletar categoria: ' . $e->getMessage());
+        }
+
+         // Redirecionar com mensagem de sucesso
+
 
         return redirect()->route('categorias.index')->with('success', 'Categoria deletada com sucesso');
     }

@@ -20,20 +20,20 @@
                                 </ul>
                             </div>
                         @endif
-                        <form action="{{ route('categorias.update', $wpTermTaxonomy->term_taxonomy_id) }}" method="POST">
+                        <form action="{{ route('categorias.update', $categoria->cto_id) }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="mb-4">
                                 <label for="name" class="block text-gray-700">CATEGORIA:</label>
-                                <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name', $wpTerm->name) }}">
+                                <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name', $categoria->cto_nome) }}">
                             </div>
                             <div class="mb-4">
                                 <label for="slug" class="block text-gray-700">SLUG:</label>
-                                <input type="text" name="slug" id="slug" class="w-full border border-gray-300 p-2 rounded" value="{{ old('slug', $wpTerm->slug) }}">
+                                <input type="text" name="slug" id="slug" class="w-full border border-gray-300 p-2 rounded" value="{{ old('slug', $categoria->cto_slug) }}">
                             </div>
                             <div class="mb-4">
                                 <label for="description" class="block text-gray-700">Descrição:</label>
-                                <textarea name="description" id="description" class="w-full border border-gray-300 p-2 rounded">{{ old('description', $wpTermTaxonomy->description)}}</textarea>
+                                <textarea name="description" id="description" class="w-full border border-gray-300 p-2 rounded">{{ old('description', $categoria->cto_descricao)}}</textarea>
                             </div>
                            
                             <div class="flex justify-between">

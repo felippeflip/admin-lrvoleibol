@@ -46,12 +46,12 @@
                             <tbody>
                                 @foreach ($categorias as $categoria)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <th scope="row" class="px-6 py-4">{{ $categoria->term->name }}</th>
-                                        <td class="px-6 py-4">{{ $categoria->description }}</td>
-                                        <td class="px-6 py-4">{{ $categoria->term->slug }}</td>
+                                        <th scope="row" class="px-6 py-4">{{ $categoria->cto_nome }}</th>
+                                        <td class="px-6 py-4">{{ $categoria->cto_descricao }}</td>
+                                        <td class="px-6 py-4">{{ $categoria->cto_slug }}</td>
                                         <td class="px-6 py-4 flex space-x-2">
-                                            <a href="{{ route('categorias.edit', $categoria->term->term_id) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
-                                            <form action="{{ route('categorias.destroy', $categoria->term->term_id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover esta categoria?');">
+                                            <a href="{{ route('categorias.edit', $categoria->cto_id) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
+                                            <form action="{{ route('categorias.destroy', $categoria->cto_id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover esta categoria?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Deletar</button>

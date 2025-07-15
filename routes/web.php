@@ -50,11 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/resultados/import', [FuncoesController::class, 'showImport'])->name('resultados.showImportForm');
     Route::post('/resultados/upload', [FuncoesController::class, 'upload'])->name('resultados.upload');
 
-    /**
-     * Projeto Futuro: Inserir mais de um jogo no mesmo submit
-     */
-   // Route::get('/multi-insert', [JogosController::class, 'createMulti'])->name('multi.insert');
-   // Route::post('/multi-insert', 'MultiInsertController@store')->name('multi.insert.store');
+   
 });
 
 
