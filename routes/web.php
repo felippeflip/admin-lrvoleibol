@@ -10,6 +10,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\ProfileUserController;
 use App\Http\Controllers\FuncoesController;
+use App\Http\Controllers\TimeController;
 
 
 
@@ -31,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
 
     Route::resource('categorias', CategoriasController::class);
+
+    Route::resource('times', TimeController::class);
 
     Route::resource('eventos', TiposEventosController::class);
 

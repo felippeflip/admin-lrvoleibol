@@ -42,6 +42,10 @@
                                 {{ __('Campeonatos') }}
                             </x-dropdown-link>
 
+                            <x-dropdown-link :href="route('times.index')">
+                                {{ __('Times') }}
+                            </x-dropdown-link>
+
                             <x-dropdown-link :href="route('categorias.index')">
                                 {{ __('Categorias') }}
                             </x-dropdown-link>
