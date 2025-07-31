@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <!-- Mensagem de Sucesso -->
                     @if (session('success'))
-                        <div class="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-md fade-out-message" style="background-color: #58FF33;">
+                        <div class="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-md fade-out-message flash-message" role="alert" style="background-color: #58FF33;">
                             {{ session('success') }}
                         </div>
                     @endif

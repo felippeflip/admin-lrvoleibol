@@ -94,8 +94,8 @@ class Time extends Model
         }
 
         // Retorna null ou uma imagem de placeholder se não houver logo
-        return null;
+        // return null;
         // Ou, para um placeholder:
-        // return asset('images/placeholder-logo.png');
+         return asset('images/placeholder-logo.png');
     }
 }

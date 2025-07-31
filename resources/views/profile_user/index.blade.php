@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl mb-4">Perfis e Usuários</h1>
                     @if (session('success'))
-                        <div class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4">
+                        <div class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4 flash-message" role="alert">
                             {{ session('success') }}
                         </div>
                     @endif

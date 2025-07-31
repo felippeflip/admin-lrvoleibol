@@ -11,6 +11,7 @@ use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\ProfileUserController;
 use App\Http\Controllers\FuncoesController;
 use App\Http\Controllers\TimeController;
+use App\Http\Controllers\AtletaController;
 
 
 
@@ -34,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('categorias', CategoriasController::class);
 
     Route::resource('times', TimeController::class);
+
+    Route::resource('atletas', AtletaController::class);
 
     Route::resource('eventos', TiposEventosController::class);
 

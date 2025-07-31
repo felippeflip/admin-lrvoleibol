@@ -14,7 +14,7 @@
 
                         <!-- Mensagem de sucesso -->
                         @if (session('success'))
-                            <div class="bg-green-500 text-white p-2 mb-4 rounded">
+                            <div class="bg-green-500 text-white p-2 mb-4 rounded flash-message" role="alert">
                                 {{ session('success') }}
                             </div>
                         @endif

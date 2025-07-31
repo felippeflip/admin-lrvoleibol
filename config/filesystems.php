@@ -58,8 +58,15 @@ return [
 
         'times_logos' => [
             'driver' => 'local',
-            'root' => storage_path('app/public/times_logos'), // Ou public_path('images/team_logos') se quiser acessível via URL diretamente
-            'url' => env('APP_URL').'/storage/times_logos', // Para o storage_path
+            'root' => storage_path('app/public/times_logos'), 
+            'url' => env('APP_URL').'/storage/times_logos',
+            'visibility' => 'public',
+        ],
+
+        'atletas_fotos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/atletas_fotos'), 
+            'url' => env('APP_URL').'/storage/atletas_fotos', 
             'visibility' => 'public',
         ],
 

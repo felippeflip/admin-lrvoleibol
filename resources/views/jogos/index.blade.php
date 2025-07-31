@@ -6,7 +6,8 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        {{-- ALTERAÇÃO AQUI: de 'max-w-7xl' para 'w-full' --}}
+        <div class="w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
@@ -15,19 +16,12 @@
                         <a href="{{ route('jogos.showImportForm') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">IMPORTAR JOGOS</a>
                     </div>
 
-                    <!-- Mensagem de sucesso -->
                     @if (session('success'))
-                        <div id="success-message" class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4">
+                        <div id="success-message" class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4 flash-message" role="alert">
                             {{ session('success') }}
                         </div>
-                        <script>
-                            setTimeout(function() {
-                                document.getElementById('success-message').style.display = 'none';
-                            }, 3000);
-                        </script>
                     @endif
 
-                    <!-- Table List -->
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         @if ($errors->any())
                             <div class="bg-red-500 text-white p-2 my-4">
@@ -103,14 +97,12 @@
         </div>
     </div>
 
-    <!-- Script para confirmação -->
     <script>
         function confirmDelete() {
             return confirm('Tem certeza que deseja remover este jogo?');
         }
     </script>
 
-    <!-- Scripts do DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>

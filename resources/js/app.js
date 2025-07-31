@@ -8,209 +8,262 @@ window.Alpine = Alpine;
 Alpine.start();
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Elementos do formulário
-    const cepInput = document.getElementById('tim_cep');
-    const enderecoInput = document.getElementById('tim_endereco');
-    const bairroInput = document.getElementById('tim_bairro');
-    const cidadeInput = document.getElementById('tim_cidade');
-    const ufInput = document.getElementById('tim_uf');
-    const numeroInput = document.getElementById('tim_numero');
-    const celularInput = document.getElementById('tim_celular');
-    const telefoneInput = document.getElementById('tim_telefone');
-    const cnpjInput = document.getElementById('tim_cnpj');
-    // Referência genérica ao formulário (serve para 'create' e 'edit')
-    const currentForm = document.getElementById('timeForm') || document.getElementById('timeEditForm');
+    // --- Elementos do formulário (GENÉRICOS para Times e Atletas) ---
+    // Atletas
+    const atlCepInput = document.getElementById('atl_cep');
+    const atlEnderecoInput = document.getElementById('atl_endereco');
+    const atlBairroInput = document.getElementById('atl_bairro');
+    const atlCidadeInput = document.getElementById('atl_cidade');
+    const atlEstadoInput = document.getElementById('atl_estado'); // atl_estado no lugar de atl_uf
+    const atlNumeroInput = document.getElementById('atl_numero');
+    const atlCelularInput = document.getElementById('atl_celular'); // atl_celular
+    const atlTelefoneInput = document.getElementById('atl_telefone'); // atl_telefone
+    const atlCpfInput = document.getElementById('atl_cpf');
+    const atlRgInput = document.getElementById('atl_rg');
+    const atletaForm = document.getElementById('atletaForm'); // Formulário de criação de Atleta
+    const atletaFormEdit = document.getElementById('atletaFormEdit'); // Formulário de edição de Atleta
+
+    // Times (manter para compatibilidade com o formulário de Times)
+    const timCepInput = document.getElementById('tim_cep');
+    const timEnderecoInput = document.getElementById('tim_endereco');
+    const timBairroInput = document.getElementById('tim_bairro');
+    const timCidadeInput = document.getElementById('tim_cidade');
+    const timUfInput = document.getElementById('tim_uf');
+    const timNumeroInput = document.getElementById('tim_numero');
+    const timCelularInput = document.getElementById('tim_celular');
+    const timTelefoneInput = document.getElementById('tim_telefone');
+    const timCnpjInput = document.getElementById('tim_cnpj');
+    const timeForm = document.getElementById('timeForm'); // Formulário de criação de Time
+
+    // Referência ao formulário atual que está sendo carregado
+    const currentForm = atletaForm || atletaFormEdit || timeForm;
 
     // --- Funções de Máscara ---
-
-    // Função genérica para remover caracteres não numéricos
     function unmask(value) {
         return value ? value.replace(/\D/g, '') : '';
     }
 
-    // Máscara para Celular (XX) XXXXX-XXXX
     function maskCelular(value) {
         value = unmask(value);
-        if (value.length > 10) { // Com 9º dígito
-            value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
-        } else if (value.length > 6) { // Sem 9º dígito (para telefones fixos ou antigos)
-            value = value.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
+        if (value.length > 10) {
+            return value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (value.length > 6) {
+            return value.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
         } else if (value.length > 2) {
-            value = value.replace(/^(\d{2})(\d+)/, '($1) $2');
+            return value.replace(/^(\d{2})(\d+)/, '($1) $2');
         }
         return value;
     }
 
-    // Máscara para Telefone (XX) XXXX-XXXX (padrão de 8 dígitos após DDD)
     function maskTelefone(value) {
         value = unmask(value);
         if (value.length > 6) {
-            value = value.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
+            return value.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
         } else if (value.length > 2) {
-            value = value.replace(/^(\d{2})(\d+)/, '($1) $2');
+            return value.replace(/^(\d{2})(\d+)/, '($1) $2');
         }
         return value;
     }
 
-    // Máscara para CNPJ XX.XXX.XXX/XXXX-XX
     function maskCNPJ(value) {
         value = unmask(value);
         if (value.length > 12) {
-            value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
+            return value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
         } else if (value.length > 8) {
-            value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+            return value.replace(/^(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
         } else if (value.length > 5) {
-            value = value.replace(/^(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+            return value.replace(/^(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
         } else if (value.length > 2) {
-            value = value.replace(/^(\d{2})(\d+)/, '$1.$2');
+            return value.replace(/^(\d{2})(\d+)/, '$1.$2');
         }
         return value;
     }
 
-    // Máscara para CEP XXXXX-XXX
+    function maskCPF(value) {
+        value = unmask(value);
+        if (value.length > 9) {
+            return value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+        } else if (value.length > 6) {
+            return value.replace(/^(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+        } else if (value.length > 3) {
+            return value.replace(/^(\d{3})(\d+)/, '$1.$2');
+        }
+        return value;
+    }
+
+    function maskRG(value) {
+        value = unmask(value);
+        if (value.length > 8) {
+            return value.replace(/^(\d{2})(\d{3})(\d{3})(\d{1}).*/, '$1.$2.$3-$4');
+        } else if (value.length > 2) {
+            return value.replace(/^(\d{2})(\d+)/, '$1.$2');
+        }
+        return value;
+    }
+
     function maskCEP(value) {
         value = unmask(value);
         if (value.length > 5) {
-            value = value.replace(/^(\d{5})(\d{3}).*/, '$1-$2');
+            return value.replace(/^(\d{5})(\d{3}).*/, '$1-$2');
         }
         return value;
     }
 
     // --- Funções de Manipulação do Endereço (do CEP) ---
-    function limpaFormularioEndereco() {
-        // Esta função agora só será chamada quando o usuário interagir com o CEP
-        if (enderecoInput) enderecoInput.value = "";
-        if (bairroInput) bairroInput.value = "";
-        if (cidadeInput) cidadeInput.value = "";
-        if (ufInput) ufInput.value = "";
-        if (numeroInput) numeroInput.value = ""; // Também limpa o número, caso queira que o usuário redigite
+    function limpaFormularioEndereco(endereco, bairro, cidade, uf, numero) {
+        if (endereco) endereco.value = "";
+        if (bairro) bairro.value = "";
+        if (cidade) cidade.value = "";
+        if (uf) uf.value = "";
+        if (numero) numero.value = "";
 
-        // Garante que os campos fiquem editáveis
-        if (enderecoInput) enderecoInput.readOnly = false;
-        if (bairroInput) bairroInput.readOnly = false;
-        if (cidadeInput) cidadeInput.readOnly = false;
-        if (ufInput) ufInput.readOnly = false;
+        if (endereco) endereco.readOnly = false;
+        if (bairro) bairro.readOnly = false;
+        if (cidade) cidade.readOnly = false;
+        if (uf) uf.readOnly = false;
 
-        // Remove o estilo de campo bloqueado
-        if (enderecoInput) enderecoInput.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-        if (bairroInput) bairroInput.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-        if (cidadeInput) cidadeInput.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-        if (ufInput) ufInput.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+        if (endereco) endereco.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+        if (bairro) bairro.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+        if (cidade) cidade.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+        if (uf) uf.classList.remove('bg-gray-200', 'dark:bg-gray-600');
     }
 
-    function preencheFormularioEndereco(data) {
-        if (enderecoInput) enderecoInput.value = data.logradouro || "";
-        if (bairroInput) bairroInput.value = data.bairro || "";
-        if (cidadeInput) cidadeInput.value = data.localidade || "";
-        if (ufInput) ufInput.value = data.uf || "";
+    function preencheFormularioEndereco(data, endereco, bairro, cidade, uf, numero) {
+        if (endereco) endereco.value = data.logradouro || "";
+        if (bairro) bairro.value = data.bairro || "";
+        if (cidade) cidade.value = data.localidade || "";
+        if (uf) uf.value = data.uf || "";
 
-        // Bloqueia e estiliza campos preenchidos pela API
-        if (enderecoInput) enderecoInput.readOnly = true;
-        if (bairroInput) bairroInput.readOnly = true;
-        if (cidadeInput) cidadeInput.readOnly = true;
-        if (ufInput) ufInput.readOnly = true;
+        if (endereco) endereco.readOnly = true;
+        if (bairro) bairro.readOnly = true;
+        if (cidade) cidade.readOnly = true;
+        if (uf) uf.readOnly = true;
 
-        if (enderecoInput) enderecoInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
-        if (bairroInput) bairroInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
-        if (cidadeInput) cidadeInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
-        if (ufInput) ufInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
+        if (endereco) endereco.classList.add('bg-gray-200', 'dark:bg-gray-600');
+        if (bairro) bairro.classList.add('bg-gray-200', 'dark:bg-gray-600');
+        if (cidade) cidade.classList.add('bg-gray-200', 'dark:bg-gray-600');
+        if (uf) uf.classList.add('bg-gray-200', 'dark:bg-gray-600');
 
-        if (numeroInput) numeroInput.focus(); // Foca no campo número após preencher
+        if (numero) numero.focus();
     }
 
-    // --- Aplicar máscaras aos valores existentes ao carregar a página (para o formulário de edição) ---
-    // Esta é a principal mudança: as máscaras são aplicadas aos valores que o Blade já inseriu.
-    if (celularInput && celularInput.value) {
-        celularInput.value = maskCelular(celularInput.value);
-    }
-    if (telefoneInput && telefoneInput.value) {
-        telefoneInput.value = maskTelefone(telefoneInput.value);
-    }
-    if (cnpjInput && cnpjInput.value) {
-        cnpjInput.value = maskCNPJ(cnpjInput.value);
-    }
-    if (cepInput && cepInput.value) {
-        cepInput.value = maskCEP(cepInput.value);
-        // Se o CEP já veio preenchido, assumimos que os campos de endereço também estão.
-        // Apenas aplica o estilo de "readOnly" e a cor de fundo cinza.
-        if (enderecoInput && enderecoInput.value) {
-            if (enderecoInput) enderecoInput.readOnly = true;
-            if (bairroInput) bairroInput.readOnly = true;
-            if (cidadeInput) cidadeInput.readOnly = true;
-            if (ufInput) ufInput.readOnly = true;
+    // --- Lógica de CEP para Atletas e Times (agora consolidada) ---
+    function setupCepLogic(cepInputEl, enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl) {
+        if (cepInputEl) {
+            // Aplicar máscara ao carregar (útil para edição)
+            if (cepInputEl.value) {
+                cepInputEl.value = maskCEP(cepInputEl.value);
+                // Se o CEP já veio preenchido, aplica o estilo de "readOnly"
+                if (enderecoInputEl && enderecoInputEl.value) {
+                    enderecoInputEl.readOnly = true;
+                    bairroInputEl.readOnly = true;
+                    cidadeInputEl.readOnly = true;
+                    ufInputEl.readOnly = true;
+                    enderecoInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                    bairroInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                    cidadeInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                    ufInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                }
+            }
 
-            if (enderecoInput) enderecoInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
-            if (bairroInput) bairroInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
-            if (cidadeInput) cidadeInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
-            if (ufInput) ufInput.classList.add('bg-gray-200', 'dark:bg-gray-600');
+            cepInputEl.addEventListener('input', (e) => {
+                e.target.value = maskCEP(e.target.value);
+            });
+
+            cepInputEl.addEventListener('blur', function() {
+                let cep = unmask(cepInputEl.value);
+                
+                if (cep != "" && /^[0-9]{8}$/.test(cep)) {
+                    limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+                    
+                    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!("erro" in data)) {
+                                preencheFormularioEndereco(data, enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+                            } else {
+                                limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+                                alert("CEP não encontrado.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar CEP:', error);
+                            limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+                            alert("Erro ao buscar CEP. Verifique sua conexão ou tente novamente.");
+                        });
+                } else if (cep === "") {
+                    limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+                } else {
+                    limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+                    alert("Formato de CEP inválido.");
+                }
+            });
+            // Opcional: Iniciar com campos de endereço limpos e habilitados se não houver valor
+            if (!cepInputEl.value) {
+                limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
+            }
         }
     }
 
+    // --- Aplica lógica de CEP e Máscaras quando a página carrega ---
+    // Para formulários de Times (create e edit)
+    if (timeForm || document.getElementById('timeEditForm')) {
+        setupCepLogic(timCepInput, timEnderecoInput, timBairroInput, timCidadeInput, timUfInput, timNumeroInput);
+        if (timCelularInput) timCelularInput.addEventListener('input', (e) => { e.target.value = maskCelular(e.target.value); });
+        if (timTelefoneInput) timTelefoneInput.addEventListener('input', (e) => { e.target.value = maskTelefone(e.target.value); });
+        if (timCnpjInput) timCnpjInput.addEventListener('input', (e) => { e.target.value = maskCNPJ(e.target.value); });
 
-    // --- Aplicar máscaras aos campos conforme o usuário digita ---
-    if (celularInput) {
-        celularInput.addEventListener('input', (e) => {
-            e.target.value = maskCelular(e.target.value);
-        });
-    }
-    if (telefoneInput) {
-        telefoneInput.addEventListener('input', (e) => {
-            e.target.value = maskTelefone(e.target.value);
-        });
-    }
-    if (cnpjInput) {
-        cnpjInput.addEventListener('input', (e) => {
-            e.target.value = maskCNPJ(e.target.value);
-        });
-    }
-    if (cepInput) {
-        cepInput.addEventListener('input', (e) => {
-            e.target.value = maskCEP(e.target.value);
-        });
+        // Aplica máscaras a valores existentes (para edição de times)
+        if (timCelularInput && timCelularInput.value) timCelularInput.value = maskCelular(timCelularInput.value);
+        if (timTelefoneInput && timTelefoneInput.value) timTelefoneInput.value = maskTelefone(timTelefoneInput.value);
+        if (timCnpjInput && timCnpjInput.value) timCnpjInput.value = maskCNPJ(timCnpjInput.value);
     }
 
-    // --- Event Listener para o CEP (na perda de foco - blur) ---
-    if (cepInput) {
-        cepInput.addEventListener('blur', function() {
-            let cep = unmask(cepInput.value); // Usa a função unmask
+    // Para formulários de Atletas (create e edit)
+    if (atletaForm || atletaFormEdit) {
+        setupCepLogic(atlCepInput, atlEnderecoInput, atlBairroInput, atlCidadeInput, atlEstadoInput, atlNumeroInput); // atl_estado para UF
+        if (atlCelularInput) atlCelularInput.addEventListener('input', (e) => { e.target.value = maskCelular(e.target.value); });
+        if (atlTelefoneInput) atlTelefoneInput.addEventListener('input', (e) => { e.target.value = maskTelefone(e.target.value); });
+        if (atlCpfInput) atlCpfInput.addEventListener('input', (e) => { e.target.value = maskCPF(e.target.value); });
+        if (atlRgInput) atlRgInput.addEventListener('input', (e) => { e.target.value = maskRG(e.target.value); });
 
-            // Só busca o CEP se ele não estiver vazio e for um CEP válido
-            if (cep != "" && /^[0-9]{8}$/.test(cep)) {
-                limpaFormularioEndereco(); // Limpa os campos antes de uma nova busca
-                
-                fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!("erro" in data)) {
-                            preencheFormularioEndereco(data);
-                        } else {
-                            limpaFormularioEndereco();
-                            alert("CEP não encontrado.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro ao buscar CEP:', error);
-                        limpaFormularioEndereco();
-                        alert("Erro ao buscar CEP. Verifique sua conexão ou tente novamente.");
-                    });
-            } else if (cep === "") { // Se o CEP foi esvaziado, limpa os campos de endereço
-                limpaFormularioEndereco();
-            } else { // Se o formato do CEP é inválido
-                limpaFormularioEndereco();
-                alert("Formato de CEP inválido.");
-            }
-        });
-        // IMPORTANTE: A LINHA ABAIXO FOI REMOVIDA.
-        // limpaFormularioEndereco(); // NÃO chame esta função no DOMContentLoaded para não apagar os dados existentes!
+        // Aplica máscaras a valores existentes (para edição de atletas)
+        if (atlCelularInput && atlCelularInput.value) atlCelularInput.value = maskCelular(atlCelularInput.value);
+        if (atlTelefoneInput && atlTelefoneInput.value) atlTelefoneInput.value = maskTelefone(atlTelefoneInput.value);
+        if (atlCpfInput && atlCpfInput.value) atlCpfInput.value = maskCPF(atlCpfInput.value);
+        if (atlRgInput && atlRgInput.value) atlRgInput.value = maskRG(atlRgInput.value);
     }
 
-    // --- Pré-processamento antes de enviar o formulário (remove máscaras) ---
+
+    // --- Pre-processamento antes de enviar o formulário (remove máscaras) ---
     if (currentForm) {
         currentForm.addEventListener('submit', function() {
-            if (celularInput) celularInput.value = unmask(celularInput.value);
-            if (telefoneInput) telefoneInput.value = unmask(telefoneInput.value);
-            if (cnpjInput) cnpjInput.value = unmask(cnpjInput.value);
-            if (cepInput) cepInput.value = unmask(cepInput.value);
+            if (atlCelularInput) atlCelularInput.value = unmask(atlCelularInput.value);
+            if (atlTelefoneInput) atlTelefoneInput.value = unmask(atlTelefoneInput.value);
+            if (atlCpfInput) atlCpfInput.value = unmask(atlCpfInput.value);
+            if (atlRgInput) atlRgInput.value = unmask(atlRgInput.value);
+            if (atlCepInput) atlCepInput.value = unmask(atlCepInput.value);
+
+            // Para o formulário de times (se for o caso)
+            if (timCelularInput) timCelularInput.value = unmask(timCelularInput.value);
+            if (timTelefoneInput) timTelefoneInput.value = unmask(timTelefoneInput.value);
+            if (timCnpjInput) timCnpjInput.value = unmask(timCnpjInput.value);
+            if (timCepInput) timCepInput.value = unmask(timCepInput.value);
         });
     }
+
+    // --- Lógica para Mensagens Flash (Sucesso, Erro, etc.) ---
+    const flashMessages = document.querySelectorAll('.flash-message');
+
+    if (flashMessages.length > 0) {
+        flashMessages.forEach(message => {
+            setTimeout(() => {
+                // Adiciona classes para uma transição suave
+                message.classList.add('transition', 'opacity-0', 'ease-out', 'duration-500');
+                // Remove o elemento do DOM após a transição
+                message.addEventListener('transitionend', () => message.remove());
+            }, 3000); // 3000 milissegundos = 3 segundos
+        });
+    }
+
 });
