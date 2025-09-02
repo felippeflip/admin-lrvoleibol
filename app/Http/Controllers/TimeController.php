@@ -38,6 +38,12 @@ class TimeController extends Controller
      */
    public function store(Request $request)
     {
+
+        // remover caracteres não numéricos do CNPJ
+        if ($request->has('tim_cnpj')) {
+          $request['tim_cnpj'] =  removeSpecialCharsFromCNPJ($request->tim_cnpj);
+        }
+
         $request->validate([
             'tim_user_id' => 'nullable|integer',
             'tim_registro' => 'nullable|integer',
@@ -123,6 +129,13 @@ class TimeController extends Controller
      */
     public function update(Request $request, Time $time)
     {
+
+         // remover caracteres não numéricos do CNPJ
+        if ($request->has('tim_cnpj')) {
+          $request['tim_cnpj'] =  removeSpecialCharsFromCNPJ($request->tim_cnpj);
+        }
+
+
         $request->validate([
             'tim_user_id' => 'nullable|integer',
             'tim_registro' => 'nullable|integer',

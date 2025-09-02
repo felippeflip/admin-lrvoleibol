@@ -12,6 +12,8 @@ use App\Http\Controllers\ProfileUserController;
 use App\Http\Controllers\FuncoesController;
 use App\Http\Controllers\TimeController;
 use App\Http\Controllers\AtletaController;
+use App\Http\Controllers\EquipesController;
+use App\Http\Controllers\EquipeCampeonatoController;
 
 
 
@@ -19,8 +21,6 @@ use App\Http\Controllers\AtletaController;
 Route::get('/', function () {
     return view('auth.login');
 });
-
-
 
 
 Route::middleware('auth')->group(function () {
@@ -41,6 +41,17 @@ Route::middleware('auth')->group(function () {
     Route::resource('eventos', TiposEventosController::class);
 
     Route::resource('jogos', JogosController::class);
+
+    Route::get('equipes/time/{time}', [EquipesController::class, 'indexForTime'])->name('equipes.index.for.time');
+
+    Route::resource('equipes', EquipesController::class);
+
+    Route::get('campeonatos/{campeonato}/equipes', [EquipeCampeonatoController::class, 'index'])->name('equipes.campeonato.index');
+    Route::get('campeonatos/{campeonato}/equipes/create', [EquipeCampeonatoController::class, 'create'])->name('equipes.campeonato.create');
+    Route::post('campeonatos/{campeonato}/equipes', [EquipeCampeonatoController::class, 'store'])->name('equipes.campeonato.store');
+    Route::delete('campeonatos/{campeonato}/equipes/{equipe}', [EquipeCampeonatoController::class, 'destroy'])->name('equipes.campeonato.destroy');
+
+
 
     Route::get('/test-create-roles', [JogosController::class, 'test']);
 

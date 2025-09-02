@@ -115,4 +115,13 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
         // Retorna uma imagem de placeholder se não houver foto
         return asset('images/placeholder-atleta.png'); // Crie esta imagem ou ajuste o caminho
     }
+
+    // Relacionamento N:N com Equipe_Campeonato (através da tabela elenco_equipe_campeonato)
+    public function participacoes()
+    {
+        return $this->belongsToMany(EquipeCampeonato::class, 'elenco_equipe_campeonato', 'ele_fk_atl_id', 'ele_fk_eqp_cpo_id')
+                    ->using(ElencoEquipeCampeonato::class)
+                    ->withPivot('ele_num_camisa', 'ele_posicao_atuando')
+                    ->withTimestamps();
+    }
 }

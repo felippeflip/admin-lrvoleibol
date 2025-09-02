@@ -19,5 +19,13 @@ class Categorias extends Model
         'cto_term_tx_id',
         'cto_descricao',
     ];
-    
+
+    /**
+     * Define o relacionamento reverso com o modelo Equipes.
+     * Uma categoria pode ter muitas equipes.
+     */
+    public function equipes()
+    {
+        return $this->hasMany(Equipes::class, 'eqp_categoria_id', 'cto_id');
+    }
 }

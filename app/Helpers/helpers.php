@@ -28,4 +28,21 @@ if (!function_exists('removeSpecialCharsFromCPF')) {
         // Remove tudo que não for números
         return preg_replace('/[^0-9]/', '', $cpf);
     }
+
+
+if(!function_exists('removeSpecialCharsFromCNPJ')) {
+    /**
+     * Remove special characters from CNPJ string, leaving only numbers.
+     *
+     * @param  string  $cnpj
+     * @return string
+     */
+    function removeSpecialCharsFromCNPJ($cnpj)
+    {
+        // Remove tudo que não for números
+        return preg_replace('/[^0-9]/', '', $cnpj);
+    }
+
+}
+
 }

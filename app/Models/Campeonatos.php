@@ -19,4 +19,13 @@ class Campeonatos extends Model
         'cpo_dt_inicio',
         'cpo_dt_fim',
     ];
+
+    // Adicione este relacionamento belongsToMany
+    public function equipes()
+    {
+        return $this->belongsToMany(Equipes::class, 'equipe_campeonato', 'cpo_fk_id', 'eqp_fk_id')
+                    ->using(EquipeCampeonato::class)
+                    ->withPivot('eqp_cpo_dt_inscricao', 'eqp_cpo_classificacaofinal')
+                    ->withTimestamps();
+    }
 }
