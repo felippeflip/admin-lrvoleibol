@@ -51,13 +51,13 @@
                                         <td class="px-6 py-4 flex flex-col space-y-2 justify-center items-center">
                                             {{-- Botões de Ação do Campeonato --}}
                                             <div class="flex space-x-2 w-full justify-center items-center">
-                                                <a href="{{ route('eventos.edit', $campeonato->cpo_id) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                                <a href="{{ route('eventos.edit', $campeonato->cpo_id) }}" title="Editar" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
                                                     {{-- Ícone de Editar --}}
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                     </svg>
                                                 </a>
-                                                <form action="{{ route('eventos.destroy', $campeonato->cpo_id) }}" method="POST" class="inline-flex w-4 mr-2 transform hover:text-purple-500 hover:scale-110" onsubmit="return confirm('Tem certeza que deseja excluir este evento?');">
+                                                <form action="{{ route('eventos.destroy', $campeonato->cpo_id) }}" method="POST" title="Excluir" class="inline-flex w-4 mr-2 transform hover:text-purple-500 hover:scale-110" onsubmit="return confirm('Tem certeza que deseja excluir este evento?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="w-full h-full">
@@ -70,13 +70,13 @@
                                             </div>
                                             {{-- Novos botões para Equipes --}}
                                             <div class="flex space-x-2 w-full justify-center items-center">
-                                                <a href="{{ route('equipes.campeonato.create', ['campeonato' => $campeonato->cpo_id]) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                                <a href="{{ route('equipes.campeonato.create', ['campeonato' => $campeonato->cpo_id]) }}" title="Adicionar" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
                                                     {{-- Ícone de Adicionar Equipe --}}
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                                     </svg>
                                                 </a>
-                                                <a href="{{ route('equipes.campeonato.index', ['campeonato' => $campeonato->cpo_id]) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                                <a href="{{ route('equipes.campeonato.index', ['campeonato' => $campeonato->cpo_id]) }}" title="Listar Times" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
                                                     {{-- Ícone de Visualizar Equipes --}}
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
