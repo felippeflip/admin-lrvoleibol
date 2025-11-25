@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Atleta; // Certifique-se de usar 'Atleta' com 'A' maiúsculo para o modelo
+use App\Models\atleta; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Para manipulação de arquivos
 use Illuminate\Support\Str; // Para gerar nomes de arquivo únicos
@@ -15,7 +15,7 @@ class AtletaController extends Controller
      */
     public function index()
     {
-        $atletas = Atleta::paginate(10); // Pagina 10 atletas por página
+        $atletas = atleta::paginate(10); // Pagina 10 atletas por página
         return view('atletas.index', compact('atletas'));
     }
 
@@ -88,7 +88,7 @@ class AtletaController extends Controller
         // --- Fim do Processamento do Upload ---
 
         try {
-            Atleta::create($data); // Cria um novo atleta com os dados preparados
+            atleta::create($data); // Cria um novo atleta com os dados preparados
         } catch (\Exception $e) {
             Log::error("Erro ao criar o atleta: " . $e->getMessage(), [
                 'request_data' => $data,
@@ -103,7 +103,7 @@ class AtletaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Atleta $atleta)
+    public function show(atleta $atleta)
     {
         return view('atletas.show', compact('atleta'));
     }
@@ -111,7 +111,7 @@ class AtletaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Atleta $atleta)
+    public function edit(atleta $atleta)
     {
         return view('atletas.edit', compact('atleta'));
     }
@@ -119,7 +119,7 @@ class AtletaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Atleta $atleta)
+    public function update(Request $request, atleta $atleta)
     {
         $request->validate([
             'atl_nome' => 'required|string|max:100',
