@@ -9,7 +9,7 @@ use App\Models\Categorias;
 use App\Models\Campeonatos;
 use App\Models\EquipeCampeonato; // Importar o modelo da tabela pivot
 
-class Equipes extends Model
+class Equipe extends Model
 {
     use HasFactory;
 
