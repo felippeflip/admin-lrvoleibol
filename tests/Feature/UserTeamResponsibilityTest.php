@@ -11,7 +11,7 @@ class UserTeamResponsibilityTest extends TestCase
 {
     // Using RefreshDatabase to ensure clean state. 
     // If this fails due to environment, we might need to change strategy.
-    use RefreshDatabase;
+    //use RefreshDatabase;
 
     public function test_can_assign_team_responsibility_on_create()
     {

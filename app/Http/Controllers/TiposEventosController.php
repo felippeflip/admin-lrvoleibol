@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Wp_Term_Taxonomy;
 use App\Models\Wp_Terms;
-use App\Models\Campeonatos;
+use App\Models\Campeonato;
 use Illuminate\Support\Facades\Log;
 
 
@@ -14,7 +14,7 @@ class TiposEventosController extends Controller
     public function index()
     {
 
-        $campeonatos = Campeonatos::all();
+        $campeonatos = Campeonato::all();
    
         return view('eventos.index', compact('campeonatos'));
     }
@@ -29,7 +29,7 @@ class TiposEventosController extends Controller
         $request->validate([
             'cpo_nome' =>       'required|string|max:50',
             'slug' =>           'required|string|max:50',
-            'cpo_ano' =>        'required|integer|min:2000|max:'.date('Y'),
+            'cpo_ano' =>        'required|integer|min:2000',
             'cpo_dt_inicio' =>  'required|date',
             'cpo_dt_fim' =>     'required|date|after_or_equal:cpo_dt_inicio',
         ]);
@@ -53,7 +53,7 @@ class TiposEventosController extends Controller
         ]);
 
         // Inserir dados na tabela campeonatos
-        Campeonatos::create([
+        Campeonato::create([
             'cpo_nome'         => $request->input('cpo_nome'),
             'cpo_term_tx_id'   => $wpTerm->term_id,
             'cpo_ano'          => $request->input('cpo_ano'),
@@ -77,7 +77,7 @@ class TiposEventosController extends Controller
     public function edit($id)
     {
 
-        $campeonato = Campeonatos::findOrFail($id);
+        $campeonato = Campeonato::findOrFail($id);
 
 
         $wpTermTaxonomy = Wp_Term_Taxonomy::with('term')->findOrFail($campeonato->cpo_term_tx_id);

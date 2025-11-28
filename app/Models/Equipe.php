@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Time;
-use App\Models\Categorias;
-use App\Models\Campeonatos;
+use App\Models\Categoria;
+use App\Models\Campeonato;
 use App\Models\EquipeCampeonato; // Importar o modelo da tabela pivot
 
 class Equipe extends Model
@@ -32,13 +32,13 @@ class Equipe extends Model
     // Define o relacionamento com o modelo Categoria
     public function categoria()
     {
-        return $this->belongsTo(Categorias::class, 'eqp_categoria_id', 'cto_id');
+        return $this->belongsTo(Categoria::class, 'eqp_categoria_id', 'cto_id');
     }
 
     // Relacionamento N:N com campeonatos através da tabela intermediária equipe_campeonato
     public function campeonatos()
     {
-        return $this->belongsToMany(Campeonatos::class, 'equipe_campeonato', 'eqp_fk_id', 'cpo_fk_id')
+        return $this->belongsToMany(Campeonato::class, 'equipe_campeonato', 'eqp_fk_id', 'cpo_fk_id')
                     ->using(EquipeCampeonato::class)
                     ->withPivot('eqp_cpo_dt_inscricao', 'eqp_cpo_classificacaofinal')
                     ->withTimestamps();

@@ -23,7 +23,7 @@ class Campeonato extends Model
     // Adicione este relacionamento belongsToMany
     public function equipes()
     {
-        return $this->belongsToMany(Equipes::class, 'equipe_campeonato', 'cpo_fk_id', 'eqp_fk_id')
+        return $this->belongsToMany(Equipe::class, 'equipe_campeonato', 'cpo_fk_id', 'eqp_fk_id')
                     ->using(EquipeCampeonato::class)
                     ->withPivot('eqp_cpo_dt_inscricao', 'eqp_cpo_classificacaofinal')
                     ->withTimestamps();

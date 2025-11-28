@@ -29,7 +29,7 @@ class EquipeCampeonato extends Pivot
      */
     public function equipe()
     {
-        return $this->belongsTo(Equipes::class, 'eqp_fk_id', 'eqp_id');
+        return $this->belongsTo(Equipe::class, 'eqp_fk_id', 'eqp_id');
     }
 
     /**
@@ -37,6 +37,6 @@ class EquipeCampeonato extends Pivot
      */
     public function campeonato()
     {
-        return $this->belongsTo(Campeonatos::class, 'cpo_fk_id', 'cpo_id');
+        return $this->belongsTo(Campeonato::class, 'cpo_fk_id', 'cpo_id');
     }
 }

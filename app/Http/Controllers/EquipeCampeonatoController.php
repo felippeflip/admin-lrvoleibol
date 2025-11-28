@@ -3,18 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Campeonatos;
-use App\Models\Equipes;
+use App\Models\Campeonato;
+use App\Models\Equipe;
 use Illuminate\Support\Facades\Log;
 
 class EquipeCampeonatoController extends Controller
 {
     /**
-     * Exibe a lista de equipes inscritas em um campeonato específico.
+     * Exibe a lista de Equipe inscritas em um campeonato específico.
      */
-    public function index(Campeonatos $campeonato)
+    public function index(Campeonato $campeonato)
     {
-        // Carrega as equipes associadas a este campeonato, com seus respectivos times e categorias.
+        // Carrega as Equipe associadas a este campeonato, com seus respectivos times e categorias.
         $equipes = $campeonato->equipes()->with(['time', 'categoria'])->paginate(10);
         
         // Passa o objeto do campeonato e as equipes para a view.
@@ -24,14 +24,14 @@ class EquipeCampeonatoController extends Controller
     /**
      * Exibe o formulário para adicionar equipes a um campeonato.
      */
-    public function create(Campeonatos $campeonato)
+    public function create(Campeonato $campeonato)
     {
         // Carrega as equipes já inscritas no campeonato
         $equipesInscritas = $campeonato->equipes()->with(['time', 'categoria'])->get();
         $equipesJaInscritasIds = $equipesInscritas->pluck('eqp_id');
 
         // Busca todas as equipes que NÃO ESTÃO inscritas neste campeonato
-        $equipesDisponiveis = Equipes::whereNotIn('eqp_id', $equipesJaInscritasIds)
+        $equipesDisponiveis = Equipe::whereNotIn('eqp_id', $equipesJaInscritasIds)
                                      ->with('time', 'categoria')
                                      ->orderBy('eqp_nome_detalhado')
                                      ->get();
@@ -43,7 +43,7 @@ class EquipeCampeonatoController extends Controller
     /**
      * Armazena as equipes selecionadas para um campeonato.
      */
-    public function store(Request $request, Campeonatos $campeonato)
+    public function store(Request $request, Campeonato $campeonato)
     {
         $request->validate([
             'equipe_ids' => 'nullable|array', // Agora pode ser null se nada for selecionado
@@ -74,7 +74,7 @@ class EquipeCampeonatoController extends Controller
     /**
      * Remove uma equipe de um campeonato específico.
      */
-    public function destroy(Campeonatos $campeonato, Equipes $equipe)
+    public function destroy(Campeonato $campeonato, Equipe $equipe)
     {
         try {
             // Remove a associação da equipe com o campeonato na tabela pivot

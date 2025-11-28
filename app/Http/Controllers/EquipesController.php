@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Equipes; // Seu modelo Equipes
+use App\Models\Equipe; // Seu modelo Equipes
 use App\Models\Time; // Para buscar Times para dropdowns (create/edit)
-use App\Models\Categorias; // Para buscar Categorias para dropdowns (create/edit), se 'Categorias' for o nome do seu modelo
+use App\Models\Categoria; // Para buscar Categorias para dropdowns (create/edit), se 'Categorias' for o nome do seu modelo
 use Illuminate\Support\Facades\Log; // Para logs de erro
 
 class EquipesController extends Controller
@@ -17,7 +17,7 @@ class EquipesController extends Controller
     {
         // Carrega as equipes e EAGER LOADING (com) os modelos relacionados Time e Categoria
         // Isso evita o problema de N+1 queries e permite acessar $equipe->time->tim_nome na view
-        $equipes = Equipes::with(['time', 'categoria'])->paginate(10); // Adicione paginação se desejar
+        $equipes = Equipe::with(['time', 'categoria'])->paginate(10); // Adicione paginação se desejar
         return view('equipes.index', compact('equipes'));
     }
 
@@ -27,7 +27,7 @@ class EquipesController extends Controller
     public function indexForTime(Time $time)
     {
         // Carrega as equipes com seus respectivos times e categorias para o time fornecido
-        $equipes = Equipes::where('eqp_time_id', $time->tim_id)->with(['time', 'categoria'])->paginate(10);
+        $equipes = Equipe::where('eqp_time_id', $time->tim_id)->with(['time', 'categoria'])->paginate(10);
         
         // Passa o objeto do time para a view para customizar o header
         return view('equipes.index', compact('equipes', 'time'));
@@ -41,7 +41,7 @@ class EquipesController extends Controller
     public function create(Request $request)
     {
         $times = Time::where('tim_id', '=' , $request->query('time_id') )->get();
-        $categorias = Categorias::orderBy('cto_nome')->get();
+        $categorias = Categoria::orderBy('cto_nome')->get();
         $timeId = $request->query('time_id'); // Pega o time_id da URL
 
         return view('equipes.create', compact('times', 'categorias', 'timeId'));
@@ -60,7 +60,7 @@ class EquipesController extends Controller
         ]);
 
         try {
-            Equipes::create($request->all());
+            Equipe::create($request->all());
             return redirect()->route('equipes.index')->with('success', 'Equipe criada com sucesso!');
         } catch (\Exception $e) {
             Log::error('Erro ao criar equipe: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
@@ -71,7 +71,7 @@ class EquipesController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Equipes $equipe) // Injeção de modelo para facilitar
+    public function show(Equipe $equipe) // Injeção de modelo para facilitar
     {
         // Carrega os relacionamentos para a view show
         $equipe->load(['time', 'categoria']);
@@ -81,17 +81,17 @@ class EquipesController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Equipes $equipe) // Injeção de modelo para facilitar
+    public function edit(Equipe $equipe) // Injeção de modelo para facilitar
     {
         $times = Time::orderBy('tim_nome')->get();
-        $categorias = Categorias::orderBy('cto_nome')->get(); // Assumindo 'cto_nome'
+        $categorias = Categoria::orderBy('cto_nome')->get(); // Assumindo 'cto_nome'
         return view('equipes.edit', compact('equipe', 'times', 'categorias'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Equipes $equipe) // Injeção de modelo para facilitar
+    public function update(Request $request, Equipe $equipe) // Injeção de modelo para facilitar
     {
         $request->validate([
             'eqp_time_id' => 'required|exists:times,tim_id',
@@ -112,7 +112,7 @@ class EquipesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Equipes $equipe) // Injeção de modelo para facilitar
+    public function destroy(Equipe $equipe) // Injeção de modelo para facilitar
     {
         try {
             $equipe->delete();

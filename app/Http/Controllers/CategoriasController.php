@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Wp_Term_Taxonomy;
 use App\Models\Wp_Terms;
-use App\Models\Categorias;
+use App\Models\Categoria;
 
 class CategoriasController extends Controller
 {
     public function index()
     {
-        $categorias = Categorias::all();
+        $categorias = Categoria::all();
    
         return view('categorias.index', compact('categorias'));
     }
@@ -45,7 +45,7 @@ class CategoriasController extends Controller
             'count'         => 0,
         ]);
 
-        Categorias::create([
+        Categoria::create([
             'cto_nome' => $request->input('name'),
             'cto_slug' => $request->input('slug'),
             'cto_term_tx_id' => $wpTerm->term_id,
@@ -58,7 +58,7 @@ class CategoriasController extends Controller
     public function edit($id)
     {
 
-        $categoria = Categorias::findOrFail($id);
+        $categoria = Categoria::findOrFail($id);
 
         return view('categorias.edit', compact('categoria'));
     }
@@ -73,7 +73,7 @@ class CategoriasController extends Controller
 
         $request->description ? empty($request->description) : ' ';
 
-        $categoria = Categorias::findOrFail($id);
+        $categoria = Categoria::findOrFail($id);
 
         $categoria->update([
             'cto_nome' => $request->input('name'),
@@ -105,7 +105,7 @@ class CategoriasController extends Controller
     public function destroy($id)
     {
         try {
-        $categoria = Categorias::findOrFail($id);
+        $categoria = Categoria::findOrFail($id);
 
         $taxonomy = Wp_Term_Taxonomy::findOrFail($categoria->cto_term_tx_id);
 

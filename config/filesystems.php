@@ -59,14 +59,14 @@ return [
         'times_logos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/times_logos'), 
-            'url' => env('APP_URL').'/storage/times_logos',
+            'url' => '/storage/times_logos',
             'visibility' => 'public',
         ],
 
         'atletas_fotos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/atletas_fotos'), 
-            'url' => env('APP_URL').'/storage/atletas_fotos', 
+            'url' => '/storage/atletas_fotos', 
             'visibility' => 'public',
         ],
 

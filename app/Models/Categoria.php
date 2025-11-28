@@ -26,6 +26,6 @@ class Categoria extends Model
      */
     public function equipes()
     {
-        return $this->hasMany(Equipes::class, 'eqp_categoria_id', 'cto_id');
+        return $this->hasMany(Equipe::class, 'eqp_categoria_id', 'cto_id');
     }
 }
