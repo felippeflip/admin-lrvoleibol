@@ -17,7 +17,17 @@ class EquipesController extends Controller
     {
         // Carrega as equipes e EAGER LOADING (com) os modelos relacionados Time e Categoria
         // Isso evita o problema de N+1 queries e permite acessar $equipe->time->tim_nome na view
-        $equipes = Equipe::with(['time', 'categoria'])->paginate(10); // Adicione paginação se desejar
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
+            if ($time) {
+                $equipes = Equipe::where('eqp_time_id', $time->tim_id)->with(['time', 'categoria'])->paginate(10);
+            } else {
+                $equipes = Equipe::where('eqp_id', 0)->paginate(10);
+            }
+        } else {
+            $equipes = Equipe::with(['time', 'categoria'])->paginate(10); // Adicione paginação se desejar
+        }
         return view('equipes.index', compact('equipes'));
     }
 
@@ -40,7 +50,16 @@ class EquipesController extends Controller
      */
     public function create(Request $request)
     {
-        $times = Time::where('tim_id', '=' , $request->query('time_id') )->get();
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+             $times = Time::where('tim_user_id', $user->id)->get();
+        } else {
+            if ($request->has('time_id')) {
+                $times = Time::where('tim_id', $request->query('time_id'))->get();
+            } else {
+                $times = Time::orderBy('tim_nome')->get();
+            }
+        }
         $categorias = Categoria::orderBy('cto_nome')->get();
         $timeId = $request->query('time_id'); // Pega o time_id da URL
 
@@ -52,6 +71,14 @@ class EquipesController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
+            if (!$time) {
+                 return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
+            }
+            $request->merge(['eqp_time_id' => $time->tim_id]);
+        }
         $request->validate([
             'eqp_time_id' => 'required|exists:times,tim_id',
             'eqp_categoria_id' => 'required|exists:categorias,cto_id', // cto_id é a PK da sua tabela categorias
@@ -83,7 +110,16 @@ class EquipesController extends Controller
      */
     public function edit(Equipe $equipe) // Injeção de modelo para facilitar
     {
-        $times = Time::orderBy('tim_nome')->get();
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+             $times = Time::where('tim_user_id', $user->id)->get();
+             // Security check: ensure the equipe belongs to the user's time
+             if ($equipe->time->tim_user_id != $user->id) {
+                 abort(403);
+             }
+        } else {
+            $times = Time::orderBy('tim_nome')->get();
+        }
         $categorias = Categoria::orderBy('cto_nome')->get(); // Assumindo 'cto_nome'
         return view('equipes.edit', compact('equipe', 'times', 'categorias'));
     }
@@ -93,6 +129,14 @@ class EquipesController extends Controller
      */
     public function update(Request $request, Equipe $equipe) // Injeção de modelo para facilitar
     {
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
+            if (!$time || $equipe->eqp_time_id != $time->tim_id) {
+                 abort(403);
+            }
+            $request->merge(['eqp_time_id' => $time->tim_id]);
+        }
         $request->validate([
             'eqp_time_id' => 'required|exists:times,tim_id',
             'eqp_categoria_id' => 'required|exists:categorias,cto_id',

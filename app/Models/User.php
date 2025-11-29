@@ -31,6 +31,7 @@ class User extends Authenticatable
         'estado',
         'cep',
         'is_arbitro',
+        'is_resp_time',
         'tipo_arbitro',
     ];
 

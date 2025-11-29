@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\atleta; 
+use App\Models\atleta;
+use App\Models\Time; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Para manipulação de arquivos
 use Illuminate\Support\Str; // Para gerar nomes de arquivo únicos
@@ -15,7 +16,17 @@ class AtletaController extends Controller
      */
     public function index()
     {
-        $atletas = atleta::paginate(10); // Pagina 10 atletas por página
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
+            if ($time) {
+                $atletas = atleta::where('atl_tim_id', $time->tim_id)->paginate(10);
+            } else {
+                $atletas = atleta::where('atl_id', 0)->paginate(10);
+            }
+        } else {
+            $atletas = atleta::paginate(10); // Pagina 10 atletas por página
+        }
         return view('atletas.index', compact('atletas'));
     }
 
@@ -32,6 +43,14 @@ class AtletaController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
+            if (!$time) {
+                 return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
+            }
+            $request->merge(['atl_tim_id' => $time->tim_id]);
+        }
         $request->validate([
             'atl_nome' => 'required|string|max:100',
             'atl_cpf' => 'nullable|string|max:11', // CPF sem máscara
@@ -113,6 +132,12 @@ class AtletaController extends Controller
      */
     public function edit(atleta $atleta)
     {
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            if ($atleta->atl_tim_id != Time::where('tim_user_id', $user->id)->value('tim_id')) {
+                abort(403);
+            }
+        }
         return view('atletas.edit', compact('atleta'));
     }
 
@@ -121,6 +146,14 @@ class AtletaController extends Controller
      */
     public function update(Request $request, atleta $atleta)
     {
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
+             if (!$time || $atleta->atl_tim_id != $time->tim_id) {
+                abort(403);
+            }
+            $request->merge(['atl_tim_id' => $time->tim_id]);
+        }
         $request->validate([
             'atl_nome' => 'required|string|max:100',
             'atl_cpf' => 'nullable|string|max:11',

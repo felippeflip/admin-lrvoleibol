@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Importe o Facade Storage
 use Illuminate\Support\Str; // Importe Str para gerar nomes de arquivo únicos
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class TimeController extends Controller
 {
@@ -17,7 +19,13 @@ class TimeController extends Controller
     public function index()
     {
         // Recupera todos os times paginados para exibir na listagem
-        $times = Time::with('user')->paginate(10); // Ex: 10 times por página
+        // Recupera todos os times paginados para exibir na listagem
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $times = Time::with('user')->where('tim_user_id', $user->id)->paginate(10);
+        } else {
+            $times = Time::with('user')->paginate(10);
+        }
         return view('times.index', compact('times'));
     }
 
@@ -62,9 +70,33 @@ class TimeController extends Controller
             'tim_email' => 'nullable|email|max:50',
             'tim_logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Regra para imagem
             'tim_responsavel' => 'nullable|string|max:50',
+            'new_user_name' => 'nullable|required_with:new_user_email|string|max:255',
+            'new_user_email' => 'nullable|required_with:new_user_name|email|unique:users,email',
+            'new_user_password' => 'nullable|required_with:new_user_name|min:8',
         ]);
 
-        $data = $request->except(['tim_logo']); // Inicia um array com todos os dados da requisição, exceto 'tim_logo'
+        $data = $request->except(['tim_logo', 'new_user_name', 'new_user_email', 'new_user_password']); // Inicia um array com todos os dados da requisição
+
+        // --- Lógica para criar ou vincular usuário ---
+        if ($request->filled('new_user_name')) {
+            $user = User::create([
+                'name' => $request->new_user_name,
+                'email' => $request->new_user_email,
+                'password' => Hash::make($request->new_user_password),
+                'is_resp_time' => true,
+            ]);
+            $user->assignRole('ResponsavelTime');
+            $data['tim_user_id'] = $user->id;
+        } elseif ($request->filled('tim_user_id')) {
+            $user = User::find($request->tim_user_id);
+            if ($user) {
+                $user->assignRole('ResponsavelTime');
+                if (!$user->is_resp_time) {
+                    $user->is_resp_time = true;
+                    $user->save();
+                }
+            }
+        }
 
         // --- Processamento do Upload da Logo para CRIAR ---
         if ($request->hasFile('tim_logo')) {
@@ -159,6 +191,18 @@ class TimeController extends Controller
 
         // Inicia um array com todos os dados da requisição, exceto 'tim_logo'
         $data = $request->except(['tim_logo']);
+
+        // --- Lógica para vincular usuário na atualização ---
+        if ($request->filled('tim_user_id')) {
+            $user = User::find($request->tim_user_id);
+            if ($user) {
+                $user->assignRole('ResponsavelTime');
+                if (!$user->is_resp_time) {
+                    $user->is_resp_time = true;
+                    $user->save();
+                }
+            }
+        }
 
         // --- Processamento do Upload da Logo para ATUALIZAR ---
         if ($request->hasFile('tim_logo')) {

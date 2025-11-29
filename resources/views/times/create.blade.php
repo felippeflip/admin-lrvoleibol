@@ -52,6 +52,25 @@
                                         @enderror
                                     </div>
 
+                                    <div class="mb-4 border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Ou Cadastre um Novo Usuário Responsável</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label for="new_user_name" class="block text-gray-700 dark:text-gray-300 mb-2">Nome:</label>
+                                                <input type="text" name="new_user_name" id="new_user_name" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('new_user_name') }}">
+                                            </div>
+                                            <div>
+                                                <label for="new_user_email" class="block text-gray-700 dark:text-gray-300 mb-2">Email:</label>
+                                                <input type="email" name="new_user_email" id="new_user_email" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('new_user_email') }}">
+                                            </div>
+                                            <div>
+                                                <label for="new_user_password" class="block text-gray-700 dark:text-gray-300 mb-2">Senha:</label>
+                                                <input type="password" name="new_user_password" id="new_user_password" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500">
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Preencha estes campos APENAS se quiser criar um novo usuário para este time.</p>
+                                    </div>
+
                                     <div class="mb-4">
                                         <label for="tim_nome" class="block text-gray-700 dark:text-gray-300 mb-2">Nome do Time *:</label>
                                         <input type="text" name="tim_nome" id="tim_nome" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('tim_nome') }}" required>
