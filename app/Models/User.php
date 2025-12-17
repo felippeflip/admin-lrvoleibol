@@ -26,6 +26,7 @@ class User extends Authenticatable
         'cpf',
         'cref',
         'endereco',
+        'numero',
         'bairro',
         'cidade',
         'estado',

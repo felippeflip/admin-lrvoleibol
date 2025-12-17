@@ -27,6 +27,7 @@ class ProfileUpdateRequest extends FormRequest
             'telefone'          => ['nullable', 'string', 'max:20'],
             'cpf'               => ['required', 'string', 'max:11'],
             'endereco'          => ['nullable', 'string', 'max:255'],
+            'numero'            => ['nullable', 'string', 'max:20'],
             'bairro'            => ['nullable', 'string', 'max:255'],
             'cidade'            => ['nullable', 'string', 'max:255'],
             'estado'            => ['nullable', 'string', 'max:255'],

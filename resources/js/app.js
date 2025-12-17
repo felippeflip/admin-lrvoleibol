@@ -35,8 +35,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const timCnpjInput = document.getElementById('tim_cnpj');
     const timeForm = document.getElementById('timeForm'); // Formulário de criação de Time
 
-    // Referência ao formulário atual que está sendo carregado
-    const currentForm = atletaForm || atletaFormEdit || timeForm;
+    // --- Elementos do formulário de Usuários ---
+    const userCepInput = document.getElementById('cep');
+    const userEnderecoInput = document.getElementById('endereco');
+    const userBairroInput = document.getElementById('bairro');
+    const userCidadeInput = document.getElementById('cidade');
+    const userEstadoInput = document.getElementById('estado');
+    const userNumeroInput = document.getElementById('numero'); // Adicionado
+    const userTelefoneInput = document.getElementById('telefone');
+    const userCpfInput = document.getElementById('cpf');
+    const userForm = document.getElementById('userForm'); // Formulário de criação de Usuário
+    const userEditForm = document.getElementById('userEditForm'); // Formulário de edição de Usuário
+    const profileForm = document.getElementById('profileForm'); // Formulário de edição de Perfil
+
+    // Referência ao formulário atual que está sendo carregado (atualizado para incluir userForm e userEditForm)
+    const currentForm = atletaForm || atletaFormEdit || timeForm || userForm || userEditForm || profileForm;
 
     // --- Funções de Máscara ---
     function unmask(value) {
@@ -170,12 +183,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.target.value = maskCEP(e.target.value);
             });
 
-            cepInputEl.addEventListener('blur', function() {
+            cepInputEl.addEventListener('blur', function () {
                 let cep = unmask(cepInputEl.value);
-                
+
                 if (cep != "" && /^[0-9]{8}$/.test(cep)) {
                     limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
-                    
+
                     fetch(`https://viacep.com.br/ws/${cep}/json/`)
                         .then(response => response.json())
                         .then(data => {
@@ -234,10 +247,22 @@ document.addEventListener('DOMContentLoaded', function () {
         if (atlRgInput && atlRgInput.value) atlRgInput.value = maskRG(atlRgInput.value);
     }
 
+    // Para formulários de Usuários (create e edit) e Perfil
+    if (userForm || userEditForm || profileForm) {
+        setupCepLogic(userCepInput, userEnderecoInput, userBairroInput, userCidadeInput, userEstadoInput, userNumeroInput);
+
+        if (userTelefoneInput) userTelefoneInput.addEventListener('input', (e) => { e.target.value = maskCelular(e.target.value); }); // Usando maskCelular pois pode ser celular
+        if (userCpfInput) userCpfInput.addEventListener('input', (e) => { e.target.value = maskCPF(e.target.value); });
+
+        // Aplica máscaras a valores existentes
+        if (userTelefoneInput && userTelefoneInput.value) userTelefoneInput.value = maskCelular(userTelefoneInput.value);
+        if (userCpfInput && userCpfInput.value) userCpfInput.value = maskCPF(userCpfInput.value);
+    }
+
 
     // --- Pre-processamento antes de enviar o formulário (remove máscaras) ---
     if (currentForm) {
-        currentForm.addEventListener('submit', function() {
+        currentForm.addEventListener('submit', function () {
             if (atlCelularInput) atlCelularInput.value = unmask(atlCelularInput.value);
             if (atlTelefoneInput) atlTelefoneInput.value = unmask(atlTelefoneInput.value);
             if (atlCpfInput) atlCpfInput.value = unmask(atlCpfInput.value);
@@ -249,6 +274,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (timTelefoneInput) timTelefoneInput.value = unmask(timTelefoneInput.value);
             if (timCnpjInput) timCnpjInput.value = unmask(timCnpjInput.value);
             if (timCepInput) timCepInput.value = unmask(timCepInput.value);
+
+            // Para o formulário de usuários
+            if (userTelefoneInput) userTelefoneInput.value = unmask(userTelefoneInput.value);
+            if (userCpfInput) userCpfInput.value = unmask(userCpfInput.value);
+            if (userCepInput) userCepInput.value = unmask(userCepInput.value);
         });
     }
 

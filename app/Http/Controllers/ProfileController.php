@@ -43,6 +43,7 @@ class ProfileController extends Controller
             'telefone' => $validatedData['telefone'],
             'cpf' => $validatedData['cpf'],
             'endereco' => $validatedData['endereco'],
+            'numero' => $validatedData['numero'],
             'bairro' => $validatedData['bairro'],
             'cidade' => $validatedData['cidade'],
             'estado' => $validatedData['estado'],
