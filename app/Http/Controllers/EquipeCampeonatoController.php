@@ -30,11 +30,23 @@ class EquipeCampeonatoController extends Controller
         $equipesInscritas = $campeonato->equipes()->with(['time', 'categoria'])->get();
         $equipesJaInscritasIds = $equipesInscritas->pluck('eqp_id');
 
-        // Busca todas as equipes que NÃO ESTÃO inscritas neste campeonato
-        $equipesDisponiveis = Equipe::whereNotIn('eqp_id', $equipesJaInscritasIds)
-                                     ->with('time', 'categoria')
-                                     ->orderBy('eqp_nome_detalhado')
-                                     ->get();
+        // Inicia a query para buscar equipes não inscritas
+        $query = Equipe::whereNotIn('eqp_id', $equipesJaInscritasIds)
+                       ->with('time', 'categoria');
+
+        // Se o usuário for responsável por time, filtra apenas as equipes dele
+        $user = auth()->user();
+        
+        // Verifica se o usuário tem a flag de responsável por time.
+        // Se for admin, assume-se que pode ver tudo (admin geralmente não tem is_resp_time=true, ou a lógica permite ver tudo se não entrar no if)
+        // Caso queira também checar role: || $user->hasRole('ResponsavelTime')
+        if ($user->is_resp_time) {
+             $query->whereHas('time', function($q) use ($user) {
+                 $q->where('tim_user_id', $user->id);
+             });
+        }
+
+        $equipesDisponiveis = $query->orderBy('eqp_nome_detalhado')->get();
 
         // Passa as duas listas de equipes para a view
         return view('equipes_campeonato.create', compact('campeonato', 'equipesDisponiveis', 'equipesInscritas'));

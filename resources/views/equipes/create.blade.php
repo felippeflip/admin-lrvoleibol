@@ -25,12 +25,18 @@
                             <div class="mb-4">
                                 <label for="eqp_time_id" class="block text-gray-700 dark:text-gray-300 mb-2">Time:</label>
                                 <select name="eqp_time_id" id="eqp_time_id" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" required>
+                                    @if($times->count() > 1)
+                                        <option value="">Selecione um Time</option>
+                                    @endif
                                     @foreach ($times as $time)
-                                        <option value="{{ $time->tim_id }}" {{ old('eqp_time_id') == $time->tim_id ? 'selected' : '' }}>
+                                        <option value="{{ $time->tim_id }}" {{ (old('eqp_time_id') == $time->tim_id || $times->count() == 1) ? 'selected' : '' }}>
                                             {{ $time->tim_nome }}
                                         </option>
                                     @endforeach
                                 </select>
+                                @if($times->isEmpty())
+                                     <p class="text-red-500 text-xs mt-1">Nenhum time vinculado ao seu perfil encontrado.</p>
+                                @endif
                                 @error('eqp_time_id')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror

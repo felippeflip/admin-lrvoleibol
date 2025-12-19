@@ -18,15 +18,19 @@ class EquipesController extends Controller
         // Carrega as equipes e EAGER LOADING (com) os modelos relacionados Time e Categoria
         // Isso evita o problema de N+1 queries e permite acessar $equipe->time->tim_nome na view
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+        if ($user->hasRole('Administrador')) {
+            $equipes = Equipe::with(['time', 'categoria'])->paginate(10);
+        } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
             $time = Time::where('tim_user_id', $user->id)->first();
             if ($time) {
                 $equipes = Equipe::where('eqp_time_id', $time->tim_id)->with(['time', 'categoria'])->paginate(10);
             } else {
+                 // Caso o usuário seja responsável mas não tenha time vinculado ainda
                 $equipes = Equipe::where('eqp_id', 0)->paginate(10);
             }
         } else {
-            $equipes = Equipe::with(['time', 'categoria'])->paginate(10); // Adicione paginação se desejar
+             // Outros usuários (padrão ver tudo ou nada? assumindo ver tudo como antes)
+             $equipes = Equipe::with(['time', 'categoria'])->paginate(10);
         }
         return view('equipes.index', compact('equipes'));
     }
@@ -51,9 +55,17 @@ class EquipesController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+        
+        if ($user->hasRole('Administrador')) {
+             if ($request->has('time_id')) {
+                $times = Time::where('tim_id', $request->query('time_id'))->get();
+            } else {
+                $times = Time::orderBy('tim_nome')->get();
+            }
+        } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
              $times = Time::where('tim_user_id', $user->id)->get();
         } else {
+             // Comportamento padrão para outros usuários
             if ($request->has('time_id')) {
                 $times = Time::where('tim_id', $request->query('time_id'))->get();
             } else {
@@ -72,11 +84,16 @@ class EquipesController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+        
+        if (!$user->hasRole('Administrador') && ($user->is_resp_time || $user->hasRole('ResponsavelTime'))) {
+            // Verifica se o time enviado pertence ao usuário
             $time = Time::where('tim_user_id', $user->id)->first();
+            
             if (!$time) {
                  return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
             }
+            
+            // Força o ID do time para o time do usuário, ignorando o input se houver
             $request->merge(['eqp_time_id' => $time->tim_id]);
         }
         $request->validate([
@@ -111,12 +128,20 @@ class EquipesController extends Controller
     public function edit(Equipe $equipe) // Injeção de modelo para facilitar
     {
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-             $times = Time::where('tim_user_id', $user->id)->get();
+        
+        if ($user->hasRole('Administrador')) {
+             $times = Time::orderBy('tim_nome')->get();
+        } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
              // Security check: ensure the equipe belongs to the user's time
-             if ($equipe->time->tim_user_id != $user->id) {
-                 abort(403);
+             // O time do usuário
+             $userTime = Time::where('tim_user_id', $user->id)->first();
+             
+             if (!$userTime || $equipe->eqp_time_id != $userTime->tim_id) {
+                 abort(403, 'Você não tem permissão para editar esta equipe.');
              }
+             
+             // Na edição, o responsável só deve ver seu próprio time no select
+             $times = Time::where('tim_user_id', $user->id)->get();
         } else {
             $times = Time::orderBy('tim_nome')->get();
         }
@@ -130,11 +155,12 @@ class EquipesController extends Controller
     public function update(Request $request, Equipe $equipe) // Injeção de modelo para facilitar
     {
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
+        if (!$user->hasRole('Administrador') && ($user->is_resp_time || $user->hasRole('ResponsavelTime'))) {
+             $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time || $equipe->eqp_time_id != $time->tim_id) {
                  abort(403);
             }
+            // Garante que o time não seja alterado para outro
             $request->merge(['eqp_time_id' => $time->tim_id]);
         }
         $request->validate([

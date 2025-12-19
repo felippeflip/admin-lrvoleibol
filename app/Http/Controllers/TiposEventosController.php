@@ -95,7 +95,7 @@ class TiposEventosController extends Controller
             'cpo_dt_fim' => 'required|date|after_or_equal:cpo_dt_inicio',
         ]);
 
-       $campeonato = Campeonatos::findOrFail($id);
+       $campeonato = Campeonato::findOrFail($id);
 
         try {
 
