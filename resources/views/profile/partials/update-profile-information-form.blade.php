@@ -68,6 +68,7 @@
             <div class="col-span-12 md:col-span-3">
                 <x-input-label for="cep" :value="__('CEP')" />
                 <x-text-input id="cep" name="cep" type="text" class="mt-1 block w-full" :value="old('cep', $user->cep)" required autofocus autocomplete="cep" />
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">Informe o CEP para preenchimento automático do endereço.</p>
                 <x-input-error class="mt-2" :messages="$errors->get('cep')" />
             </div>
             <div class="col-span-12 md:col-span-7">

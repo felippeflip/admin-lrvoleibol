@@ -35,6 +35,8 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
         'atl_categoria',
         'atl_ano_insc',
         'atl_foto', // Nome do arquivo da foto
+        'atl_ativo',
+        'atl_tim_id',
     ];
 
     // --- Accessors para formatação de dados ---
@@ -69,7 +71,7 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
     /**
      * Accessor para formatar o Celular para exibição.
      */
-    public function getAtlCelFormattedAttribute()
+    public function getAtlCelularFormattedAttribute()
     {
         $celular = preg_replace('/[^0-9]/', '', $this->atl_celular);
         if (strlen($celular) === 11) {
@@ -83,7 +85,7 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
     /**
      * Accessor para formatar o Telefone para exibição.
      */
-    public function getAtlTelFormattedAttribute()
+    public function getAtlTelefoneFormattedAttribute()
     {
         $telefone = preg_replace('/[^0-9]/', '', $this->atl_telefone);
         if (strlen($telefone) === 10) {
@@ -114,6 +116,18 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
         }
         // Retorna uma imagem de placeholder se não houver foto
         return asset('images/placeholder-atleta.png'); // Crie esta imagem ou ajuste o caminho
+    }
+
+    // Relacionamento com Categoria
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class, 'atl_categoria', 'cto_id');
+    }
+
+    // Relacionamento com Time
+    public function time()
+    {
+        return $this->belongsTo(Time::class, 'atl_tim_id', 'tim_id');
     }
 
     // Relacionamento N:N com Equipe_Campeonato (através da tabela elenco_equipe_campeonato)

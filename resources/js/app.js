@@ -48,8 +48,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const userEditForm = document.getElementById('userEditForm'); // Formulário de edição de Usuário
     const profileForm = document.getElementById('profileForm'); // Formulário de edição de Perfil
 
+    // --- Elementos do formulário de Ginásios ---
+    const ginCepInput = document.getElementById('gin_cep');
+    const ginEnderecoInput = document.getElementById('gin_endereco');
+    const ginBairroInput = document.getElementById('gin_bairro');
+    const ginCidadeInput = document.getElementById('gin_cidade');
+    const ginEstadoInput = document.getElementById('gin_estado');
+    const ginNumeroInput = document.getElementById('gin_numero');
+    const ginTelefoneInput = document.getElementById('gin_telefone');
+    const ginasioForm = document.getElementById('ginasioForm');
+    const ginasioEditForm = document.getElementById('ginasioEditForm');
+
     // Referência ao formulário atual que está sendo carregado (atualizado para incluir userForm e userEditForm)
-    const currentForm = atletaForm || atletaFormEdit || timeForm || userForm || userEditForm || profileForm;
+    const currentForm = atletaForm || atletaFormEdit || timeForm || userForm || userEditForm || profileForm || ginasioForm || ginasioEditForm;
 
     // --- Funções de Máscara ---
     function unmask(value) {
@@ -257,6 +268,15 @@ document.addEventListener('DOMContentLoaded', function () {
         // Aplica máscaras a valores existentes
         if (userTelefoneInput && userTelefoneInput.value) userTelefoneInput.value = maskCelular(userTelefoneInput.value);
         if (userCpfInput && userCpfInput.value) userCpfInput.value = maskCPF(userCpfInput.value);
+        if (userCpfInput && userCpfInput.value) userCpfInput.value = maskCPF(userCpfInput.value);
+    }
+
+    // Para formulários de Ginásios
+    if (ginasioForm || ginasioEditForm) {
+        setupCepLogic(ginCepInput, ginEnderecoInput, ginBairroInput, ginCidadeInput, ginEstadoInput, ginNumeroInput);
+        if (ginTelefoneInput) ginTelefoneInput.addEventListener('input', (e) => { e.target.value = maskTelefone(e.target.value); });
+
+        if (ginTelefoneInput && ginTelefoneInput.value) ginTelefoneInput.value = maskTelefone(ginTelefoneInput.value);
     }
 
 
@@ -278,7 +298,12 @@ document.addEventListener('DOMContentLoaded', function () {
             // Para o formulário de usuários
             if (userTelefoneInput) userTelefoneInput.value = unmask(userTelefoneInput.value);
             if (userCpfInput) userCpfInput.value = unmask(userCpfInput.value);
+            if (userCpfInput) userCpfInput.value = unmask(userCpfInput.value);
             if (userCepInput) userCepInput.value = unmask(userCepInput.value);
+
+            // Para o formulário de ginásios
+            if (ginTelefoneInput) ginTelefoneInput.value = unmask(ginTelefoneInput.value);
+            if (ginCepInput) ginCepInput.value = unmask(ginCepInput.value);
         });
     }
 

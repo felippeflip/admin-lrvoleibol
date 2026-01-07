@@ -16,36 +16,86 @@
                             </div>
                         @endif
 
-                        <div class="flex justify-end mb-4">
-                            <a href="{{ route('atletas.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Adicionar Novo Atleta</a>
+                        <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
+                            <form method="GET" action="{{ route('atletas.index') }}">
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <!-- Status -->
+                                    <div>
+                                        <label for="ativo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                        <select name="ativo" id="ativo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                            <option value="1" {{ request('ativo', '1') == '1' ? 'selected' : '' }}>Ativo</option>
+                                            <option value="0" {{ request('ativo') == '0' ? 'selected' : '' }}>Inativo</option>
+                                            <option value="todos" {{ request('ativo') == 'todos' ? 'selected' : '' }}>Todos</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Categoria -->
+                                    <div>
+                                        <label for="categoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
+                                        <select name="categoria" id="categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                            <option value="">Todas</option>
+                                            @foreach($categorias ?? [] as $cat)
+                                                <option value="{{ $cat->cto_id }}" {{ request('categoria') == $cat->cto_id ? 'selected' : '' }}>{{ $cat->cto_nome }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <!-- Ano Inscrição -->
+                                    <div>
+                                        <label for="ano_inscricao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ano Inscrição</label>
+                                        <input type="number" name="ano_inscricao" id="ano_inscricao" value="{{ request('ano_inscricao') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400" placeholder="Ex: 2024">
+                                    </div>
+
+                                    <!-- Sexo -->
+                                    <div>
+                                        <label for="sexo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sexo</label>
+                                        <select name="sexo" id="sexo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                            <option value="">Todos</option>
+                                            <option value="M" {{ request('sexo') == 'M' ? 'selected' : '' }}>Masculino</option>
+                                            <option value="F" {{ request('sexo') == 'F' ? 'selected' : '' }}>Feminino</option>
+                                            <option value="O" {{ request('sexo') == 'O' ? 'selected' : '' }}>Outro</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Botões -->
+                                    <div class="flex items-end space-x-2">
+                                        <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
+                                        <a href="{{ route('atletas.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="flex justify-start mb-4">
+                            <a href="{{ route('atletas.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Novo Atleta</a>
                         </div>
 
                         <div class="overflow-x-auto">
                             <table class="min-w-full bg-white dark:bg-gray-700 rounded-lg shadow-md">
                                 <thead>
                                     <tr class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
-                                        <th class="py-3 px-6 text-left">ID</th>
-                                        <th class="py-3 px-6 text-left">Foto</th> {{-- Nova Coluna --}}
+                                        <th class="py-3 px-6 text-left">Foto</th>
                                         <th class="py-3 px-6 text-left">Nome</th>
-                                        <th class="py-3 px-6 text-left">CPF</th>
+                                        <th class="py-3 px-6 text-left">Time</th>
+                                        <th class="py-3 px-6 text-left">Idade</th>
+                                        <th class="py-3 px-6 text-left">Categoria</th>
                                         <th class="py-3 px-6 text-left">Celular</th>
-                                        <th class="py-3 px-6 text-left">Telefone</th>
-                                        <th class="py-3 px-6 text-left">Cidade / UF</th>
                                         <th class="py-3 px-6 text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-700 dark:text-gray-300 text-sm font-light">
                                     @foreach ($atletas as $atleta)
                                         <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                            <td class="py-3 px-6 text-left whitespace-nowrap">{{ $atleta->atl_id }}</td>
                                             <td class="py-3 px-6 text-left">
                                                 <img src="{{ $atleta->atl_foto_url }}" alt="Foto {{ $atleta->atl_nome }}" class="h-8 w-8 object-cover rounded-full inline-block">
                                             </td>
                                             <td class="py-3 px-6 text-left">{{ $atleta->atl_nome }}</td>
-                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_cpf_formatted }}</td>
-                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_cel_formatted }}</td>
-                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_tel_formatted }}</td>
-                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_cidade }} / {{ $atleta->atl_estado }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $atleta->time->tim_nome ?? 'N/A' }}</td>
+                                            <td class="py-3 px-6 text-left">
+                                                {{ $atleta->atl_dt_nasc ? \Carbon\Carbon::parse($atleta->atl_dt_nasc)->age : 'N/A' }}
+                                            </td>
+                                            <td class="py-3 px-6 text-left">{{ $atleta->categoria ? $atleta->categoria->cto_nome : 'N/A' }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_celular_formatted }}</td>
                                             <td class="py-3 px-6 text-center">
                                                 <div class="flex item-center justify-center">
                                                     <a href="{{ route('atletas.show', $atleta->atl_id) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
@@ -59,6 +109,15 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </a>
+                                                    <form action="{{ route('atletas.inactivate', $atleta->atl_id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este atleta?');" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" title="Desativar Atleta" class="flex items-center justify-center w-full h-full">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
                                                     <form action="{{ route('atletas.destroy', $atleta->atl_id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este atleta?');" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
                                                         @csrf
                                                         @method('DELETE')

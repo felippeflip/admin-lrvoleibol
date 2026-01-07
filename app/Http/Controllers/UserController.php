@@ -10,10 +10,41 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::paginate(10);
+        $query = User::query();
+
+        // Filtro de Status
+        $status = $request->input('status', 'active');
+        if ($status === 'active') {
+            $query->where('active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('active', false);
+        }
+
+        // Filtro de Perfil
+        if ($request->filled('role')) {
+            $role = $request->role;
+            if ($role === 'Administrador') {
+                $query->role('Administrador');
+            } elseif ($role === 'ResponsavelTime') {
+                $query->role('ResponsavelTime');
+            } elseif ($role === 'Juiz') {
+                $query->where('is_arbitro', true);
+            }
+        }
+
+        $users = $query->paginate(10)->appends($request->all());
         return view('users.index', compact('users'));
+    }
+
+    public function toggleStatus(User $user)
+    {
+        $user->active = !$user->active;
+        $user->save();
+
+        $statusMessage = $user->active ? 'ativado' : 'desativado';
+        return redirect()->route('users.index')->with('success', "Usuário {$statusMessage} com sucesso.");
     }
 
     public function create()

@@ -22,6 +22,18 @@
                         <form action="{{ route('atletas.update', $atleta->atl_id) }}" method="POST" enctype="multipart/form-data" id="atletaFormEdit">
                             @csrf
                             @method('PUT') {{-- Importante para o método UPDATE --}}
+                            
+                            @if(isset($times) && count($times) > 0)
+                                <div class="mb-4">
+                                    <label for="atl_tim_id" class="block text-gray-700 dark:text-gray-300 mb-2">Time/Equipe *:</label>
+                                    <select name="atl_tim_id" id="atl_tim_id" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="">Selecione um Time</option>
+                                        @foreach($times as $time)
+                                            <option value="{{ $time->tim_id }}" {{ old('atl_tim_id', $atleta->atl_tim_id) == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
 
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                                 <div class="md:col-span-1 flex flex-col items-center justify-center">
@@ -81,7 +93,7 @@
                                 </div>
                                 <div>
                                     <label for="atl_resg" class="block text-gray-700 dark:text-gray-300 mb-2">Registro Geral (RG):</label>
-                                    <input type="text" name="atl_resg" id="atl_resg" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('atl_resg', $atleta->atl_resg_formatted) }}">
+                                    <input type="text" name="atl_resg" id="atl_resg" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('atl_resg', $atleta->atl_resg) }}">
                                 </div>
                             </div>
 
@@ -121,11 +133,25 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label for="atl_categoria" class="block text-gray-700 dark:text-gray-300 mb-2">Categoria:</label>
-                                    <input type="text" name="atl_categoria" id="atl_categoria" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('atl_categoria', $atleta->atl_categoria) }}">
+                                    <select name="atl_categoria" id="atl_categoria" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Selecione a Categoria</option>
+                                        @foreach($categorias as $categoria)
+                                            <option value="{{ $categoria->cto_id }}" {{ old('atl_categoria', $atleta->atl_categoria) == $categoria->cto_id ? 'selected' : '' }}>{{ $categoria->cto_nome }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div>
                                     <label for="atl_ano_insc" class="block text-gray-700 dark:text-gray-300 mb-2">Ano Inscrição:</label>
-                                    <input type="number" name="atl_ano_insc" id="atl_ano_insc" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('atl_ano_insc', $atleta->atl_ano_insc) }}" min="1900" max="{{ date('Y') }}">
+                                    <select name="atl_ano_insc" id="atl_ano_insc" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Selecione o Ano</option>
+                                        @php
+                                            $currentYear = date('Y');
+                                            $years = range($currentYear + 3, $currentYear - 3);
+                                        @endphp
+                                        @foreach($years as $year)
+                                            <option value="{{ $year }}" {{ old('atl_ano_insc', $atleta->atl_ano_insc ?? $currentYear) == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
 

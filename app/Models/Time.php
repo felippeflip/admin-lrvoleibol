@@ -42,6 +42,11 @@ class Time extends Model
         return $this->belongsTo(User::class, 'tim_user_id');
     }
 
+    public function ginasios()
+    {
+        return $this->hasMany(Ginasio::class, 'gin_tim_id', 'tim_id');
+    }
+
     /**
      * Accessor para formatar o CNPJ para exibição.
      */

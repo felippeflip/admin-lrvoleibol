@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\atleta;
-use App\Models\Time; 
+use App\Models\Time;
+use App\Models\Categoria; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Para manipulação de arquivos
 use Illuminate\Support\Str; // Para gerar nomes de arquivo únicos
@@ -14,20 +15,51 @@ class AtletaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $query = atleta::with(['categoria', 'time']);
+
+        // Escopo baseado em Função (Role)
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
             $time = Time::where('tim_user_id', $user->id)->first();
             if ($time) {
-                $atletas = atleta::where('atl_tim_id', $time->tim_id)->paginate(10);
+                $query->where('atl_tim_id', $time->tim_id);
             } else {
+                // Se não tem time vinculado, retorna lista vazia
                 $atletas = atleta::where('atl_id', 0)->paginate(10);
+                return view('atletas.index', compact('atletas'));
             }
-        } else {
-            $atletas = atleta::paginate(10); // Pagina 10 atletas por página
         }
-        return view('atletas.index', compact('atletas'));
+
+        // Filtros
+        // 1. Ativo / Inativo (Padrão: Ativo)
+        $ativo = $request->input('ativo', '1');
+        if ($ativo !== 'todos') {
+             $query->where('atl_ativo', $ativo);
+        }
+
+        // 2. Categoria
+        if ($request->filled('categoria')) {
+            $query->where('atl_categoria', $request->categoria);
+        }
+
+        // 3. Ano de Inscrição
+        if ($request->filled('ano_inscricao')) {
+            $query->where('atl_ano_insc', $request->ano_inscricao);
+        }
+
+        // 4. Sexo
+        if ($request->filled('sexo')) {
+            $query->where('atl_sexo', $request->sexo);
+        }
+
+        // Obtém categorias para o filtro
+        $categorias = Categoria::orderBy('cto_nome')->get();
+
+        $atletas = $query->paginate(10)->appends($request->all());
+
+        return view('atletas.index', compact('atletas', 'categorias'));
     }
 
     /**
@@ -35,7 +67,12 @@ class AtletaController extends Controller
      */
     public function create()
     {
-        return view('atletas.create');
+        $times = [];
+        if (auth()->user()->hasRole('Administrador')) {
+            $times = Time::all();
+        }
+        $categorias = Categoria::all();
+        return view('atletas.create', compact('times', 'categorias'));
     }
 
     /**
@@ -44,13 +81,16 @@ class AtletaController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
             $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time) {
                  return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
             }
             $request->merge(['atl_tim_id' => $time->tim_id]);
+
         }
+
         $request->validate([
             'atl_nome' => 'required|string|max:100',
             'atl_cpf' => 'nullable|string|max:11', // CPF sem máscara
@@ -67,9 +107,10 @@ class AtletaController extends Controller
             'atl_cidade' => 'nullable|string|max:100',
             'atl_estado' => 'nullable|string|max:2', // UF
             'atl_cep' => 'nullable|string|max:8', // CEP sem máscara
-            'atl_categoria' => 'nullable|string|max:50',
+            'atl_categoria' => 'nullable|exists:categorias,cto_id',
             'atl_ano_insc' => 'nullable|integer|digits:4',
             'atl_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            'atl_tim_id' => 'nullable|exists:times,tim_id',
         ]);
 
         // Prepara os dados, removendo 'atl_foto' para processar separadamente
@@ -138,7 +179,14 @@ class AtletaController extends Controller
                 abort(403);
             }
         }
-        return view('atletas.edit', compact('atleta'));
+        
+        $times = [];
+        if ($user->hasRole('Administrador')) {
+            $times = Time::all();
+        }
+        $categorias = Categoria::all();
+
+        return view('atletas.edit', compact('atleta', 'times', 'categorias'));
     }
 
     /**
@@ -170,9 +218,10 @@ class AtletaController extends Controller
             'atl_cidade' => 'nullable|string|max:100',
             'atl_estado' => 'nullable|string|max:2',
             'atl_cep' => 'nullable|string|max:8',
-            'atl_categoria' => 'nullable|string|max:50',
+            'atl_categoria' => 'nullable|exists:categorias,cto_id',
             'atl_ano_insc' => 'nullable|integer|digits:4',
             'atl_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'atl_tim_id' => 'nullable|exists:times,tim_id',
         ]);
 
         $data = $request->except(['atl_foto']);
@@ -257,5 +306,22 @@ class AtletaController extends Controller
         }
 
         return redirect()->route('atletas.index')->with('success', 'Atleta excluído com sucesso!');
+    }
+
+    /**
+     * Inactivate the specified athlete.
+     */
+    public function inactivate(atleta $atleta)
+    {
+        // Verificações de permissão
+        $user = auth()->user();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+             if ($atleta->atl_tim_id != Time::where('tim_user_id', $user->id)->value('tim_id')) {
+                 abort(403);
+             }
+        }
+
+        $atleta->update(['atl_ativo' => false]);
+        return redirect()->route('atletas.index')->with('success', 'Atleta inativado com sucesso!');
     }
 }

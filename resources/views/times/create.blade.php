@@ -107,7 +107,7 @@
                             <div class="mb-4">
                                 <label for="tim_cep" class="block text-gray-700 dark:text-gray-300 mb-2">CEP:</label>
                                 <input type="text" name="tim_cep" id="tim_cep" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500" value="{{ old('tim_cep') }}" maxlength="9">
-                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-300" id="user_avatar_help">Informe o CEP para realizar a pesquisa do endereço</p>
+                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-300" id="user_avatar_help">Informe o CEP para preenchimento automático do endereço.</p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">

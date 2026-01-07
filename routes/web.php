@@ -14,6 +14,7 @@ use App\Http\Controllers\TimeController;
 use App\Http\Controllers\AtletaController;
 use App\Http\Controllers\EquipesController;
 use App\Http\Controllers\EquipeCampeonatoController;
+use App\Http\Controllers\GinasioController;
 
 
 
@@ -30,12 +31,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [JogosController::class, 'index_dashboard'])->name('dashboard');
 
+    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
     Route::resource('users', UserController::class);
 
     Route::resource('categorias', CategoriasController::class);
 
     Route::resource('times', TimeController::class);
+    Route::resource('ginasios', GinasioController::class);
 
+    Route::patch('atletas/{atleta}/inactivate', [AtletaController::class, 'inactivate'])->name('atletas.inactivate');
     Route::resource('atletas', AtletaController::class);
 
     Route::resource('eventos', TiposEventosController::class);

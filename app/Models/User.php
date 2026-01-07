@@ -34,6 +34,7 @@ class User extends Authenticatable
         'is_arbitro',
         'is_resp_time',
         'tipo_arbitro',
+        'active',
     ];
 
     /**

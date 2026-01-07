@@ -51,10 +51,14 @@
                                         <td class="px-6 py-4">{{ $equipe->eqp_nome_treinador ?? 'N/A' }}</td>
                                         <td class="px-6 py-4 flex space-x-2 justify-center">
                                             {{-- Botão de remover a equipe do campeonato --}}
-                                            <form action="{{ route('equipes.campeonato.destroy', ['campeonato' => $campeonato->cpo_id, 'equipe' => $equipe->eqp_id]) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover esta equipe do campeonato?');">
+                                            <form action="{{ route('equipes.campeonato.destroy', ['campeonato' => $campeonato->cpo_id, 'equipe' => $equipe->eqp_id]) }}" method="POST" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" onsubmit="return confirm('Tem certeza que deseja remover esta equipe do campeonato?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-xs">Remover</button>
+                                                <button type="submit" title="Remover Equipe do Campeonato">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
                                             </form>
                                         </td>
                                     </tr>

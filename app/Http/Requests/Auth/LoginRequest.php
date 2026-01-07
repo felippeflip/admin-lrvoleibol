@@ -48,6 +48,13 @@ class LoginRequest extends FormRequest
                 'email' => trans('auth.failed'),
             ]);
         }
+        
+        if (! Auth::user()->active) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Sua conta está inativa. Por favor, entre em contato com o administrador.',
+            ]);
+        }
 
         RateLimiter::clear($this->throttleKey());
     }

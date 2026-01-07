@@ -32,6 +32,12 @@ class PasswordResetLinkController extends Controller
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
         // need to show to the user. Finally, we'll send out a proper response.
+        // Check if user is active
+        $user = \App\Models\User::where('email', $request->email)->first();
+        if ($user && !$user->active) {
+            return back()->withErrors(['email' => 'Sua conta está inativa. Não é possível redefinir a senha.']);
+        }
+
         $status = Password::sendResetLink(
             $request->only('email')
         );

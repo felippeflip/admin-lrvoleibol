@@ -115,6 +115,7 @@
                                     <label for="cep" class="block text-gray-700 dark:text-gray-300">CEP:</label>
                                     <input type="text" name="cep" id="cep" class="w-full border border-gray-300 p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
                                         value="{{ old('cep') }}">
+                                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">Informe o CEP para preenchimento automático do endereço.</p>
                                 </div>
                                 <div class="col-span-12 md:col-span-7">
                                     <label for="endereco" class="block text-gray-700 dark:text-gray-300">ENDEREÇO:</label>

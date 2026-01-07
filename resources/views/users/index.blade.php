@@ -9,88 +9,124 @@
         <div class="w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <div class="container mx-auto p-4">
+                        @if (session('success'))
+                            <div class="bg-green-500 text-white p-2 my-4 rounded flash-message" role="alert">
+                                {{ session('success') }}
+                            </div>
+                        @endif
 
-                    <div class="flex justify-between">
-                        <a href="{{ route('users.create') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO</a>
-                    </div>
+                        <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
+                            <form method="GET" action="{{ route('users.index') }}">
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <!-- Status -->
+                                    <div>
+                                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                        <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                            <option value="active" {{ request('status', 'active') == 'active' ? 'selected' : '' }}>Ativo</option>
+                                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inativo</option>
+                                            <option value="todos" {{ request('status') == 'todos' ? 'selected' : '' }}>Todos</option>
+                                        </select>
+                                    </div>
 
-                    <!-- Mensagem de sucesso -->
-                    @if (session('success'))
-                        <div class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4 flash-message" role="alert">
-                            {{ session('success') }}
+                                    <!-- Perfil -->
+                                    <div>
+                                        <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
+                                        <select name="role" id="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                            <option value="">Todos</option>
+                                            <option value="Administrador" {{ request('role') == 'Administrador' ? 'selected' : '' }}>Administrador</option>
+                                            <option value="Juiz" {{ request('role') == 'Juiz' ? 'selected' : '' }}>Juiz</option>
+                                            <option value="ResponsavelTime" {{ request('role') == 'ResponsavelTime' ? 'selected' : '' }}>Responsável pelo TIME</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Botões -->
+                                    <div class="flex items-end space-x-2">
+                                        <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
+                                        <a href="{{ route('users.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                    @endif
 
-                    <!-- Mensagem de erro -->
-                    @if ($errors->any())
-                        <div class="bg-red-500 text-white p-2 my-4 rounded">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
+                        <div class="flex justify-start mb-4">
+                            <a href="{{ route('users.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Novo Usuário</a>
                         </div>
-                    @endif
 
-                    <!-- Table List -->
-                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                        <table id="users-table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">Apelido</th>
-                                    <th scope="col" class="px-6 py-3">Nome Completo</th>
-                                    <th scope="col" class="px-6 py-3">REGISTRO</th>
-                                    <th scope="col" class="px-6 py-3">Categoria</th>
-                                    <th scope="col" class="px-6 py-3">Telefone</th>
-                                    <th scope="col" class="px-6 py-3">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($users as $user)
-                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <th scope="row" class="px-6 py-4">{{ $user->apelido }}</th>
-                                        <td class="px-6 py-4">{{ $user->name }}</td>
-                                        <td class="px-6 py-4">{{ $user->cref }}</td>
-                                        <td class="px-6 py-4">{{ $user->tipo_arbitro }}</td>
-                                        <td class="px-6 py-4">{{ $user->telefone }}</td>
-                                        <td class="px-6 py-4 flex space-x-2">
-                                            <a href="{{ route('users.edit', $user->id) }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Editar</a>
-                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover este usuário?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Deletar</button>
-                                            </form>
-                                        </td>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white dark:bg-gray-700 rounded-lg shadow-md">
+                                <thead>
+                                    <tr class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
+                                        <th class="py-3 px-6 text-left">Apelido</th>
+                                        <th class="py-3 px-6 text-left">Nome Completo</th>
+                                        <th class="py-3 px-6 text-left">Registro</th>
+                                        <th class="py-3 px-6 text-left">Categoria</th>
+                                        <th class="py-3 px-6 text-left">Telefone</th>
+                                        <th class="py-3 px-6 text-center">Status</th>
+                                        <th class="py-3 px-6 text-center">Ações</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody class="text-gray-700 dark:text-gray-300 text-sm font-light">
+                                    @foreach ($users as $user)
+                                        <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                            <td class="py-3 px-6 text-left">{{ $user->apelido }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $user->name }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $user->cref }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $user->tipo_arbitro }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $user->telefone }}</td>
+                                            <td class="py-3 px-6 text-center">
+                                                <span class="{{ $user->active ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600' }} py-1 px-3 rounded-full text-xs">
+                                                    {{ $user->active ? 'Ativo' : 'Inativo' }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div class="flex item-center justify-center space-x-2">
+                                                    <a href="{{ route('users.edit', $user->id) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" title="Editar Usuário">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                        </svg>
+                                                    </a>
+                                                    
+                                                    <form action="{{ route('users.toggleStatus', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja {{ $user->active ? 'desativar' : 'ativar' }} este usuário?');">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" title="{{ $user->active ? 'Desativar Usuário' : 'Ativar Usuário' }}">
+                                                            @if($user->active)
+                                                                <!-- Ícone para Desativar (Ex: Bloqueio ou Check) -->
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                                </svg>
+                                                            @else
+                                                                <!-- Ícone para Ativar (Ex: Check) -->
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            @endif
+                                                        </button>
+                                                    </form>
 
-                    <!-- Links de Paginação -->
-                    <div class="mt-4">
-                        {{ $users->links() }}
+                                                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" onsubmit="return confirm('Tem certeza que deseja remover este usuário?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" title="Excluir Usuário">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4">
+                            {{ $users->links() }}
+                        </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Scripts do DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#users-table').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
-                },
-                "columnDefs": [
-                    { "orderable": false, "targets": -1 } // Desativa a ordenação na coluna 'Ação'
-                ]
-            });
-        });
-    </script>
 </x-app-layout>
