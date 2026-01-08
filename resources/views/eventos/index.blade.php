@@ -30,6 +30,46 @@
                         </div>
                     @endif
 
+                    <!-- Filtros -->
+                    <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
+                        <form method="GET" action="{{ route('eventos.index') }}">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <!-- Busca por Nome -->
+                                <div>
+                                    <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Campeonato</label>
+                                    <input type="text" name="search" id="search" value="{{ request('search') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-white placeholder-gray-400" placeholder="Nome do campeonato">
+                                </div>
+
+                                <!-- Ano -->
+                                <div>
+                                    <label for="ano" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ano</label>
+                                    <select name="ano" id="ano" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-white">
+                                        <option value="">Todos</option>
+                                        @for ($year = date('Y') + 1; $year >= 2000; $year--)
+                                            <option value="{{ $year }}" {{ request('ano') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <!-- Status -->
+                                <div>
+                                    <label for="ativo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                    <select name="ativo" id="ativo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-white">
+                                        <option value="">Todos</option>
+                                        <option value="1" {{ request('ativo') === '1' ? 'selected' : '' }}>Ativo</option>
+                                        <option value="0" {{ request('ativo') === '0' ? 'selected' : '' }}>Inativo</option>
+                                    </select>
+                                </div>
+
+                                <!-- Botões -->
+                                <div class="flex items-end space-x-2">
+                                    <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
+                                    <a href="{{ route('eventos.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -38,6 +78,7 @@
                                     <th scope="col" class="px-6 py-3">ANO</th>
                                     <th scope="col" class="px-6 py-3">DATA INICIO</th>
                                     <th scope="col" class="px-6 py-3">DATA FIM</th>
+                                    <th scope="col" class="px-6 py-3 text-center">STATUS</th>
                                     <th scope="col" class="px-6 py-3 text-center">AÇÃO</th>
                                 </tr>
                             </thead>
@@ -48,6 +89,13 @@
                                         <td class="px-6 py-4">{{ $campeonato->cpo_ano }}</td>
                                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($campeonato->cpo_dt_inicio)->format('d/m/Y') }}</td>
                                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($campeonato->cpo_dt_fim)->format('d/m/Y') }}</td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if($campeonato->cpo_ativo)
+                                                <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Ativo</span>
+                                            @else
+                                                <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Inativo</span>
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-4 flex flex-col space-y-2 justify-center items-center">
                                             {{-- Botões de Ação do Campeonato --}}
                                             <div class="flex space-x-2 w-full justify-center items-center">
@@ -89,8 +137,12 @@
                             </tbody>
                         </table>
                     </div>
+                    </div>
 
-                </div>
+                    <div class="mt-4">
+                        {{ $campeonatos->links() }}
+                    </div>
+
             </div>
         </div>
     </div>

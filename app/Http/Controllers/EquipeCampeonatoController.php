@@ -40,7 +40,8 @@ class EquipeCampeonatoController extends Controller
         // Verifica se o usuário tem a flag de responsável por time.
         // Se for admin, assume-se que pode ver tudo (admin geralmente não tem is_resp_time=true, ou a lógica permite ver tudo se não entrar no if)
         // Caso queira também checar role: || $user->hasRole('ResponsavelTime')
-        if ($user->is_resp_time) {
+        // Se não for Administrador e tiver permissão de responsável, filtra pelo time
+        if (!$user->hasRole('Administrador') && ($user->is_resp_time || $user->hasRole('ResponsavelTime'))) {
              $query->whereHas('time', function($q) use ($user) {
                  $q->where('tim_user_id', $user->id);
              });

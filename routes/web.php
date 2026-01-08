@@ -55,6 +55,14 @@ Route::middleware('auth')->group(function () {
     Route::post('campeonatos/{campeonato}/equipes', [EquipeCampeonatoController::class, 'store'])->name('equipes.campeonato.store');
     Route::delete('campeonatos/{campeonato}/equipes/{equipe}', [EquipeCampeonatoController::class, 'destroy'])->name('equipes.campeonato.destroy');
 
+    Route::get('elencos', [App\Http\Controllers\ElencoController::class, 'list'])->name('elenco.list');
+
+    Route::prefix('campeonatos/{campeonato}/equipes/{equipe_campeonato}/elenco')->group(function () {
+        Route::get('/', [App\Http\Controllers\ElencoController::class, 'index'])->name('elenco.index');
+        Route::post('/', [App\Http\Controllers\ElencoController::class, 'store'])->name('elenco.store');
+        Route::delete('/{elenco_id}', [App\Http\Controllers\ElencoController::class, 'destroy'])->name('elenco.destroy');
+    });
+
 
 
     Route::get('/test-create-roles', [JogosController::class, 'test']);

@@ -39,4 +39,12 @@ class EquipeCampeonato extends Pivot
     {
         return $this->belongsTo(Campeonato::class, 'cpo_fk_id', 'cpo_id');
     }
+
+    /**
+     * Define o relacionamento com o Elenco (Atletas inscritos neste campeonato por esta equipe)
+     */
+    public function elenco()
+    {
+        return $this->hasMany(ElencoEquipeCampeonato::class, 'ele_fk_eqp_cpo_id', 'eqp_cpo_id');
+    }
 }

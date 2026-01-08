@@ -37,6 +37,6 @@ class ElencoEquipeCampeonato extends Pivot
      */
     public function atleta()
     {
-        return $this->belongsTo(Atletas::class, 'ele_fk_atl_id', 'atl_id');
+        return $this->belongsTo(Atleta::class, 'ele_fk_atl_id', 'atl_id');
     }
 }

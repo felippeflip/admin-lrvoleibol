@@ -13,26 +13,65 @@ class EquipesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        // Carrega as equipes e EAGER LOADING (com) os modelos relacionados Time e Categoria
-        // Isso evita o problema de N+1 queries e permite acessar $equipe->time->tim_nome na view
         $user = auth()->user();
+        
+        // Inicia a query base carregando relacionamentos
+        $query = Equipe::with(['time', 'categoria', 'campeonatos']);
+
+        // 1. Aplica o escopo de segurança (Quem vê o quê)
         if ($user->hasRole('Administrador')) {
-            $equipes = Equipe::with(['time', 'categoria'])->paginate(10);
+            // Administrador vê tudo, sem restrição inicial
         } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
             $time = Time::where('tim_user_id', $user->id)->first();
             if ($time) {
-                $equipes = Equipe::where('eqp_time_id', $time->tim_id)->with(['time', 'categoria'])->paginate(10);
+                $query->where('eqp_time_id', $time->tim_id);
             } else {
-                 // Caso o usuário seja responsável mas não tenha time vinculado ainda
-                $equipes = Equipe::where('eqp_id', 0)->paginate(10);
+                // Responsável sem time não vê nada
+                $query->where('eqp_id', 0);
             }
         } else {
-             // Outros usuários (padrão ver tudo ou nada? assumindo ver tudo como antes)
-             $equipes = Equipe::with(['time', 'categoria'])->paginate(10);
+            // Outros usuários
+            // Se a regra for ver tudo, não faz nada. Se for restritiva, adicione aqui.
         }
-        return view('equipes.index', compact('equipes'));
+
+        // 2. Aplica Filtros de Pesquisa ( vindos do request )
+
+        // Filtro por Nome da Equipe
+        if ($request->filled('search')) {
+            $query->where('eqp_nome_detalhado', 'like', '%' . $request->search . '%');
+        }
+
+        // Filtro por Categoria
+        if ($request->filled('categoria')) {
+            $query->where('eqp_categoria_id', $request->categoria);
+        }
+
+        // Filtro por Time
+        if ($request->filled('time_id')) {
+            $query->where('eqp_time_id', $request->time_id);
+        }
+
+        // Paginação
+        $equipes = $query->paginate(10)->appends($request->all());
+
+        // Carregar dados auxiliares para os dropdowns de filtro
+        $categorias = Categoria::orderBy('cto_nome')->get();
+        
+        // Para o filtro de times, se for admin carrega todos, se for responsável, só o seu (já estaria filtrado na query, mas para o dropdown é bom restringir visualmente também)
+        if ($user->hasRole('Administrador')) {
+            $times = Time::orderBy('tim_nome')->get();
+        } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
+            $times = Time::where('tim_user_id', $user->id)->get();
+        } else {
+             $times = Time::orderBy('tim_nome')->get();
+        }
+
+        return view('equipes.index', compact('equipes', 'categorias', 'times'));
     }
 
     /**

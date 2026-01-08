@@ -18,6 +18,11 @@ class Campeonato extends Model
         'cpo_ano',
         'cpo_dt_inicio',
         'cpo_dt_fim',
+        'cpo_ativo',
+    ];
+
+    protected $casts = [
+        'cpo_ativo' => 'boolean',
     ];
 
     // Adicione este relacionamento belongsToMany

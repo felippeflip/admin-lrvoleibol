@@ -53,6 +53,14 @@
                                 <label for="cpo_dt_fim" class="block text-gray-700">DATA FIM:</label>
                                 <input type="date" name="cpo_dt_fim" id="cpo_dt_fim" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_dt_fim', $campeonato->cpo_dt_fim) }}">
                             </div>
+
+                            <div class="mb-6">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="cpo_ativo" id="cpo_ativo" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {{ old('cpo_ativo', $campeonato->cpo_ativo) ? 'checked' : '' }}>
+                                    <span class="ml-2 text-gray-700 text-sm font-bold uppercase">Campeonato Ativo?</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">Se desmarcado, este campeonato ficará oculto para gestão das equipes, mas manterá o histórico.</p>
+                            </div>
                            
                             <div class="flex justify-between">
                                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Atualizar</button>

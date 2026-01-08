@@ -11,10 +11,30 @@ use Illuminate\Support\Facades\Log;
 
 class TiposEventosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Campeonato::query();
 
-        $campeonatos = Campeonato::all();
+        // Filtro por Nome
+        if ($request->filled('search')) {
+            $query->where('cpo_nome', 'like', '%' . $request->search . '%');
+        }
+
+        // Filtro por Ano
+        if ($request->filled('ano')) {
+            $query->where('cpo_ano', $request->ano);
+        }
+
+        // Filtro por Status
+        if ($request->filled('ativo')) {
+            if ($request->ativo == '1') {
+                $query->where('cpo_ativo', true);
+            } elseif ($request->ativo == '0') {
+                $query->where('cpo_ativo', false);
+            }
+        }
+
+        $campeonatos = $query->orderBy('cpo_id', 'desc')->paginate(10)->appends($request->all());
    
         return view('eventos.index', compact('campeonatos'));
     }
@@ -59,6 +79,7 @@ class TiposEventosController extends Controller
             'cpo_ano'          => $request->input('cpo_ano'),
             'cpo_dt_inicio'    => $request->input('cpo_dt_inicio'),
             'cpo_dt_fim'       => $request->input('cpo_dt_fim'),
+            'cpo_ativo'        => true,
         ]);
 
     } catch (\Exception $e) {
@@ -105,6 +126,7 @@ class TiposEventosController extends Controller
             'cpo_ano' => $request->input('cpo_ano'),
             'cpo_dt_inicio' => $request->input('cpo_dt_inicio'),
             'cpo_dt_fim' => $request->input('cpo_dt_fim'),
+            'cpo_ativo' => $request->boolean('cpo_ativo'),
         ]);
 
         $wpTermTaxonomy = Wp_Term_Taxonomy::findOrFail($campeonato->cpo_term_tx_id);
@@ -138,14 +160,40 @@ class TiposEventosController extends Controller
 
     public function destroy($id)
     {
-        $taxonomy = Wp_Term_Taxonomy::findOrFail($id);
+        try {
+            $campeonato = Campeonato::findOrFail($id);
 
-        // Primeiro, deletar o registro de wp_term_taxonomy
-        $taxonomy->delete();
+            // Verifica se existem equipes vinculadas a este campeonato
+            // Assumindo que a relação se chama 'equipes' no model Campeonato
+            if ($campeonato->equipes()->exists()) {
+                return redirect()->route('eventos.index')
+                    ->withErrors(['error' => 'Não é possível excluir este campeonato pois existem equipes vinculadas a ele.']);
+            }
 
-        // Depois, deletar o registro correspondente em wp_terms
-        Wp_Terms::where('term_id', $taxonomy->term_id)->delete();
+            // Armazena IDs relacionados para exclusão posterior
+            $termTaxonomyId = $campeonato->cpo_term_tx_id;
 
-        return redirect()->route('eventos.index')->with('success', 'Evento deletado com sucesso');
+            // Exclui o campeonato
+            $campeonato->delete();
+
+            // Exclui dados relacionados do WordPress (Wp_Term_Taxonomy e Wp_Terms)
+            if ($termTaxonomyId) {
+                $taxonomy = Wp_Term_Taxonomy::find($termTaxonomyId);
+                if ($taxonomy) {
+                    $termId = $taxonomy->term_id;
+                    $taxonomy->delete();
+                    
+                    if ($termId) {
+                         Wp_Terms::where('term_id', $termId)->delete();
+                    }
+                }
+            }
+
+            return redirect()->route('eventos.index')->with('success', 'Evento deletado com sucesso');
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir campeonato: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->route('eventos.index')->withErrors(['error' => 'Erro ao excluir campeonato.']);
+        }
     }
 }
