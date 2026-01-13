@@ -21,7 +21,10 @@ class EquipesController extends Controller
         $user = auth()->user();
         
         // Inicia a query base carregando relacionamentos
-        $query = Equipe::with(['time', 'categoria', 'campeonatos']);
+        // Carrega apenas campeonatos ATIVOS para visualização na lista de equipes
+        $query = Equipe::with(['time', 'categoria', 'campeonatos' => function($q) {
+            $q->where('cpo_ativo', true);
+        }]);
 
         // 1. Aplica o escopo de segurança (Quem vê o quê)
         if ($user->hasRole('Administrador')) {
@@ -80,7 +83,12 @@ class EquipesController extends Controller
     public function indexForTime(Time $time)
     {
         // Carrega as equipes com seus respectivos times e categorias para o time fornecido
-        $equipes = Equipe::where('eqp_time_id', $time->tim_id)->with(['time', 'categoria'])->paginate(10);
+        // Também filtra campeonatos ativos
+        $equipes = Equipe::where('eqp_time_id', $time->tim_id)
+            ->with(['time', 'categoria', 'campeonatos' => function($q) {
+                $q->where('cpo_ativo', true);
+            }])
+            ->paginate(10);
         
         // Passa o objeto do time para a view para customizar o header
         return view('equipes.index', compact('equipes', 'time'));

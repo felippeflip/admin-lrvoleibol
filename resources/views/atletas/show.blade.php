@@ -18,7 +18,7 @@
                             </div>
                             <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-1">{{ $atleta->atl_nome }}</h3>
                             <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 mb-4">
-                                {{ $atleta->atl_categoria ?? 'Sem Categoria' }}
+                                {{ $atleta->categoria->cto_nome ?? 'Sem Categoria' }}
                             </span>
 
                             <div class="w-full bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-inner">
@@ -116,10 +116,10 @@
                                 <a href="{{ route('atletas.index') }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md transition duration-150 ease-in-out">
                                     Voltar
                                 </a>
-                                <button onclick="window.print()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition duration-150 ease-in-out flex items-center">
+                                <a href="{{ route('atletas.print', $atleta->atl_id) }}" target="_blank" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition duration-150 ease-in-out flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                     Imprimir
-                                </button>
+                                </a>
                                 <a href="{{ route('atletas.edit', $atleta->atl_id) }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition duration-150 ease-in-out flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     Editar
@@ -133,26 +133,4 @@
             </div>
         </div>
     </div>
-    
-    <style>
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printable-area, #printable-area * {
-                visibility: visible;
-            }
-            #printable-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                box-shadow: none;
-            }
-            .no-print {
-                display: none !important;
-            }
-        }
-    </style>
 </x-app-layout>

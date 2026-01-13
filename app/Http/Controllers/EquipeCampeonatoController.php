@@ -26,6 +26,11 @@ class EquipeCampeonatoController extends Controller
      */
     public function create(Campeonato $campeonato)
     {
+        // Verifica se o campeonato está ativo
+        if (!$campeonato->cpo_ativo) {
+            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
+                ->withErrors(['error' => 'Este campeonato está encerrado/inativo e não permite mais alterações de equipes.']);
+        }
         // Carrega as equipes já inscritas no campeonato
         $equipesInscritas = $campeonato->equipes()->with(['time', 'categoria'])->get();
         $equipesJaInscritasIds = $equipesInscritas->pluck('eqp_id');
@@ -58,6 +63,11 @@ class EquipeCampeonatoController extends Controller
      */
     public function store(Request $request, Campeonato $campeonato)
     {
+        // Verifica se o campeonato está ativo
+        if (!$campeonato->cpo_ativo) {
+             return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
+                ->withErrors(['error' => 'Campeonato inativo. Não é possível alterar as equipes.']);
+        }
         $request->validate([
             'equipe_ids' => 'nullable|array', // Agora pode ser null se nada for selecionado
             'equipe_ids.*' => 'exists:equipes,eqp_id',
@@ -89,6 +99,11 @@ class EquipeCampeonatoController extends Controller
      */
     public function destroy(Campeonato $campeonato, Equipe $equipe)
     {
+        // Verifica se o campeonato está ativo
+        if (!$campeonato->cpo_ativo) {
+             return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
+                ->withErrors(['error' => 'Campeonato inativo. Não é possível remover equipes.']);
+        }
         try {
             // Remove a associação da equipe com o campeonato na tabela pivot
             $campeonato->equipes()->detach($equipe->eqp_id);
@@ -98,5 +113,23 @@ class EquipeCampeonatoController extends Controller
             Log::error('Erro ao remover equipe do campeonato: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->withErrors(['error' => 'Erro ao remover equipe do campeonato.']);
         }
+    }
+    /**
+     * Retorna a lista de equipes inscritas em um campeonato em formato JSON.
+     * Usado no formulário de criação de jogos.
+     */
+    public function listByCampeonatoJson($campeonatoId)
+    {
+        $equipes = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonatoId)
+            ->with(['equipe'])
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->eqp_cpo_id, // ID da tabela pivot
+                    'nome' => $item->equipe->eqp_nome_detalhado ?? 'Time Sem Nome'
+                ];
+            });
+
+        return response()->json($equipes);
     }
 }

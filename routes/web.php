@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('times', TimeController::class);
     Route::resource('ginasios', GinasioController::class);
 
+    Route::get('atletas/{atleta}/print', [AtletaController::class, 'print'])->name('atletas.print');
     Route::patch('atletas/{atleta}/inactivate', [AtletaController::class, 'inactivate'])->name('atletas.inactivate');
     Route::resource('atletas', AtletaController::class);
 
@@ -56,6 +57,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('campeonatos/{campeonato}/equipes/{equipe}', [EquipeCampeonatoController::class, 'destroy'])->name('equipes.campeonato.destroy');
 
     Route::get('elencos', [App\Http\Controllers\ElencoController::class, 'list'])->name('elenco.list');
+
+    Route::get('/api/campeonatos/{id}/equipes', [EquipeCampeonatoController::class, 'listByCampeonatoJson'])->name('api.equipes.campeonato');
 
     Route::prefix('campeonatos/{campeonato}/equipes/{equipe_campeonato}/elenco')->group(function () {
         Route::get('/', [App\Http\Controllers\ElencoController::class, 'index'])->name('elenco.index');
@@ -77,7 +80,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
     Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
     Route::get('/resultados/import', [FuncoesController::class, 'showImport'])->name('resultados.showImportForm');
-    Route::post('/resultados/upload', [FuncoesController::class, 'upload'])->name('resultados.upload');
+    Route::get('/jogos/{id}/resultado/create', [App\Http\Controllers\ResultadosController::class, 'create'])->name('resultados.create');
+    Route::post('/jogos/{id}/resultado', [App\Http\Controllers\ResultadosController::class, 'store'])->name('resultados.store');
+    Route::patch('/jogos/{id}/approve', [App\Http\Controllers\ResultadosController::class, 'approve'])->name('resultados.approve');
 
    
 });

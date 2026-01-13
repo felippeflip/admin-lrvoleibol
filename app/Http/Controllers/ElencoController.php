@@ -73,7 +73,10 @@ class ElencoController extends Controller
                                 ->pluck('ele_fk_atl_id')
                                 ->toArray();
 
+        $categoriaId = $equipeCampeonato->equipe->eqp_categoria_id; // ID da Categoria da Equipe
+        
         $atletasDisponiveis = Atleta::where('atl_tim_id', $timeId)
+            ->where('atl_categoria', $categoriaId) // Filtrar apenas atletas desta categoria
             ->whereNotIn('atl_id', $atletasNoElencoIds)
             ->where('atl_ativo', 1) // Opcional: apenas ativos
             ->orderBy('atl_nome')

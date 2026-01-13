@@ -91,9 +91,15 @@ class AtletaController extends Controller
 
         }
 
+        // Limpa CPF e RG antes de validar para garantir unicidade com o formato do banco (apenas números)
+        $request->merge([
+            'atl_cpf' => preg_replace('/[^0-9]/', '', $request->atl_cpf ?? ''),
+            'atl_rg' => preg_replace('/[^0-9]/', '', $request->atl_rg ?? ''),
+        ]);
+
         $request->validate([
             'atl_nome' => 'required|string|max:100',
-            'atl_cpf' => 'nullable|string|max:11', // CPF sem máscara
+            'atl_cpf' => 'nullable|string|max:11|unique:atletas,atl_cpf', // Adicionando unique
             'atl_rg' => 'nullable|string|max:10', // RG sem máscara
             'atl_celular' => 'nullable|string|max:11', // Celular sem máscara
             'atl_telefone' => 'nullable|string|max:10', // Telefone sem máscara
@@ -115,6 +121,7 @@ class AtletaController extends Controller
 
         // Prepara os dados, removendo 'atl_foto' para processar separadamente
         $data = $request->except(['atl_foto']);
+        $data['atl_ativo'] = 1; // Garante que o atleta seja criado como ativo
 
         // Ajusta campos que vêm formatados ou precisam de pré-processamento
         $data['atl_cpf'] = preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
@@ -166,6 +173,14 @@ class AtletaController extends Controller
     public function show(atleta $atleta)
     {
         return view('atletas.show', compact('atleta'));
+    }
+
+    /**
+     * Display the specified resource for printing.
+     */
+    public function print(atleta $atleta)
+    {
+        return view('atletas.print', compact('atleta'));
     }
 
     /**
