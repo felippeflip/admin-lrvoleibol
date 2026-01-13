@@ -53,7 +53,10 @@ class NotifyApontadoresResultados extends Command
             // Calculate Game End Time Threshold (Start Time + 3 Hours)
             // Combine Date and Time
             try {
-                $gameTime = Carbon::parse($jogo->jgo_dt_jogo . ' ' . $jogo->jgo_hora_jogo);
+                // Ensure we parse only the date part from jgo_dt_jogo
+                $datePart = Carbon::parse($jogo->jgo_dt_jogo)->format('Y-m-d');
+                $gameTime = Carbon::parse($datePart . ' ' . $jogo->jgo_hora_jogo);
+                
                 $threshold = $gameTime->addHours(3);
 
                 if ($now->greaterThan($threshold)) {
@@ -72,6 +75,7 @@ class NotifyApontadoresResultados extends Command
                     }
                 }
             } catch (\Exception $e) {
+                $this->error("Erro ao processar notificação de jogo {$jogo->jgo_id}: " . $e->getMessage());
                 Log::error("Erro ao processar notificação de jogo {$jogo->jgo_id}: " . $e->getMessage());
             }
         }

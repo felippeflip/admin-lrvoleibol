@@ -11,12 +11,14 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
                     {{-- Actions --}}
+                    @hasrole('Administrador')
                     <div class="flex justify-between items-center mb-6">
                         <div class="space-x-2">
-                            <a href="{{ route('jogos.create') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO JOGO</a>
-                            <a href="{{ route('jogos.showImportForm') }}" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">IMPORTAR</a>
+                             <a href="{{ route('jogos.create') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO JOGO</a>
+                             <a href="{{ route('jogos.showImportForm') }}" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">IMPORTAR</a>
                         </div>
                     </div>
+                    @endhasrole
 
                     {{-- Filter Form --}}
                     <form method="GET" action="{{ route('jogos.index') }}" class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -164,8 +166,7 @@
                                                 </a>
 
                                                 <!-- Approve (Admin Only - Logic in View for now, Controller validates) -->
-                                                @if($resStatus == 'pendente' && auth()->user()->can('manage team')) 
-                                                    {{-- Note: 'manage team' is placeholder permission for Admin/Manager --}}
+                                                @if($resStatus == 'pendente' && auth()->user()->hasRole('Administrador')) 
                                                     <form action="{{ route('resultados.approve', $jogo->local_id ?? 0) }}" method="POST" class="mr-2 transform hover:text-green-500 hover:scale-110" onsubmit="return confirm('Aprovar este resultado?');">
                                                         @csrf
                                                         @method('PATCH')
@@ -177,6 +178,7 @@
                                                     </form>
                                                 @endif
 
+                                                @hasrole('Administrador')
                                                 <!-- Edit Jogo -->
                                                 <a href="{{ route('jogos.edit', $jogo->ID) }}" class="mr-2 transform hover:text-purple-500 hover:scale-110" title="Editar Jogo">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,6 +196,7 @@
                                                         </svg>
                                                     </button>
                                                 </form>
+                                                @endhasrole
                                             </div>
                                         </td>
                                     </tr>

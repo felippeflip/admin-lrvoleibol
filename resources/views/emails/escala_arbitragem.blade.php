@@ -14,6 +14,7 @@
 <body>
     <div class="container">
         <div class="header">
+            <img src="{{ $message->embed(public_path('build/assets/images/LOGO_LRV-150x150.png')) }}" alt="Logo LRV" style="display: block; margin: 0 auto 10px auto; max-width: 150px;">
             <h2>Escala de Arbitragem</h2>
         </div>
         <div class="content">
@@ -21,7 +22,7 @@
             <p>Você foi escalado(a) como <strong>{{ $funcao }}</strong> para a seguinte partida:</p>
             
             <div class="details">
-                <p><strong>Partida:</strong> {{ $jogo->mandante->equipe->eqp_nome ?? 'Mandante' }} x {{ $jogo->visitante->equipe->eqp_nome ?? 'Visitante' }}</p>
+                <p><strong>Partida:</strong> {{ $jogo->mandante->equipe->time->tim_nome ?? 'Mandante' }} x {{ $jogo->visitante->equipe->time->tim_nome ?? 'Visitante' }}</p>
                 <p><strong>Data:</strong> {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }}</p>
                 <p><strong>Horário:</strong> {{ $jogo->jgo_hora_jogo }}</p>
                 <p><strong>Local:</strong> {{ $jogo->ginasio->gin_nome ?? 'Local a definir' }}</p>
@@ -39,7 +40,9 @@
             <p>Por favor, chegue com antecedência ao local.</p>
         </div>
         <div class="footer">
-            <p>Este é um e-mail automático do Sistema de Gestão de Voleibol.</p>
+            <p style="margin-bottom: 0;">Este é um e-mail automático do Sistema de Gestão de Voleibol</p>
+            <p style="margin-top: 5px;">LIGA REGIONAL DE VOLEIBOL - CAMPINAS</p>
+            <p>Favor não responder a este e-mail.</p>
         </div>
     </div>
 </body>

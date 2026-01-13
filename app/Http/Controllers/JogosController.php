@@ -43,6 +43,15 @@ class JogosController extends Controller
                     ->leftJoin('jogos', 'wp_posts.ID', '=', 'jogos.jgo_wp_id')
                     ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id');
 
+        $user = Auth::user();
+        if ($user->hasRole('Juiz') && !$user->hasRole('Administrador')) {
+             $query->where(function ($q) use ($user) {
+                 $q->where('jogos.jgo_arbitro_principal', $user->id)
+                   ->orWhere('jogos.jgo_arbitro_secundario', $user->id)
+                   ->orWhere('jogos.jgo_apontador', $user->id);
+             });
+        }
+
         // Filters
         if ($request->filled('titulo')) {
             $query->where('post_title', 'like', '%' . $request->titulo . '%');
@@ -423,6 +432,10 @@ class JogosController extends Controller
 
     public function update(Request $request, $id)
     {
+         if (!Auth::user()->hasRole('Administrador')) {
+             return redirect()->route('jogos.index')->with('error', 'Acesso não autorizado.');
+         }
+
          $request->validate([
             'event_number' => 'required|integer',
             'campeonato_id' => 'required|exists:campeonatos,cpo_id',
@@ -502,6 +515,10 @@ class JogosController extends Controller
 
     public function destroy($id)
     {
+        if (!Auth::user()->hasRole('Administrador')) {
+             return redirect()->route('jogos.index')->with('error', 'Acesso não autorizado.');
+        }
+
         $post = WpPosts::findOrFail($id);
         
         // Also delete local jogo if linked
