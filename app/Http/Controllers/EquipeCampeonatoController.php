@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Campeonato;
 use App\Models\Equipe;
+use App\Models\Time;
+use App\Models\Categoria;
 use Illuminate\Support\Facades\Log;
 
 class EquipeCampeonatoController extends Controller
@@ -12,13 +14,39 @@ class EquipeCampeonatoController extends Controller
     /**
      * Exibe a lista de Equipe inscritas em um campeonato específico.
      */
-    public function index(Campeonato $campeonato)
+    public function index(Request $request, Campeonato $campeonato)
     {
         // Carrega as Equipe associadas a este campeonato, com seus respectivos times e categorias.
-        $equipes = $campeonato->equipes()->with(['time', 'categoria'])->paginate(10);
-        
+        $query = $campeonato->equipes()->with(['time', 'categoria']);
+
+        // Filtro por Nome da Equipe
+        if ($request->filled('search_equipe')) {
+            $query->where('eqp_nome', 'like', '%' . $request->search_equipe . '%');
+        }
+
+        // Filtro por Time (Select)
+        if ($request->filled('search_time')) {
+            $query->where('tim_fk_id', $request->search_time);
+        }
+
+        // Filtro por Categoria (Select)
+        if ($request->filled('search_categoria')) {
+            $query->where('cto_fk_id', $request->search_categoria);
+        }
+
+        // Filtro por Nome do Treinador
+        if ($request->filled('search_treinador')) {
+            $query->where('eqp_nome_treinador', 'like', '%' . $request->search_treinador . '%');
+        }
+
+        $equipes = $query->paginate(10)->appends($request->all());
+
+        // Carregar opções para os selects de filtro
+        $times = Time::orderBy('tim_nome')->get();
+        $categorias = Categoria::orderBy('cto_nome')->get();
+
         // Passa o objeto do campeonato e as equipes para a view.
-        return view('equipes_campeonato.index', compact('equipes', 'campeonato'));
+        return view('equipes_campeonato.index', compact('equipes', 'campeonato', 'times', 'categorias'));
     }
 
     /**
@@ -37,19 +65,19 @@ class EquipeCampeonatoController extends Controller
 
         // Inicia a query para buscar equipes não inscritas
         $query = Equipe::whereNotIn('eqp_id', $equipesJaInscritasIds)
-                       ->with('time', 'categoria');
+            ->with('time', 'categoria');
 
         // Se o usuário for responsável por time, filtra apenas as equipes dele
         $user = auth()->user();
-        
+
         // Verifica se o usuário tem a flag de responsável por time.
         // Se for admin, assume-se que pode ver tudo (admin geralmente não tem is_resp_time=true, ou a lógica permite ver tudo se não entrar no if)
         // Caso queira também checar role: || $user->hasRole('ResponsavelTime')
         // Se não for Administrador e tiver permissão de responsável, filtra pelo time
         if (!$user->hasRole('Administrador') && ($user->is_resp_time || $user->hasRole('ResponsavelTime'))) {
-             $query->whereHas('time', function($q) use ($user) {
-                 $q->where('tim_user_id', $user->id);
-             });
+            $query->whereHas('time', function ($q) use ($user) {
+                $q->where('tim_user_id', $user->id);
+            });
         }
 
         $equipesDisponiveis = $query->orderBy('eqp_nome_detalhado')->get();
@@ -65,7 +93,7 @@ class EquipeCampeonatoController extends Controller
     {
         // Verifica se o campeonato está ativo
         if (!$campeonato->cpo_ativo) {
-             return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
+            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
                 ->withErrors(['error' => 'Campeonato inativo. Não é possível alterar as equipes.']);
         }
         $request->validate([
@@ -101,13 +129,13 @@ class EquipeCampeonatoController extends Controller
     {
         // Verifica se o campeonato está ativo
         if (!$campeonato->cpo_ativo) {
-             return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
+            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)
                 ->withErrors(['error' => 'Campeonato inativo. Não é possível remover equipes.']);
         }
         try {
             // Remove a associação da equipe com o campeonato na tabela pivot
             $campeonato->equipes()->detach($equipe->eqp_id);
-            
+
             return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)->with('success', 'Equipe removida do campeonato com sucesso!');
         } catch (\Exception $e) {
             Log::error('Erro ao remover equipe do campeonato: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);

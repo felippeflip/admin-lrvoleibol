@@ -50,7 +50,8 @@ class UserController extends Controller
     public function create()
     {
         $times = Time::all();
-        return view('users.create', compact('times'));
+        $roles = \Spatie\Permission\Models\Role::all();
+        return view('users.create', compact('times', 'roles'));
     }
 
     public function store(Request $request)
@@ -68,20 +69,38 @@ class UserController extends Controller
             'bairro' => 'nullable|string|max:255',
             'cidade' => 'nullable|string|max:255',
             'cep' => 'nullable|string|max:10',
-            'is_arbitro' => 'boolean',
+            'role' => 'nullable|exists:roles,name', // Validar Role
             'tipo_arbitro' => 'nullable|string|max:50',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
+        // Remover campos que não existem na tabela users se necessário, ou garantir que o fillable os ignore
+        // is_arbitro e is_resp_time podem ser removidos do validate se não usados mais no DB
+        // Mas por compatibilidade com banco legado, talvez mantê-los como false ou null
+
         $user = User::create($validated);
 
-        if ($request->has('is_responsavel') && $request->is_responsavel == 1 && $request->has('time_id')) {
+        // Atribuir Role
+        if ($request->filled('role')) {
+            $user->assignRole($request->role);
+        }
+
+        // Lógica de Responsável pelo Time usando a Role
+        if ($request->role === 'ResponsavelTime' && $request->has('time_id')) {
             $time = Time::find($request->time_id);
             if ($time) {
+                // Limpar responsabilidades anteriores se necessário (um time só tem um user responsável, e um user só um time)
+                Time::where('tim_user_id', $user->id)->update(['tim_user_id' => null]);
                 $time->tim_user_id = $user->id;
                 $time->save();
             }
+        }
+
+        // Lógica Legada de Arbitro (para manter compatibilidade com banco se colunas existirem)
+        if ($request->role === 'Juiz') {
+            $user->is_arbitro = true;
+            $user->save();
         }
 
         return redirect()->route('users.index')->with('success', 'Usuário criado com sucesso.');
@@ -90,13 +109,12 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $times = Time::all();
-        return view('users.edit', compact('user', 'times'));
+        $roles = \Spatie\Permission\Models\Role::all();
+        return view('users.edit', compact('user', 'times', 'roles'));
     }
 
     public function update(Request $request, User $user)
     {
-
-        // dd($request); die;
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'apelido' => 'nullable|string|max:50',
@@ -110,36 +128,37 @@ class UserController extends Controller
             'cidade' => 'nullable|string|max:50',
             'estado' => 'nullable|string|max:50',
             'cep' => 'nullable|string|max:10',
-            'is_arbitro' => 'boolean',
+            'role' => 'nullable|exists:roles,name',
             'tipo_arbitro' => 'nullable|string|max:50',
         ]);
 
         $user->update($validated);
 
-        if ($request->has('is_responsavel') && $request->is_responsavel == 1 && $request->has('time_id')) {
-            // Remove responsibility from other teams if necessary (optional, depending on business rule)
-            // For now, just set the new team
+        // Sincronizar Role
+        if ($request->filled('role')) {
+            $user->syncRoles([$request->role]);
+        } else {
+            // Se nenhum role enviado, remove todos? Ou mantém? 
+            // Geralmente select vazio = remover roles
+            $user->syncRoles([]);
+        }
+
+        // Lógica Responsável Time
+        if ($request->role === 'ResponsavelTime' && $request->has('time_id')) {
             $time = Time::find($request->time_id);
             if ($time) {
-                // If this user was responsible for another team, we might want to clear it?
-                // Assuming one user can be responsible for multiple teams is NOT the case here based on the request "qual time será".
-                // But let's stick to the request: "select which team".
-
-                // First, clear previous responsibility for this user if we want to enforce 1 team per user? 
-                // The request says "o usuário será o responsavel por um determinado TIME" (singular).
-                // Let's clear any team where this user is currently responsible, just to be safe/clean?
-                // Or maybe the user can be responsible for multiple? "um determinado TIME" implies one.
-
-                // Let's clear previous responsibilities for this user to be safe.
                 Time::where('tim_user_id', $user->id)->update(['tim_user_id' => null]);
-
                 $time->tim_user_id = $user->id;
                 $time->save();
             }
-        } elseif (!$request->has('is_responsavel') || $request->is_responsavel == 0) {
-            // If user is NOT responsible anymore, clear their teams
+        } else {
+            // Se não for mais responsável, remove vínculo
             Time::where('tim_user_id', $user->id)->update(['tim_user_id' => null]);
         }
+
+        // Lógica Legada Arbitro
+        $user->is_arbitro = ($request->role === 'Juiz');
+        $user->save();
 
         return redirect()->route('users.index')->with('success', 'Usuário atualizado com sucesso.');
     }

@@ -34,8 +34,8 @@ class TimeController extends Controller
      */
     public function create()
     {
-        // Buscando apenas usuários que são responsáveis de time
-        $users = User::where('is_resp_time', true)->get();
+        // Buscando apenas usuários que possuem a ROLE de Responsável de Time
+        $users = User::role('ResponsavelTime')->get();
 
         // Retorna a view para criar um novo time
         return view('times.create', compact('users'));
@@ -44,12 +44,12 @@ class TimeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(Request $request)
+    public function store(Request $request)
     {
 
         // remover caracteres não numéricos do CNPJ
         if ($request->has('tim_cnpj')) {
-          $request['tim_cnpj'] =  removeSpecialCharsFromCNPJ($request->tim_cnpj);
+            $request['tim_cnpj'] = removeSpecialCharsFromCNPJ($request->tim_cnpj);
         }
 
         $request->validate([
@@ -149,8 +149,8 @@ class TimeController extends Controller
      */
     public function edit(Time $time)
     {
-        // Buscando apenas usuários que são responsáveis de time
-        $users = User::where('is_resp_time', true)->get();
+        // Buscando apenas usuários que possuem a ROLE de Responsável de Time
+        $users = User::role('ResponsavelTime')->get();
 
         // Retorna a view para editar um time específico
         return view('times.edit', compact('time', 'users')); // Passa $users para a view
@@ -162,9 +162,9 @@ class TimeController extends Controller
     public function update(Request $request, Time $time)
     {
 
-         // remover caracteres não numéricos do CNPJ
+        // remover caracteres não numéricos do CNPJ
         if ($request->has('tim_cnpj')) {
-          $request['tim_cnpj'] =  removeSpecialCharsFromCNPJ($request->tim_cnpj);
+            $request['tim_cnpj'] = removeSpecialCharsFromCNPJ($request->tim_cnpj);
         }
 
 

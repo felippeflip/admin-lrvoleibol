@@ -11,8 +11,9 @@ class ProfileUserController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles')->get();
-        return view('profile_user.index', compact('users'));
+        $users = User::with('roles')->paginate(20);
+        $profiles = Profile::orderBy('name')->get();
+        return view('profile_user.index', compact('users', 'profiles'));
     }
 
     public function create()
