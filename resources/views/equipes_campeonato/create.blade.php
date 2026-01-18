@@ -38,15 +38,18 @@
                                     </div>
                                     <input type="text" id="searchDisponiveis" class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Buscar equipe...">
                                 </div>
-                                <select multiple id="equipesDisponiveis" class="flex-1 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-96 text-sm">
+                                <div id="listDisponiveis" class="custom-list flex-1 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg h-[calc(100vh-28rem)] min-h-[300px] overflow-y-auto bg-white">
                                     @foreach ($equipesDisponiveis as $equipe)
-                                        <option value="{{ $equipe->eqp_id }}" data-search="{{ strtolower($equipe->eqp_nome_detalhado . ' ' . ($equipe->time->tim_nome ?? '')) }}">
-                                            {{ $equipe->eqp_nome_detalhado }} (Time: {{ $equipe->time->tim_nome ?? 'N/A' }})
-                                        </option>
+                                        <div class="list-item cursor-pointer p-3 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" 
+                                             data-value="{{ $equipe->eqp_id }}" 
+                                             data-search="{{ strtolower($equipe->eqp_nome_detalhado . ' ' . ($equipe->time->tim_nome ?? '')) }}">
+                                            <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $equipe->eqp_nome_detalhado }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Time: {{ $equipe->time->tim_nome ?? 'N/A' }}</div>
+                                        </div>
                                     @endforeach
-                                </select>
+                                </div>
                             </div>
-
+                            
                             <!-- Botões de Ação -->
                             <div class="flex flex-row lg:flex-col gap-2 justify-center items-center">
                                 <button type="button" id="addAll" class="p-2 text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700" title="Adicionar Todos">
@@ -66,25 +69,28 @@
                                     <span class="lg:hidden">▲▲</span>
                                 </button>
                             </div>
-
+                            
                             <!-- Coluna de Equipes Selecionadas -->
                             <div class="flex flex-col h-full">
                                 <label for="equipesSelecionadas" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Equipes no Campeonato <span id="countSelecionadas" class="text-xs text-gray-500 ml-1">(0)</span>
                                 </label>
                                 <div class="relative mb-2">
-                                     <!-- Placeholder visual para alinhar com a busca da esquerda, se desejar, ou apenas um espaço -->
                                      <div class="h-[42px] flex items-center justify-end">
                                         <span class="text-xs text-gray-500 dark:text-gray-400">Itens finais a salvar</span>
                                      </div>
                                 </div>
-                                <select multiple name="equipe_ids[]" id="equipesSelecionadas" class="flex-1 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-96 text-sm">
+                                <div id="listSelecionadas" class="custom-list flex-1 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg h-[calc(100vh-28rem)] min-h-[300px] overflow-y-auto bg-white">
                                     @foreach ($equipesInscritas as $equipe)
-                                        <option value="{{ $equipe->eqp_id }}" selected data-search="{{ strtolower($equipe->eqp_nome_detalhado . ' ' . ($equipe->time->tim_nome ?? '')) }}">
-                                            {{ $equipe->eqp_nome_detalhado }} (Time: {{ $equipe->time->tim_nome ?? 'N/A' }})
-                                        </option>
+                                        <div class="list-item cursor-pointer p-3 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" 
+                                             data-value="{{ $equipe->eqp_id }}" 
+                                             data-search="{{ strtolower($equipe->eqp_nome_detalhado . ' ' . ($equipe->time->tim_nome ?? '')) }}">
+                                            <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $equipe->eqp_nome_detalhado }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Time: {{ $equipe->time->tim_nome ?? 'N/A' }}</div>
+                                            <input type="hidden" name="equipe_ids[]" value="{{ $equipe->eqp_id }}">
+                                        </div>
                                     @endforeach
-                                </select>
+                                </div>
                                 @error('equipe_ids')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
@@ -119,8 +125,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const disponiveis = document.getElementById('equipesDisponiveis');
-    const selecionadas = document.getElementById('equipesSelecionadas');
+    // Configurações e Elementos
+    const listDisponiveis = document.getElementById('listDisponiveis');
+    const listSelecionadas = document.getElementById('listSelecionadas');
     const searchInput = document.getElementById('searchDisponiveis');
     
     const btnAdd = document.getElementById('addSelected');
@@ -130,83 +137,144 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const countDisponiveis = document.getElementById('countDisponiveis');
     const countSelecionadas = document.getElementById('countSelecionadas');
-    const form = document.getElementById('equipesForm');
-
-    // Inicializa contadores
+    
+    // Inicialização
+    registerEvents(listDisponiveis);
+    registerEvents(listSelecionadas);
     updateCounters();
 
-    // Filtro de busca
+    // Filtro de Busca type-to-filter
     searchInput.addEventListener('input', function(e) {
         const term = e.target.value.toLowerCase();
-        Array.from(disponiveis.options).forEach(option => {
-            const text = option.getAttribute('data-search') || option.text.toLowerCase();
-            option.style.display = text.includes(term) ? '' : 'none';
+        const items = listDisponiveis.getElementsByClassName('list-item');
+        
+        Array.from(items).forEach(item => {
+            const text = item.getAttribute('data-search') || '';
+            item.style.display = text.includes(term) ? 'block' : 'none';
         });
     });
 
-    // Ações dos botões
-    btnAdd.addEventListener('click', () => moveOptions(disponiveis, selecionadas));
-    btnRemove.addEventListener('click', () => moveOptions(selecionadas, disponiveis));
-    btnAddAll.addEventListener('click', () => moveAllOptions(disponiveis, selecionadas));
-    btnRemoveAll.addEventListener('click', () => moveAllOptions(selecionadas, disponiveis));
+    // Eventos Click nos Botões
+    btnAdd.addEventListener('click', () => moveSelectedItems(listDisponiveis, listSelecionadas));
+    btnRemove.addEventListener('click', () => moveSelectedItems(listSelecionadas, listDisponiveis));
+    btnAddAll.addEventListener('click', () => moveAllItems(listDisponiveis, listSelecionadas));
+    btnRemoveAll.addEventListener('click', () => moveAllItems(listSelecionadas, listDisponiveis));
 
-    // Duplo clique para mover
-    disponiveis.addEventListener('dblclick', () => moveOptions(disponiveis, selecionadas));
-    selecionadas.addEventListener('dblclick', () => moveOptions(selecionadas, disponiveis));
+    // Funções de Registro de Eventos (para novos itens movidos)
+    function registerEvents(container) {
+        // Usa delegação de eventos para melhor performance e lidar com itens dinâmicos
+        container.removeEventListener('click', handleItemClick); // Evita duplicidade
+        container.addEventListener('click', handleItemClick);
+    }
+    
+    function handleItemClick(e) {
+        // Encontra o parente mais próximo que seja um .list-item
+        const item = e.target.closest('.list-item');
+        if (item && this.contains(item)) {
+            // Toggle seleção
+            item.classList.toggle('bg-blue-100');
+            item.classList.toggle('dark:bg-blue-900');
+            item.classList.toggle('border-blue-300'); // Borda de destaque
+            item.classList.toggle('selected-item'); // Classe lógica
+        }
+    }
 
-    // Submissão do formulário
-    form.addEventListener('submit', function() {
-        // Seleciona todas as opções na lista da direita para garantir que sejam enviadas
-        Array.from(selecionadas.options).forEach(option => option.selected = true);
-    });
-
-    function moveOptions(from, to) {
-        const selected = Array.from(from.selectedOptions);
+    // Mover itens selecionados
+    function moveSelectedItems(from, to) {
+        // Pega todos items com a classe 'selected-item' DENTRO do container origem
+        const selected = Array.from(from.getElementsByClassName('selected-item'));
+        
         if (selected.length === 0) return;
         
-        selected.forEach(option => {
-            option.selected = false; // Remove seleção ao mover
-            to.appendChild(option);
+        selected.forEach(item => {
+            // Remove classes de seleção visual
+            cleanItemStyles(item);
+            
+            // Gerencia input hidden
+            manageHiddenInput(item, to.id === 'listSelecionadas');
+            
+            // Move elemento
+            to.appendChild(item);
+            
+            // Se veio de disponíveis, reseta o display (busca)
+            if (from === listDisponiveis) {
+                item.style.display = 'block'; 
+            }
         });
         
-        sortOptions(to);
+        sortItems(to);
         updateCounters();
         
-        // Se moveu de "Disponíveis", re-aplica o filtro de busca (caso esteja ativo)
-        if (from === disponiveis) {
-            searchInput.dispatchEvent(new Event('input'));
+        // Refazer busca se necessário (se moveu de volta pra disponíveis)
+        if (to === listDisponiveis) {
+           searchInput.dispatchEvent(new Event('input'));
         }
     }
 
-    function moveAllOptions(from, to) {
-        // Move apenas as visíveis (caso haja filtro) ou todas?
-        // Geralmente "Mover Todos" move tudo, mas se houver filtro, pode ser confuso.
-        // Vamos mover TUDO que está visível no momento.
+    // Mover Todos
+    function moveAllItems(from, to) {
+        // Considera apenas itens visíveis (respeitando filtro de busca se for origem)
+        const items = Array.from(from.getElementsByClassName('list-item')).filter(el => el.style.display !== 'none');
         
-        const options = Array.from(from.options).filter(opt => opt.style.display !== 'none');
-        
-        options.forEach(option => {
-            to.appendChild(option);
+        items.forEach(item => {
+            cleanItemStyles(item);
+            manageHiddenInput(item, to.id === 'listSelecionadas');
+            to.appendChild(item);
+            
+            if (from === listDisponiveis) {
+                item.style.display = 'block';
+            }
         });
 
-        sortOptions(to);
+        sortItems(to);
         updateCounters();
         
-        if (from === disponiveis) {
-            searchInput.dispatchEvent(new Event('input'));
+        if (to === listDisponiveis) {
+             searchInput.dispatchEvent(new Event('input'));
         }
     }
 
-    function sortOptions(select) {
-        const options = Array.from(select.options);
-        options.sort((a, b) => a.text.localeCompare(b.text));
-        select.innerHTML = '';
-        options.forEach(opt => select.appendChild(opt));
+    // Adiciona ou remove input hidden
+    function manageHiddenInput(item, isSelectedCol) {
+        const existingInput = item.querySelector('input[name="equipe_ids[]"]');
+        
+        if (isSelectedCol) {
+            // Adicionar input se não existir
+            if (!existingInput) {
+                const id = item.getAttribute('data-value');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'equipe_ids[]';
+                input.value = id;
+                item.appendChild(input);
+            }
+        } else {
+            // Remover input se existir
+            if (existingInput) {
+                existingInput.remove();
+            }
+        }
+    }
+
+    function cleanItemStyles(item) {
+        item.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-300', 'selected-item');
+    }
+
+    function sortItems(container) {
+        const items = Array.from(container.getElementsByClassName('list-item'));
+        
+        items.sort((a, b) => {
+            const textA = a.innerText.toLowerCase();
+            const textB = b.innerText.toLowerCase();
+            return textA.localeCompare(textB);
+        });
+        
+        items.forEach(item => container.appendChild(item));
     }
 
     function updateCounters() {
-        countDisponiveis.textContent = `(${disponiveis.options.length})`;
-        countSelecionadas.textContent = `(${selecionadas.options.length})`;
+        countDisponiveis.textContent = `(${listDisponiveis.getElementsByClassName('list-item').length})`;
+        countSelecionadas.textContent = `(${listSelecionadas.getElementsByClassName('list-item').length})`;
     }
 });
 </script>
