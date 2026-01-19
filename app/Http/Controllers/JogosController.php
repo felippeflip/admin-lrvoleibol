@@ -26,6 +26,7 @@ use App\Models\Jogo;
 use App\Models\Equipe;
 use App\Services\JogoService;
 use App\Services\WordpressGameService;
+use App\Models\Time;
 
 class JogosController extends Controller
 {
@@ -38,18 +39,18 @@ class JogosController extends Controller
 
         // 2. Build Query
         $query = DB::table('wp_posts')
-                    ->where('post_type', 'event_listing')
-                    // Join local table to get Status
-                    ->leftJoin('jogos', 'wp_posts.ID', '=', 'jogos.jgo_wp_id')
-                    ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id');
+            ->where('post_type', 'event_listing')
+            // Join local table to get Status
+            ->leftJoin('jogos', 'wp_posts.ID', '=', 'jogos.jgo_wp_id')
+            ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id');
 
         $user = Auth::user();
         if ($user->hasRole('Juiz') && !$user->hasRole('Administrador')) {
-             $query->where(function ($q) use ($user) {
-                 $q->where('jogos.jgo_arbitro_principal', $user->id)
-                   ->orWhere('jogos.jgo_arbitro_secundario', $user->id)
-                   ->orWhere('jogos.jgo_apontador', $user->id);
-             });
+            $query->where(function ($q) use ($user) {
+                $q->where('jogos.jgo_arbitro_principal', $user->id)
+                    ->orWhere('jogos.jgo_arbitro_secundario', $user->id)
+                    ->orWhere('jogos.jgo_apontador', $user->id);
+            });
         }
 
         // Filters
@@ -58,92 +59,93 @@ class JogosController extends Controller
         }
 
         if ($request->filled('status')) {
-             // Removed 'sem_status' logic as requested
-             $query->where('jogos.jgo_status', $request->status);
+            // Removed 'sem_status' logic as requested
+            $query->where('jogos.jgo_status', $request->status);
         }
 
         if ($request->filled('campeonato_id')) {
-             $camp = Campeonato::find($request->campeonato_id);
-             if ($camp) {
-                 $termId = $camp->cpo_term_tx_id;
-                 $query->whereExists(function ($sub) use ($termId) {
-                     $sub->select(DB::raw(1))
-                         ->from('wp_term_relationships')
-                         ->whereColumn('wp_term_relationships.object_id', 'wp_posts.ID')
-                         ->where('term_taxonomy_id', $termId);
-                 });
-             }
+            $camp = Campeonato::find($request->campeonato_id);
+            if ($camp) {
+                $termId = $camp->cpo_term_tx_id;
+                $query->whereExists(function ($sub) use ($termId) {
+                    $sub->select(DB::raw(1))
+                        ->from('wp_term_relationships')
+                        ->whereColumn('wp_term_relationships.object_id', 'wp_posts.ID')
+                        ->where('term_taxonomy_id', $termId);
+                });
+            }
         }
 
         if ($request->filled('ginasio_id')) {
             $gin = Ginasio::find($request->ginasio_id);
             if ($gin) {
-                 // Busca pelo nome do ginasio no meta location
-                 $locName = $gin->gin_nome;
-                 $query->whereExists(function ($sub) use ($locName) {
-                     $sub->select(DB::raw(1))
-                         ->from('wp_postmeta')
-                         ->whereColumn('post_id', 'wp_posts.ID')
-                         ->where('meta_key', '_event_location')
-                         ->where('meta_value', 'like', "{$locName}%");
-                 });
+                // Busca pelo nome do ginasio no meta location
+                $locName = $gin->gin_nome;
+                $query->whereExists(function ($sub) use ($locName) {
+                    $sub->select(DB::raw(1))
+                        ->from('wp_postmeta')
+                        ->whereColumn('post_id', 'wp_posts.ID')
+                        ->where('meta_key', '_event_location')
+                        ->where('meta_value', 'like', "{$locName}%");
+                });
             }
         }
 
         // Period Date Filter
         if ($request->filled('data_inicio')) {
-             $start = $request->data_inicio . ' 00:00:00';
-             $query->whereExists(function ($sub) use ($start) {
-                 $sub->select(DB::raw(1))
-                     ->from('wp_postmeta')
-                     ->whereColumn('post_id', 'wp_posts.ID')
-                     ->where('meta_key', '_event_start_date')
-                     ->where('meta_value', '>=', $start);
-             });
+            $start = $request->data_inicio . ' 00:00:00';
+            $query->whereExists(function ($sub) use ($start) {
+                $sub->select(DB::raw(1))
+                    ->from('wp_postmeta')
+                    ->whereColumn('post_id', 'wp_posts.ID')
+                    ->where('meta_key', '_event_start_date')
+                    ->where('meta_value', '>=', $start);
+            });
         }
-        
+
         if ($request->filled('data_fim')) {
-             $end = $request->data_fim . ' 23:59:59';
-             $query->whereExists(function ($sub) use ($end) {
-                 $sub->select(DB::raw(1))
-                     ->from('wp_postmeta')
-                     ->whereColumn('post_id', 'wp_posts.ID')
-                     ->where('meta_key', '_event_start_date')
-                     ->where('meta_value', '<=', $end);
-             });
+            $end = $request->data_fim . ' 23:59:59';
+            $query->whereExists(function ($sub) use ($end) {
+                $sub->select(DB::raw(1))
+                    ->from('wp_postmeta')
+                    ->whereColumn('post_id', 'wp_posts.ID')
+                    ->where('meta_key', '_event_start_date')
+                    ->where('meta_value', '<=', $end);
+            });
         }
 
         // Pagination with sort by date meta (DESC: Maior para Menor)
         $jogos = $query->orderByRaw("(SELECT meta_value FROM wp_postmeta WHERE post_id = wp_posts.ID AND meta_key = '_event_start_date' LIMIT 1) DESC")
-                       ->paginate(15)
-                       ->appends($request->all());
+            ->paginate(15)
+            ->appends($request->all());
 
         // Transform items to attach Meta and Relations
         $jogos->getCollection()->transform(function ($jogo) {
-             // Populate Meta
-             $meta = DB::table('wp_postmeta')->where('post_id', $jogo->ID)->get()->keyBy('meta_key')->toArray();
-             $jogo->meta = $meta;
+            // Populate Meta
+            $meta = DB::table('wp_postmeta')->where('post_id', $jogo->ID)->get()->keyBy('meta_key')->toArray();
+            $jogo->meta = $meta;
 
-             // Populate Taxonomy
-             $termRelationships = DB::table('wp_term_relationships')->where('object_id', $jogo->ID)->get()->toArray();
-             foreach ($termRelationships as &$relationship) {
+            // Populate Taxonomy
+            $termRelationships = DB::table('wp_term_relationships')->where('object_id', $jogo->ID)->get()->toArray();
+            foreach ($termRelationships as &$relationship) {
                 $termTaxonomy = DB::table('wp_term_taxonomy')->where('term_taxonomy_id', $relationship->term_taxonomy_id)->first();
                 if ($termTaxonomy) {
                     $relationship->term_taxonomy = $termTaxonomy;
                     $term = DB::table('wp_terms')->where('term_id', $termTaxonomy->term_id)->first();
-                    if ($term) $relationship->term_taxonomy->term = $term;
+                    if ($term)
+                        $relationship->term_taxonomy->term = $term;
                 }
-             }
-             $jogo->term_relationships = $termRelationships;
+            }
+            $jogo->term_relationships = $termRelationships;
 
-             // Default Status Display logic if null
-             if (!$jogo->jgo_status) {
-                 $jogo->jgo_status = 'ativo'; // Default for WP
-             }
+            // Default Status Display logic if null
+            if (!$jogo->jgo_status) {
+                $jogo->jgo_status = 'ativo'; // Default for WP
+            }
 
-             return $jogo;
+            return $jogo;
         });
-        
+
         $campeonatos = Campeonato::orderBy('cpo_nome')->get();
         $ginasios = Ginasio::orderBy('gin_nome')->get();
 
@@ -153,86 +155,98 @@ class JogosController extends Controller
     public function index_dashboard()
     {
         $user = Auth::user();
-        $isArbitro = $user->is_arbitro;
+        $data = [];
 
-        $jogosQuery = DB::table('wp_posts')
-                        ->where('post_type', 'event_listing');
+        // --- 1. ADMINISTRADOR ---
+        if ($user->hasRole('Administrador')) {
+            $campeonatos = Campeonato::where('cpo_ativo', true)->get();
+            $adminStats = [];
 
-        if ($isArbitro) {
-            $userId = $user->id;
+            foreach ($campeonatos as $camp) {
+                // Get games related to this championship
+                // We check 'mandante' relationship to find the championship
+                $jogosDoCampeonato = Jogo::whereHas('mandante', function ($q) use ($camp) {
+                    $q->where('cpo_fk_id', $camp->cpo_id);
+                })->get();
 
-            $jogosQuery->whereIn('ID', function($query) use ($userId) {
-                $query->select('post_id')
-                      ->from('wp_postmeta')
-                      ->where(function ($query) use ($userId) {
-                          $query->where('meta_key', '_juiz_principal')
-                                ->where('meta_value', $userId)
-                                ->orWhere('meta_key', '_juiz_linha1')
-                                ->where('meta_value', $userId)
-                                ->orWhere('meta_key', '_juiz_linha2')
-                                ->where('meta_value', $userId);
-                      });
-            });
+                $novos = $jogosDoCampeonato->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count();
+                $finalizados_total = $jogosDoCampeonato->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count();
+                $com_apontamento = $jogosDoCampeonato->whereNotNull('jgo_res_status')->count();
+
+                // Calculated: Finished games that HAVE NO result submitted yet
+                $sem_apontamento = $jogosDoCampeonato->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))
+                    ->whereNull('jgo_res_status')
+                    ->count();
+
+                $adminStats[] = [
+                    'campeonato' => $camp->cpo_nome,
+                    'novos' => $novos,
+                    'finalizados' => $finalizados_total, // Just past games
+                    'com_apontamento' => $com_apontamento,
+                    'sem_apontamento' => $sem_apontamento
+                ];
+            }
+            $data['adminStats'] = $adminStats;
         }
 
-        $jogos = $jogosQuery->get()
-                            ->map(function ($jogo) {
-                                $meta = DB::table('wp_postmeta')
-                                          ->where('post_id', $jogo->ID)
-                                          ->get()
-                                          ->keyBy('meta_key')
-                                          ->toArray();
-                                $jogo->meta = $meta;
+        // --- 2. JUIZ ---
+        if ($user->hasRole('Juiz') || $user->is_arbitro) {
+            // Games where user is selected assigned
+            $meusJogos = Jogo::where(function ($q) use ($user) {
+                $q->where('jgo_arbitro_principal', $user->id)
+                    ->orWhere('jgo_arbitro_secundario', $user->id)
+                    ->orWhere('jgo_apontador', $user->id);
+            })->get();
 
-                                $termRelationships = DB::table('wp_term_relationships')
-                                                      ->where('object_id', $jogo->ID)
-                                                      ->get()
-                                                      ->toArray();
+            $juizStats = [
+                'total_participacao' => $meusJogos->count(),
+                'novos' => $meusJogos->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count(),
+                'realizados' => $meusJogos->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count(),
+            ];
 
-                                foreach ($termRelationships as &$relationship) {
-                                    $termTaxonomy = DB::table('wp_term_taxonomy')
-                                                      ->where('term_taxonomy_id', $relationship->term_taxonomy_id)
-                                                      ->first();
+            // Pass the listing of upcoming games for convenience if needed, 
+            // but the prompt asked for "Quantidade", so stats focused.
+            // I'll pass the upcoming games collection just in case we want to show a list.
+            $data['juizStats'] = $juizStats;
+            $data['juizJogosFuturos'] = $meusJogos->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'));
+        }
 
-                                    $termTaxonomy->term = null;
-                                    if ($termTaxonomy) {
-                                        $relationship->term_taxonomy = $termTaxonomy;
-                                        $term = DB::table('wp_terms')
-                                                  ->where('term_id', $termTaxonomy->term_id)
-                                                  ->first();
+        // --- 3. RESPONSAVEL PELO TIME ---
+        if ($user->hasRole('ResponsavelTime') || $user->is_resp_time) {
+            $time = Time::where('tim_user_id', $user->id)->first();
 
-                                        if ($term) {
-                                            $relationship->term_taxonomy->term = $term;
-                                        }
-                                    }
-                                }
+            if ($time) {
+                // Find all EquipeCampeonato entries for this Time
+                $equipeIds = DB::table('equipes')
+                    ->where('eqp_time_id', $time->tim_id)
+                    ->join('equipe_campeonato', 'equipes.eqp_id', '=', 'equipe_campeonato.eqp_fk_id')
+                    ->pluck('equipe_campeonato.eqp_cpo_id');
 
-                                $jogo->term_relationships = $termRelationships;
+                $jogosTime = Jogo::whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
+                    ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds)
+                    ->get();
 
-                                $referees = [
-                                    'eventNumber' => $meta['_event_number']->meta_value ?? null,
-                                    'principal' => $meta['_juiz_principal']->meta_value ?? null,
-                                    'line1' => $meta['_juiz_linha1']->meta_value ?? null,
-                                    'line2' => $meta['_juiz_linha2']->meta_value ?? null,
-                                ];
+                $timeStats = [
+                    'escalado_total' => $jogosTime->count(),
+                    'concluidos' => $jogosTime->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count(),
+                    'proximos' => $jogosTime->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count(),
+                ];
 
-                                foreach ($referees as $key => $userId) {
-                                    if ($userId) {
-                                        $user = DB::table('users')
-                                                  ->where('ID', $userId)
-                                                  ->first();
-                                        $referees[$key] = $user->apelido ?? 'N/A';
-                                    } else {
-                                        $referees[$key] = 'N/A';
-                                    }
-                                }
+                $data['timeStats'] = $timeStats;
+                $data['timeJogos'] = $jogosTime;
+            } else {
+                $data['timeStats'] = null; // Has role but no team assigned
+            }
+        }
 
-                                $jogo->referees = $referees;
+        // Fallback or Shared Data (e.g. recent games list for everyone or just admin?)
+        // The original code returned 'jogos' (all synced properties).
+        // Since we are creating custom dashboards, we might standardise what 'jogos' variable holds 
+        // OR just rely on the new Stat variables.
+        // For backward compatibility with the View (if I reuse parts), I should ensure strictly needed variables are passed.
+        // But since I'm rewriting the view, I can control it.
 
-                                return $jogo;
-                            });
-
-        return view('dashboard', compact('jogos'));
+        return view('dashboard', $data);
     }
 
 
@@ -304,27 +318,29 @@ class JogosController extends Controller
     {
         // $id is the WP ID (because route uses WP ID)
         $jogo = WpPosts::with(['eventTypes.term', 'eventCategories.term', 'meta'])->findOrFail($id);
-        
+
         $juizes = User::where('is_arbitro', true)->get();
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
         $ginasios = Ginasio::orderBy('gin_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
 
         $eventNumber = $jogo->getMetaValue('_event_number');
-        
+
         // --- 1. Identify Taxonomy Data ---
         $selectedCampeonatoId = null;
         if ($jogo->eventTypes->isNotEmpty()) {
             $termId = $jogo->eventTypes->first()->term_taxonomy_id;
             $camp = Campeonato::where('cpo_term_tx_id', $termId)->first();
-            if ($camp) $selectedCampeonatoId = $camp->cpo_id;
+            if ($camp)
+                $selectedCampeonatoId = $camp->cpo_id;
         }
 
         $selectedCategoriaId = null;
         if ($jogo->eventCategories->isNotEmpty()) {
             $termId = $jogo->eventCategories->first()->term_taxonomy_id;
             $cat = Categoria::where('cto_term_tx_id', $termId)->first();
-            if ($cat) $selectedCategoriaId = $cat->cto_id;
+            if ($cat)
+                $selectedCategoriaId = $cat->cto_id;
         }
 
         // --- 2. Retrieve Local Data from Table 'jogos' (Primary Source) ---
@@ -343,7 +359,7 @@ class JogosController extends Controller
                 }
             }
         }
-        
+
         if ($localJogo) {
             // Data from Local Table
             $mandanteId = $localJogo->jgo_eqp_cpo_mandante_id;
@@ -352,10 +368,10 @@ class JogosController extends Controller
             $juizPrincipalId = $localJogo->jgo_arbitro_principal;
             $juizLinha1Id = $localJogo->jgo_arbitro_secundario;
             $juizLinha2Id = $localJogo->jgo_apontador;
-            
+
             $dataJogo = $localJogo->jgo_dt_jogo ? \Carbon\Carbon::parse($localJogo->jgo_dt_jogo)->format('Y-m-d') : null;
             $horaJogo = $localJogo->jgo_hora_jogo ? \Carbon\Carbon::parse($localJogo->jgo_hora_jogo)->format('H:i') : null;
-            
+
         } else {
             // Data from WP Meta (Redundancy/Legacy)
             $mandanteId = $jogo->getMetaValue('_mandante_id');
@@ -364,37 +380,39 @@ class JogosController extends Controller
             $juizPrincipalId = $jogo->getMetaValue('_juiz_principal');
             $juizLinha1Id = $jogo->getMetaValue('_juiz_linha1');
             $juizLinha2Id = $jogo->getMetaValue('_juiz_linha2');
-            
+
             $dtMeta = $jogo->getMetaValue('_event_start_date');
             $dataJogo = $dtMeta ? \Carbon\Carbon::parse($dtMeta)->format('Y-m-d') : null;
-            
+
             $horaTime = $jogo->getMetaValue('_event_start_time');
             $horaJogo = $horaTime ? \Carbon\Carbon::parse($horaTime)->format('H:i') : null;
         }
-        
+
         // --- 3. Inference / Migration (for legacy data with no IDs) ---
         if ((!$mandanteId || !$visitanteId) && $selectedCampeonatoId) {
             // Use same robust logic (stripped debug logs for brevity, but functionality remains)
-             $parts = preg_split('/\s*(X|x|vs|VS)\s*/', $jogo->post_title);
-             if (count($parts) === 2) {
+            $parts = preg_split('/\s*(X|x|vs|VS)\s*/', $jogo->post_title);
+            if (count($parts) === 2) {
                 $nameMandante = trim($parts[0]);
                 $nameVisitante = trim($parts[1]);
                 $candidates = EquipeCampeonato::with(['equipe.time'])
-                                ->where('cpo_fk_id', $selectedCampeonatoId) 
-                                ->get();
-                $findTeamId = function($name) use ($candidates) {
+                    ->where('cpo_fk_id', $selectedCampeonatoId)
+                    ->get();
+                $findTeamId = function ($name) use ($candidates) {
                     $name = trim($name);
-                    if (strlen($name) < 3) return null;
+                    if (strlen($name) < 3)
+                        return null;
                     foreach ($candidates as $pivot) {
                         $eqp = $pivot->equipe;
                         $time = $eqp->time;
                         $namesToCheck = [$eqp->eqp_nome_detalhado, $time->tim_nome ?? '', $time->tim_nome_abre ?? '', $time->tim_sigla ?? ''];
                         foreach ($namesToCheck as $candidateName) {
-                            if ($candidateName && strcasecmp($name, $candidateName) === 0) return $pivot->eqp_cpo_id;
+                            if ($candidateName && strcasecmp($name, $candidateName) === 0)
+                                return $pivot->eqp_cpo_id;
                         }
                     }
                     // Partial
-                     foreach ($candidates as $pivot) {
+                    foreach ($candidates as $pivot) {
                         $eqp = $pivot->equipe;
                         $time = $eqp->time;
                         $namesToCheck = [$eqp->eqp_nome_detalhado, $time->tim_nome ?? '', $time->tim_nome_abre ?? ''];
@@ -406,37 +424,51 @@ class JogosController extends Controller
                     }
                     return null;
                 };
-                if (!$mandanteId) $mandanteId = $findTeamId($nameMandante);
-                if (!$visitanteId) $visitanteId = $findTeamId($nameVisitante);
-             }
+                if (!$mandanteId)
+                    $mandanteId = $findTeamId($nameMandante);
+                if (!$visitanteId)
+                    $visitanteId = $findTeamId($nameVisitante);
+            }
         }
-        
+
         if (!$ginasioId) {
             $loc = $jogo->getMetaValue('_event_location');
             if ($loc) {
                 $parts = explode(' - ', $loc);
                 $ginName = trim($parts[0]);
                 $gin = Ginasio::where('gin_nome', $ginName)->first();
-                if ($gin) $ginasioId = $gin->gin_id;
+                if ($gin)
+                    $ginasioId = $gin->gin_id;
             }
         }
 
         return view('jogos.edit', compact(
-            'jogo', 'campeonatos', 'ginasios', 'categorias', 'juizes',
-            'eventNumber', 'juizPrincipalId', 'juizLinha1Id', 'juizLinha2Id',
-            'mandanteId', 'visitanteId', 'ginasioId',
-            'selectedCampeonatoId', 'selectedCategoriaId',
-            'dataJogo', 'horaJogo'
+            'jogo',
+            'campeonatos',
+            'ginasios',
+            'categorias',
+            'juizes',
+            'eventNumber',
+            'juizPrincipalId',
+            'juizLinha1Id',
+            'juizLinha2Id',
+            'mandanteId',
+            'visitanteId',
+            'ginasioId',
+            'selectedCampeonatoId',
+            'selectedCategoriaId',
+            'dataJogo',
+            'horaJogo'
         ));
     }
 
     public function update(Request $request, $id)
     {
-         if (!Auth::user()->hasRole('Administrador')) {
-             return redirect()->route('jogos.index')->with('error', 'Acesso não autorizado.');
-         }
+        if (!Auth::user()->hasRole('Administrador')) {
+            return redirect()->route('jogos.index')->with('error', 'Acesso não autorizado.');
+        }
 
-         $request->validate([
+        $request->validate([
             'event_number' => 'required|integer',
             'campeonato_id' => 'required|exists:campeonatos,cpo_id',
             'mandante_id' => 'required|exists:equipe_campeonato,eqp_cpo_id|different:visitante_id',
@@ -454,13 +486,13 @@ class JogosController extends Controller
         // Priority: jgo_wp_id -> meta -> create
         $localJogo = Jogo::where('jgo_wp_id', $id)->first();
         if (!$localJogo) {
-             $wpPost = WpPosts::with('meta')->find($id);
-             $localJogoId = $wpPost ? $wpPost->getMetaValue('_local_jogo_id') : null;
-             if ($localJogoId) {
-                 $localJogo = Jogo::find($localJogoId);
-             }
+            $wpPost = WpPosts::with('meta')->find($id);
+            $localJogoId = $wpPost ? $wpPost->getMetaValue('_local_jogo_id') : null;
+            if ($localJogoId) {
+                $localJogo = Jogo::find($localJogoId);
+            }
         }
-        
+
         // Data to update/create
         $data = [
             'jgo_eqp_cpo_mandante_id' => $request->mandante_id,
@@ -479,22 +511,23 @@ class JogosController extends Controller
         if ($localJogo) {
             $localJogo->update($data);
             // Ensure link
-            if (!$localJogo->jgo_wp_id) $localJogo->update(['jgo_wp_id' => $id]);
+            if (!$localJogo->jgo_wp_id)
+                $localJogo->update(['jgo_wp_id' => $id]);
         } else {
-             // Create new local record for this legacy game
-             $data['jgo_wp_id'] = $id;
-             $localJogo = Jogo::create($data);
+            // Create new local record for this legacy game
+            $data['jgo_wp_id'] = $id;
+            $localJogo = Jogo::create($data);
         }
 
         // 2. Sync to WordPress (Use Service)
         $campeonato = Campeonato::find($request->campeonato_id);
         $categoria = Categoria::find($request->categoria_id);
-        
+
         $wpService = new WordpressGameService();
         $wpService->sync($localJogo, [
-                'event_number' => $request->event_number,
-                'event_type' => $campeonato->cpo_term_tx_id,
-                'event_category' => $categoria->cto_term_tx_id,
+            'event_number' => $request->event_number,
+            'event_type' => $campeonato->cpo_term_tx_id,
+            'event_category' => $categoria->cto_term_tx_id,
         ], $id); // Pass $id to update
 
         return redirect()->route('jogos.index')->with('success', 'Jogo atualizado e sincronizado com sucesso!');
@@ -504,7 +537,7 @@ class JogosController extends Controller
     {
         try {
             Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
-                'post_id'       => $postId,
+                'post_id' => $postId,
                 'attachment_id' => 4132
             ]);
         } catch (\Exception $e) {
@@ -516,18 +549,19 @@ class JogosController extends Controller
     public function destroy($id)
     {
         if (!Auth::user()->hasRole('Administrador')) {
-             return redirect()->route('jogos.index')->with('error', 'Acesso não autorizado.');
+            return redirect()->route('jogos.index')->with('error', 'Acesso não autorizado.');
         }
 
         $post = WpPosts::findOrFail($id);
-        
+
         // Also delete local jogo if linked
         $localJogo = Jogo::where('jgo_wp_id', $id)->first();
         if (!$localJogo) {
-             $localJogoId = $post->getMetaValue('_local_jogo_id');
-             if ($localJogoId) $localJogo = Jogo::find($localJogoId);
+            $localJogoId = $post->getMetaValue('_local_jogo_id');
+            if ($localJogoId)
+                $localJogo = Jogo::find($localJogoId);
         }
-        
+
         if ($localJogo) {
             $localJogo->delete();
         }
@@ -548,140 +582,153 @@ class JogosController extends Controller
 
     public function import(Request $request)
     {
-    $request->validate([
-    'csv_file' => 'required|mimes:csv,txt',
-    ]);
-    
-    $path = $request->file('csv_file')->getRealPath();
-    $reader = Reader::createFromPath($path, 'r');
-    
-    $reader->setDelimiter(';');
-    $reader->setEnclosure('"');
-    $reader->setHeaderOffset(0);
-    
-    $expectedColumns = [
-        'numero_jogo', 'titulo_evento', 'id_event', 'tipo_evento', 'ID_CATEGORY', 'categoria_evento',
-        'local_evento', 'data_inicio', 'inicio', 'ID_USERS', 'juiz_principal', 'ID_USERS_1', 'juiz_linha1', 'ID_USERS_2', 'apontador'
-    ];
-    
-    $records = iterator_to_array($reader->getRecords());
-    if (empty($records)) {
-        return back()->withErrors(['error' => 'O arquivo CSV está vazio.']);
-    }
-    
-    foreach ($records as $index => $record) {
-        if (empty(implode('', array_map('trim', $record)))) {
-            continue;
-        }
-    
-        if (isset($record['titulo_evento']) && !empty(trim($record['titulo_evento']))) {
-    
-            if (count($record) !== count($expectedColumns)) {
-                return back()->withErrors(['error' => "Erro na linha $index: número de colunas incorreto."]);
-            }
-    
-            foreach ($record as $key => $value) {
-                $val = trim($value);
-                if (substr($val, 1) === '"' && substr($val, -1) === '"') {
-                    $val = substr($val, 1, -1);
-                }
-                $detectedEncoding = mb_detect_encoding($val, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
-                if ($detectedEncoding !== 'UTF-8') {
-                    $val = mb_convert_encoding($val, 'UTF-8', $detectedEncoding);
-                }
-                $record[$key] = $val;
-            }
-    
-            try {
-                $post_title = $record['titulo_evento'];
-                $post_name  = Str::slug($post_title);
-                $existingPost = DB::table('wp_posts')->where('post_name', $post_name)->first();
-                if ($existingPost) {
-                    $post_name .= '-' . (DB::table('wp_posts')->where('post_name', 'like', "$post_name%")->count() + 1);
-                }
-                $post_date = Carbon::now();
-                $wpPostData = [
-                    'post_author'           => 2,
-                    'post_date'             => $post_date,
-                    'post_date_gmt'         => $post_date->copy()->setTimezone('GMT'),
-                    'post_content'          => '',
-                    'post_title'            => $post_title,
-                    'post_excerpt'          => '',
-                    'post_status'           => 'publish',
-                    'comment_status'        => 'closed',
-                    'ping_status'           => 'closed',
-                    'post_password'         => '',
-                    'post_name'             => $post_name,
-                    'to_ping'               => '',
-                    'pinged'                => '',
-                    'post_modified'         => $post_date,
-                    'post_modified_gmt'     => $post_date->copy()->setTimezone('GMT'),
-                    'post_content_filtered' => '',
-                    'post_parent'           => 0,
-                    'guid'                  => '',
-                    'menu_order'            => 0,
-                    'post_type'             => 'event_listing',
-                    'post_mime_type'        => '',
-                    'comment_count'         => 0,
-                ];
-    
-                $postId = DB::table('wp_posts')->insertGetId($wpPostData);
-                if (!$postId) {
-                    return back()->withErrors(['error' => 'Falha ao inserir o post no banco de dados']);
-                }
-                DB::table('wp_posts')->where('ID', $postId)->update([
-                    'guid' => "https://lrvoleibol.com.br/event_listing?p=$postId"
-                ]);
-    
-                $metaData = [
-                    ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
-                    ['post_id' => $postId, 'meta_key' => '_edit_lock', 'meta_value' => '1720293949:2'],
-                    ['post_id' => $postId, 'meta_key' => '_edit_last', 'meta_value' => '2'],
-                    ['post_id' => $postId, 'meta_key' => '_view_count', 'meta_value' => '1'],
-                    ['post_id' => $postId, 'meta_key' => '_event_title', 'meta_value' => $post_title],
-                    ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $record['local_evento']],
-                    ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->format('Y-m-d H:i:s')],
-                    ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $record['inicio']],
-                    ['post_id' => $postId, 'meta_key' => '_event_number', 'meta_value' => $record['numero_jogo']],
-                    ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $record['ID_USERS']],
-                    ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $record['ID_USERS_1']],
-                    ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $record['ID_USERS_2']],
-                    ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->modify('+1 month')->format('Y-m-d')],
-                    ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
-                    ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
-                    ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'https://lrvoleibol.com.br/wp-content/uploads/2024/07/voleibol.jpg'],
-                    ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
-                    ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => ''],
-                    ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => 'Brasil'],
-                    ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => Auth::user()->email]
-
-                ];
-                DB::table('wp_postmeta')->insert($metaData);
-    
-                $termRelationships = [
-                    ['object_id' => $postId, 'term_taxonomy_id' => $record['id_event'], 'term_order' => 0],
-                    ['object_id' => $postId, 'term_taxonomy_id' => $record['ID_CATEGORY'], 'term_order' => 0],
-                ];
-                DB::table('wp_term_relationships')->insert($termRelationships);
-    
-            } catch (Exception $e) {
-                return back()->withErrors(['error' => $e->getMessage()]);
-            }
-        }
-        $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
-            'post_id'       => $postId,
-            'attachment_id' => 4132
+        $request->validate([
+            'csv_file' => 'required|mimes:csv,txt',
         ]);
-    
-        if (!$response->successful()) {
-            Log::error('Erro ao destacar a imagem do evento', [
-                'post_id' => $postId,
-                'attachment_id' => 4132,
-                'response' => $response->json()
-            ]);
+
+        $path = $request->file('csv_file')->getRealPath();
+        $reader = Reader::createFromPath($path, 'r');
+
+        $reader->setDelimiter(';');
+        $reader->setEnclosure('"');
+        $reader->setHeaderOffset(0);
+
+        $expectedColumns = [
+            'numero_jogo',
+            'titulo_evento',
+            'id_event',
+            'tipo_evento',
+            'ID_CATEGORY',
+            'categoria_evento',
+            'local_evento',
+            'data_inicio',
+            'inicio',
+            'ID_USERS',
+            'juiz_principal',
+            'ID_USERS_1',
+            'juiz_linha1',
+            'ID_USERS_2',
+            'apontador'
+        ];
+
+        $records = iterator_to_array($reader->getRecords());
+        if (empty($records)) {
+            return back()->withErrors(['error' => 'O arquivo CSV está vazio.']);
         }
-    }
-    
-    return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
+
+        foreach ($records as $index => $record) {
+            if (empty(implode('', array_map('trim', $record)))) {
+                continue;
+            }
+
+            if (isset($record['titulo_evento']) && !empty(trim($record['titulo_evento']))) {
+
+                if (count($record) !== count($expectedColumns)) {
+                    return back()->withErrors(['error' => "Erro na linha $index: número de colunas incorreto."]);
+                }
+
+                foreach ($record as $key => $value) {
+                    $val = trim($value);
+                    if (substr($val, 1) === '"' && substr($val, -1) === '"') {
+                        $val = substr($val, 1, -1);
+                    }
+                    $detectedEncoding = mb_detect_encoding($val, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+                    if ($detectedEncoding !== 'UTF-8') {
+                        $val = mb_convert_encoding($val, 'UTF-8', $detectedEncoding);
+                    }
+                    $record[$key] = $val;
+                }
+
+                try {
+                    $post_title = $record['titulo_evento'];
+                    $post_name = Str::slug($post_title);
+                    $existingPost = DB::table('wp_posts')->where('post_name', $post_name)->first();
+                    if ($existingPost) {
+                        $post_name .= '-' . (DB::table('wp_posts')->where('post_name', 'like', "$post_name%")->count() + 1);
+                    }
+                    $post_date = Carbon::now();
+                    $wpPostData = [
+                        'post_author' => 2,
+                        'post_date' => $post_date,
+                        'post_date_gmt' => $post_date->copy()->setTimezone('GMT'),
+                        'post_content' => '',
+                        'post_title' => $post_title,
+                        'post_excerpt' => '',
+                        'post_status' => 'publish',
+                        'comment_status' => 'closed',
+                        'ping_status' => 'closed',
+                        'post_password' => '',
+                        'post_name' => $post_name,
+                        'to_ping' => '',
+                        'pinged' => '',
+                        'post_modified' => $post_date,
+                        'post_modified_gmt' => $post_date->copy()->setTimezone('GMT'),
+                        'post_content_filtered' => '',
+                        'post_parent' => 0,
+                        'guid' => '',
+                        'menu_order' => 0,
+                        'post_type' => 'event_listing',
+                        'post_mime_type' => '',
+                        'comment_count' => 0,
+                    ];
+
+                    $postId = DB::table('wp_posts')->insertGetId($wpPostData);
+                    if (!$postId) {
+                        return back()->withErrors(['error' => 'Falha ao inserir o post no banco de dados']);
+                    }
+                    DB::table('wp_posts')->where('ID', $postId)->update([
+                        'guid' => "https://lrvoleibol.com.br/event_listing?p=$postId"
+                    ]);
+
+                    $metaData = [
+                        ['post_id' => $postId, 'meta_key' => '_featured', 'meta_value' => '0'],
+                        ['post_id' => $postId, 'meta_key' => '_edit_lock', 'meta_value' => '1720293949:2'],
+                        ['post_id' => $postId, 'meta_key' => '_edit_last', 'meta_value' => '2'],
+                        ['post_id' => $postId, 'meta_key' => '_view_count', 'meta_value' => '1'],
+                        ['post_id' => $postId, 'meta_key' => '_event_title', 'meta_value' => $post_title],
+                        ['post_id' => $postId, 'meta_key' => '_event_location', 'meta_value' => $record['local_evento']],
+                        ['post_id' => $postId, 'meta_key' => '_event_start_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->format('Y-m-d H:i:s')],
+                        ['post_id' => $postId, 'meta_key' => '_event_start_time', 'meta_value' => $record['inicio']],
+                        ['post_id' => $postId, 'meta_key' => '_event_number', 'meta_value' => $record['numero_jogo']],
+                        ['post_id' => $postId, 'meta_key' => '_juiz_principal', 'meta_value' => $record['ID_USERS']],
+                        ['post_id' => $postId, 'meta_key' => '_juiz_linha1', 'meta_value' => $record['ID_USERS_1']],
+                        ['post_id' => $postId, 'meta_key' => '_juiz_linha2', 'meta_value' => $record['ID_USERS_2']],
+                        ['post_id' => $postId, 'meta_key' => '_event_expiry_date', 'meta_value' => Carbon::createFromFormat('d/m/Y H:i:s', $record['data_inicio'] . ' ' . $record['inicio'])->modify('+1 month')->format('Y-m-d')],
+                        ['post_id' => $postId, 'meta_key' => '_thumbnail_id', 'meta_value' => '4132'],
+                        ['post_id' => $postId, 'meta_key' => '_event_venue_ids', 'meta_value' => ''],
+                        ['post_id' => $postId, 'meta_key' => '_event_banner', 'meta_value' => 'https://lrvoleibol.com.br/wp-content/uploads/2024/07/voleibol.jpg'],
+                        ['post_id' => $postId, 'meta_key' => '_cancelled', 'meta_value' => '0'],
+                        ['post_id' => $postId, 'meta_key' => '_event_registration_deadline', 'meta_value' => ''],
+                        ['post_id' => $postId, 'meta_key' => '_event_country', 'meta_value' => 'Brasil'],
+                        ['post_id' => $postId, 'meta_key' => '_registration', 'meta_value' => Auth::user()->email]
+
+                    ];
+                    DB::table('wp_postmeta')->insert($metaData);
+
+                    $termRelationships = [
+                        ['object_id' => $postId, 'term_taxonomy_id' => $record['id_event'], 'term_order' => 0],
+                        ['object_id' => $postId, 'term_taxonomy_id' => $record['ID_CATEGORY'], 'term_order' => 0],
+                    ];
+                    DB::table('wp_term_relationships')->insert($termRelationships);
+
+                } catch (Exception $e) {
+                    return back()->withErrors(['error' => $e->getMessage()]);
+                }
+            }
+            $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
+                'post_id' => $postId,
+                'attachment_id' => 4132
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('Erro ao destacar a imagem do evento', [
+                    'post_id' => $postId,
+                    'attachment_id' => 4132,
+                    'response' => $response->json()
+                ]);
+            }
+        }
+
+        return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
     }
 }
