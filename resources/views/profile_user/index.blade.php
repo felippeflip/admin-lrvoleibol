@@ -31,15 +31,15 @@
                                             placeholder="Nome ou Email">
                                     </div>
 
-                                    <!-- Perfil -->
+                                    <!-- Role -->
                                     <div>
-                                        <label for="profile"
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
-                                        <select name="profile" id="profile"
+                                        <label for="role"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Permissão (Role)</label>
+                                        <select name="role" id="role"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
-                                            <option value="">Todos</option>
-                                            @foreach($profiles as $profile)
-                                                <option value="{{ $profile->id }}" {{ request('profile') == $profile->id ? 'selected' : '' }}>{{ $profile->name }}</option>
+                                            <option value="">Todas</option>
+                                            @foreach($roles as $role)
+                                                <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -67,7 +67,6 @@
                                     <tr
                                         class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
                                         <th class="py-3 px-6 text-left">Usuário</th>
-                                        <th class="py-3 px-6 text-left">Perfil</th>
                                         <th class="py-3 px-6 text-left">Roles (Permissões)</th>
                                         <th class="py-3 px-6 text-center">Ações</th>
                                     </tr>
@@ -78,9 +77,6 @@
                                             class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                                             <td class="py-3 px-6 text-left">{{ $user->name }} <br> <span
                                                     class="text-xs text-gray-500">{{ $user->email }}</span></td>
-                                            <td class="py-3 px-6 text-left">
-                                                {{ $user->profile->name ?? 'Nenhum Perfil Associado' }}
-                                            </td>
                                             <td class="py-3 px-6 text-left">
                                                 @foreach($user->roles as $role)
                                                     <span

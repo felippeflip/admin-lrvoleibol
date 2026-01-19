@@ -18,7 +18,7 @@
 
                         <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
                             <form method="GET" action="{{ route('atletas.index') }}">
-                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                                     <!-- Status -->
                                     <div>
                                         <label for="ativo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
@@ -39,6 +39,19 @@
                                             @endforeach
                                         </select>
                                     </div>
+
+                                @if(!empty($times) && count($times) > 0)
+                                    <!-- Time -->
+                                    <div>
+                                        <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                                        <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                            <option value="">Todos</option>
+                                            @foreach($times as $time)
+                                                <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
 
                                     <!-- Ano Inscrição -->
                                     <div>

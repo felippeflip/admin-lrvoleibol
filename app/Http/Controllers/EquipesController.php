@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Equipe; // Seu modelo Equipes
 use App\Models\Time; // Para buscar Times para dropdowns (create/edit)
 use App\Models\Categoria; // Para buscar Categorias para dropdowns (create/edit), se 'Categorias' for o nome do seu modelo
+use App\Models\Campeonato; // Importar o modelo Campeonato
 use Illuminate\Support\Facades\Log; // Para logs de erro
 
 class EquipesController extends Controller
@@ -44,9 +45,15 @@ class EquipesController extends Controller
 
         // 2. Aplica Filtros de Pesquisa ( vindos do request )
 
-        // Filtro por Nome da Equipe
+        // Filtro por Nome da Equipe ou Campeonato
         if ($request->filled('search')) {
-            $query->where('eqp_nome_detalhado', 'like', '%' . $request->search . '%');
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('eqp_nome_detalhado', 'like', $searchTerm)
+                  ->orWhereHas('campeonatos', function ($q2) use ($searchTerm) {
+                      $q2->where('cpo_nome', 'like', $searchTerm);
+                  });
+            });
         }
 
         // Filtro por Categoria
@@ -59,11 +66,20 @@ class EquipesController extends Controller
             $query->where('eqp_time_id', $request->time_id);
         }
 
+        // Filtro por Campeonato (Dropdown específico)
+        if ($request->filled('campeonato_id')) {
+            $query->whereHas('campeonatos', function ($q) use ($request) {
+                $q->where('cpo_id', $request->campeonato_id);
+            });
+        }
+
         // Paginação
         $equipes = $query->paginate(10)->appends($request->all());
 
         // Carregar dados auxiliares para os dropdowns de filtro
         $categorias = Categoria::orderBy('cto_nome')->get();
+        $campeonatos = Campeonato::orderBy('cpo_nome')->get();
+        
         
         // Para o filtro de times, se for admin carrega todos, se for responsável, só o seu (já estaria filtrado na query, mas para o dropdown é bom restringir visualmente também)
         if ($user->hasRole('Administrador')) {
@@ -74,7 +90,7 @@ class EquipesController extends Controller
              $times = Time::orderBy('tim_nome')->get();
         }
 
-        return view('equipes.index', compact('equipes', 'categorias', 'times'));
+        return view('equipes.index', compact('equipes', 'categorias', 'times', 'campeonatos'));
     }
 
     /**

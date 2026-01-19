@@ -9,11 +9,32 @@ use Spatie\Permission\Models\Role;
 
 class ProfileUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->paginate(20);
-        $profiles = Profile::orderBy('name')->get();
-        return view('profile_user.index', compact('users', 'profiles'));
+        $query = User::with('roles');
+
+        if ($request->filled('user')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->user . '%')
+                  ->orWhere('email', 'like', '%' . $request->user . '%');
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function($q) use ($request) {
+                $q->where('id', $request->role);
+            });
+        }
+
+        $users = $query->paginate(20)->appends($request->all());
+        $roles = Role::orderBy('name')->get();
+        $profiles = Profile::orderBy('name')->get(); // Mantendo caso ainda seja usado em outro lugar, mas o foco é role
+
+        return view('profile_user.index', [
+            'users' => $users,
+            'roles' => $roles,
+            'profiles' => $profiles
+        ]);
     }
 
     public function create()

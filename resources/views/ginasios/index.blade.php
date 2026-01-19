@@ -19,6 +19,41 @@
                             {{ session('success') }}
                         </div>
                     @endif
+                    
+                    <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
+                         <form method="GET" action="{{ route('ginasios.index') }}">
+                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <!-- Nome -->
+                                <div>
+                                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Ginásio</label>
+                                    <input type="text" name="nome" id="nome" value="{{ request('nome') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400" placeholder="Digite o nome">
+                                </div>
+
+                                <!-- Cidade -->
+                                <div>
+                                    <label for="cidade" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cidade</label>
+                                    <input type="text" name="cidade" id="cidade" value="{{ request('cidade') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400" placeholder="Digite a cidade">
+                                </div>
+
+                                <!-- Time -->
+                                <div>
+                                    <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                                    <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <option value="">Todos</option>
+                                        @foreach($times as $time)
+                                            <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Botões -->
+                                <div class="flex items-end space-x-2">
+                                    <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
+                                    <a href="{{ route('ginasios.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
+                                </div>
+                            </div>
+                         </form>
+                    </div>
 
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">

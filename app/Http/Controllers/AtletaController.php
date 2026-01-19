@@ -54,12 +54,22 @@ class AtletaController extends Controller
             $query->where('atl_sexo', $request->sexo);
         }
 
+        // 5. Time
+        if ($request->filled('time_id')) {
+            $query->where('atl_tim_id', $request->time_id);
+        }
+
         // Obtém categorias para o filtro
         $categorias = Categoria::orderBy('cto_nome')->get();
+        
+        $times = [];
+        if ($user->hasRole('Administrador')) {
+             $times = Time::orderBy('tim_nome')->get();
+        }
 
         $atletas = $query->paginate(10)->appends($request->all());
 
-        return view('atletas.index', compact('atletas', 'categorias'));
+        return view('atletas.index', compact('atletas', 'categorias', 'times'));
     }
 
     /**

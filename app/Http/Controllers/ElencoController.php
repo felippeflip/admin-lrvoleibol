@@ -6,11 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\EquipeCampeonato;
 use App\Models\Atleta;
 use App\Models\ElencoEquipeCampeonato;
+use App\Models\Campeonato; // Import do model Campeonato
+use App\Models\Categoria; // Import do model Categoria
+use App\Models\Equipe; // Import do model Equipe
 
 class ElencoController extends Controller
 {
     
-    public function list()
+    public function list(Request $request)
     {
         $user = auth()->user();
         
@@ -25,11 +28,41 @@ class ElencoController extends Controller
             ->whereHas('campeonato', function($q) {
                 $q->where('cpo_ativo', true);
             })
+            // Filtros da Pesquisa
+            ->when($request->filled('campeonato_id'), function ($q) use ($request) {
+                $q->where('cpo_fk_id', $request->campeonato_id);
+            })
+            ->when($request->filled('equipe_id'), function ($q) use ($request) {
+                // Filtra pelo id da equipe (eqp_id) que está na relação 'equipe'
+                $q->whereHas('equipe', function ($qEqp) use ($request) {
+                    $qEqp->where('eqp_id', $request->equipe_id);
+                });
+            })
+            ->when($request->filled('categoria_id'), function ($q) use ($request) {
+                $q->whereHas('equipe', function ($qEqp) use ($request) {
+                     $qEqp->where('eqp_categoria_id', $request->categoria_id);
+                });
+            })
+
             ->orderBy('created_at', 'desc')
 
-            ->paginate(15);
+            ->paginate(15)
+            ->appends($request->all());
 
-        return view('campeonatos.elenco.list', compact('participacoes'));
+        // Carregar listas para os dropdowns
+        $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
+        $categorias = Categoria::orderBy('cto_nome')->get();
+        
+        // Equipes: se for admin carrega todas, se não, carrega só as do usuário
+        if ($user->hasRole('Administrador')) {
+             $equipes = Equipe::orderBy('eqp_nome_detalhado')->get();
+        } else {
+             $equipes = Equipe::whereHas('time', function($q) use ($user) {
+                 $q->where('tim_user_id', $user->id);
+             })->orderBy('eqp_nome_detalhado')->get();
+        }
+
+        return view('campeonatos.elenco.list', compact('participacoes', 'campeonatos', 'categorias', 'equipes'));
     }
 
     public function index($campeonatoId, $equipeCampeonatoId)

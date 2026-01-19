@@ -22,11 +22,11 @@
                                 <input type="hidden" name="time_id" value="{{ $time->tim_id }}">
                             @endif
 
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <!-- Busca por Nome -->
                                 <div>
                                     <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome da Equipe</label>
-                                    <input type="text" name="search" id="search" value="{{ request('search') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-white placeholder-gray-400" placeholder="Ex: Sub-17">
+                                    <input type="text" name="search" id="search" value="{{ request('search') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-white placeholder-gray-400" placeholder="Ex: Sub-17, Série A...">
                                 </div>
 
                                 <!-- Categoria -->
@@ -36,6 +36,17 @@
                                         <option value="">Todas</option>
                                         @foreach($categorias ?? [] as $cat)
                                             <option value="{{ $cat->cto_id }}" {{ request('categoria') == $cat->cto_id ? 'selected' : '' }}>{{ $cat->cto_nome }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Campeonato -->
+                                <div>
+                                    <label for="campeonato_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Campeonato</label>
+                                    <select name="campeonato_id" id="campeonato_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-white">
+                                        <option value="">Todos</option>
+                                        @foreach($campeonatos ?? [] as $camp)
+                                            <option value="{{ $camp->cpo_id }}" {{ request('campeonato_id') == $camp->cpo_id ? 'selected' : '' }}>{{ $camp->cpo_nome }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -82,6 +93,7 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3">NOME EQUIPE</th>
                                     <th scope="col" class="px-6 py-3">TIME</th>
+                                    <th scope="col" class="px-6 py-3">CAMPEONATOS</th>
                                     <th scope="col" class="px-6 py-3">CATEGORIA</th>
                                     <th scope="col" class="px-6 py-3">TREINADOR</th>
                                     <th scope="col" class="px-6 py-3 text-center">AÇÃO</th>
@@ -92,6 +104,17 @@
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $equipe->eqp_nome_detalhado }}</th>
                                         <td class="px-6 py-4">{{ $equipe->time->tim_nome ?? 'N/A' }}</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col gap-1">
+                                                @forelse($equipe->campeonatos as $campeonato)
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                                        {{ $campeonato->cpo_nome }}
+                                                    </span>
+                                                @empty
+                                                    <span class="text-gray-400 text-xs italic">Nenhum</span>
+                                                @endforelse
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4">{{ $equipe->categoria->cto_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">{{ $equipe->eqp_nome_treinador ?? 'N/A' }}</td>
                                         <td class="px-6 py-4 flex space-x-2 justify-center">

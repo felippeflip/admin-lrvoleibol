@@ -22,15 +22,18 @@ class UserProfileController extends Controller
             });
         }
 
-        // Filtro por Perfil
-        if ($request->filled('profile')) {
-            $query->where('profile_id', $request->input('profile'));
+        // Filtro por Role (já que a view agora usa 'role')
+        if ($request->filled('role')) {
+             $query->whereHas('roles', function($q) use ($request) {
+                $q->where('id', $request->role);
+            });
         }
 
         $users = $query->paginate(20)->appends($request->all());
+        $roles = Role::orderBy('name')->get();
         $profiles = Profile::orderBy('name')->get();
 
-        return view('profile_user.index', compact('users', 'profiles'));
+        return view('profile_user.index', compact('users', 'roles', 'profiles'));
     }
 
     public function create()

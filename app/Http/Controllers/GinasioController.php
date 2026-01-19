@@ -8,10 +8,26 @@ use Illuminate\Http\Request;
 
 class GinasioController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $ginasios = Ginasio::with('time')->paginate(10);
-        return view('ginasios.index', compact('ginasios'));
+        $query = Ginasio::with('time');
+
+        if ($request->filled('nome')) {
+            $query->where('gin_nome', 'like', '%' . $request->nome . '%');
+        }
+
+        if ($request->filled('cidade')) {
+            $query->where('gin_cidade', 'like', '%' . $request->cidade . '%');
+        }
+
+        if ($request->filled('time_id')) {
+            $query->where('gin_tim_id', $request->time_id);
+        }
+
+        $ginasios = $query->paginate(10)->appends($request->all());
+        $times = Time::orderBy('tim_nome')->get();
+
+        return view('ginasios.index', compact('ginasios', 'times'));
     }
 
     public function create()
