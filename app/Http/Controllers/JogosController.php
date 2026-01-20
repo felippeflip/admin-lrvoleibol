@@ -42,7 +42,7 @@ class JogosController extends Controller
             ->where('post_type', 'event_listing')
             // Join local table to get Status
             ->leftJoin('jogos', 'wp_posts.ID', '=', 'jogos.jgo_wp_id')
-            ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id');
+            ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id', 'jogos.jgo_apontador');
 
         $user = Auth::user();
         if ($user->hasRole('Juiz') && !$user->hasRole('Administrador')) {
@@ -193,7 +193,8 @@ class JogosController extends Controller
         // --- 2. JUIZ ---
         if ($user->hasRole('Juiz') || $user->is_arbitro) {
             // Games where user is selected assigned
-            $meusJogos = Jogo::where(function ($q) use ($user) {
+            $meusJogos = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio'])
+                ->where(function ($q) use ($user) {
                 $q->where('jgo_arbitro_principal', $user->id)
                     ->orWhere('jgo_arbitro_secundario', $user->id)
                     ->orWhere('jgo_apontador', $user->id);

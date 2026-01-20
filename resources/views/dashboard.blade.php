@@ -106,18 +106,51 @@
                                             Jogos</h4>
                                         <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                                             @foreach($juizJogosFuturos as $jogo)
-                                                <li class="py-3 flex justify-between items-center">
-                                                    <div class="flex flex-col">
-                                                        <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                                            Jogo #{{ $jogo->jgo_id }}
-                                                        </span>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                            {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} às
-                                                            {{ $jogo->jgo_hora_jogo }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="text-sm text-gray-500">
-                                                        <!-- Location or other info -->
+                                                <li class="py-4">
+                                                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
+                                                        <!-- Game Info -->
+                                                        <div class="flex flex-col">
+                                                            <div class="flex items-center gap-2 mb-1">
+                                                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">
+                                                                    #{{ $jogo->jgo_id }}
+                                                                </span>
+                                                                <span class="text-sm font-bold text-gray-900 dark:text-white">
+                                                                    {{ $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : 'Campeonato Indefinido' }}
+                                                                </span>
+                                                            </div>
+                                                            
+                                                            <div class="flex items-center gap-2 text-md text-gray-700 dark:text-gray-300">
+                                                                <span class="font-medium">
+                                                                    {{ $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : '?' }}
+                                                                </span>
+                                                                <span class="text-xs text-gray-400">vs</span>
+                                                                <span class="font-medium">
+                                                                    {{ $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : '?' }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Date & Location -->
+                                                        <div class="flex flex-col sm:items-end text-sm text-gray-500 dark:text-gray-400">
+                                                            <div class="flex items-center gap-1">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                                <span>{{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }}</span>
+                                                                <span class="mx-1">•</span>
+                                                                <span>{{ \Carbon\Carbon::parse($jogo->jgo_hora_jogo)->format('H:i') }}</span>
+                                                            </div>
+                                                            
+                                                            @if($jogo->ginasio)
+                                                                <a href="{{ $jogo->ginasio->google_maps_link }}" target="_blank" class="mt-1 flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                                    {{ $jogo->ginasio->gin_nome }}
+                                                                </a>
+                                                            @else
+                                                                <span class="mt-1 flex items-center gap-1">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                                    Local não definido
+                                                                </span>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </li>
                                             @endforeach
