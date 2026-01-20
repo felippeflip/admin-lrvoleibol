@@ -152,7 +152,7 @@ class JogosController extends Controller
         return view('jogos.index', compact('jogos', 'campeonatos', 'ginasios'));
     }
 
-    public function index_dashboard()
+    public function index_dashboard(Request $request)
     {
         $user = Auth::user();
         $data = [];
@@ -179,6 +179,7 @@ class JogosController extends Controller
                     ->count();
 
                 $adminStats[] = [
+                    'id' => $camp->cpo_id,
                     'campeonato' => $camp->cpo_nome,
                     'novos' => $novos,
                     'finalizados' => $finalizados_total, // Just past games
@@ -212,7 +213,7 @@ class JogosController extends Controller
         }
 
         // --- 3. RESPONSAVEL PELO TIME ---
-        if ($user->hasRole('ResponsavelTime') || $user->is_resp_time) {
+        if (($user->hasRole('ResponsavelTime') || $user->is_resp_time) && !$user->hasRole('Administrador')) {
             $time = Time::where('tim_user_id', $user->id)->first();
 
             if ($time) {
@@ -222,18 +223,56 @@ class JogosController extends Controller
                     ->join('equipe_campeonato', 'equipes.eqp_id', '=', 'equipe_campeonato.eqp_fk_id')
                     ->pluck('equipe_campeonato.eqp_cpo_id');
 
-                $jogosTime = Jogo::whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
-                    ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds)
-                    ->get();
+                $jogosQuery = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio'])
+                    ->where(function ($query) use ($equipeIds) {
+                        $query->whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
+                              ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds);
+                    });
+
+                // Stats Calculation (before pagination filtering, or separately?)
+                // The stats should probably reflect the total picture, not just the filtered list.
+                // Re-instantiating query for stats or cloning.
+                $statsQuery = clone $jogosQuery;
+                $allJogosForStats = $statsQuery->get();
 
                 $timeStats = [
-                    'escalado_total' => $jogosTime->count(),
-                    'concluidos' => $jogosTime->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count(),
-                    'proximos' => $jogosTime->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count(),
+                    'escalado_total' => $allJogosForStats->count(),
+                    'concluidos' => $allJogosForStats->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count(),
+                    'proximos' => $allJogosForStats->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count(),
                 ];
 
                 $data['timeStats'] = $timeStats;
-                $data['timeJogos'] = $jogosTime;
+
+                // Filters for the List
+                // "status filtrado ativo como default"
+                $statusFilter = $request->input('status', 'ativo');
+                
+                if ($statusFilter) {
+                    // Assuming 'ativo' means future games or explicitly 'ativo' status? 
+                    // Use 'jgo_status' column if that's what stores it.
+                    // In index(), we saw: Jogo::where('jgo_dt_jogo', '<', now())->update(['jgo_status' => 'inativo']);
+                    // So 'ativo' likely corresponds to 'jgo_status' = 'ativo'.
+                    if ($statusFilter !== 'todos') {
+                         $jogosQuery->where('jgo_status', $statusFilter);
+                    }
+                }
+                
+                if ($request->filled('search')) {
+                     $term = $request->search;
+                     // Search by ID/Number
+                     $jogosQuery->where(function($q) use ($term) {
+                         $q->where('jgo_id', 'like', "%{$term}%")
+                           ->orWhereHas('mandante.campeonato', function($sq) use ($term){
+                               $sq->where('cpo_nome', 'like', "%{$term}%");
+                           });
+                     });
+                }
+
+                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'desc')->paginate(10)->appends($request->all());
+                
+                $data['timeJogos'] = $timeJogos;
+                $data['statusFilter'] = $statusFilter;
+
             } else {
                 $data['timeStats'] = null; // Has role but no team assigned
             }

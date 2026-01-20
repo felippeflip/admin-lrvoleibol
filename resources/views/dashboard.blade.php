@@ -39,7 +39,9 @@
                                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                     <th scope="row"
                                                         class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                        {{ $stat['campeonato'] }}
+                                                        <a href="{{ route('jogos.index', ['campeonato_id' => $stat['id']]) }}" class="text-blue-600 hover:text-blue-900 hover:underline">
+                                                            {{ $stat['campeonato'] }}
+                                                        </a>
                                                     </th>
                                                     <td class="px-6 py-4 text-center font-bold text-blue-600">
                                                         {{ $stat['novos'] }}
@@ -132,7 +134,7 @@
                                     Time</h3>
 
                                 @if($timeStats)
-                                    <dl class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                                    <dl class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-6">
                                         <div
                                             class="px-4 py-5 bg-gray-50 dark:bg-gray-700 shadow rounded-lg overflow-hidden sm:p-6">
                                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total de
@@ -155,6 +157,106 @@
                                                 {{ $timeStats['proximos'] }}</dd>
                                         </div>
                                     </dl>
+
+                                    <!-- Filters -->
+                                    <div class="mb-4">
+                                        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row gap-4">
+                                            <div class="w-full sm:w-1/3">
+                                                <label for="search" class="sr-only">Buscar</label>
+                                                <input type="text" name="search" id="search" value="{{ request('search') }}"
+                                                    placeholder="Buscar por ID ou Campeonato..."
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                            </div>
+                                            <div class="w-full sm:w-1/3">
+                                                <label for="status" class="sr-only">Status</label>
+                                                <select name="status" id="status"
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                    <option value="ativo" {{ request('status', 'ativo') == 'ativo' ? 'selected' : '' }}>Ativo</option>
+                                                    <option value="inativo" {{ request('status') == 'inativo' ? 'selected' : '' }}>Inativo</option>
+                                                    <option value="todos" {{ request('status') == 'todos' ? 'selected' : '' }}>Todos</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="submit"
+                                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    Filtrar
+                                                </button>
+                                                <a href="{{ route('dashboard') }}"
+                                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                                                    Limpar
+                                                </a>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <!-- Games List -->
+                                    @if(isset($timeJogos) && $timeJogos->count() > 0)
+                                        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                                    <tr>
+                                                        <th scope="col" class="px-6 py-3">Número</th>
+                                                        <th scope="col" class="px-6 py-3">Campeonato</th>
+                                                        <th scope="col" class="px-6 py-3">Equipes</th>
+                                                        <th scope="col" class="px-6 py-3">Local</th>
+                                                        <th scope="col" class="px-6 py-3">Data/Hora</th>
+                                                        <th scope="col" class="px-6 py-3">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($timeJogos as $jogo)
+                                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                #{{ $jogo->jgo_id }}
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                {{ $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : '-' }}
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                <div class="flex flex-col">
+                                                                    <span class="font-bold text-gray-900 dark:text-white">
+                                                                        {{ $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : '?' }}
+                                                                    </span>
+                                                                    <span class="text-xs text-center text-gray-400">vs</span>
+                                                                    <span class="font-bold text-gray-900 dark:text-white">
+                                                                        {{ $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : '?' }}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                @if($jogo->ginasio)
+                                                                    <a href="{{ $jogo->ginasio->google_maps_link }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                                        {{ $jogo->ginasio->gin_nome }}
+                                                                    </a>
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} <br>
+                                                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                @if($jogo->jgo_status == 'ativo')
+                                                                    <span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Ativo</span>
+                                                                @else
+                                                                    <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Inativo</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                            <div class="mt-4 px-2">
+                                                {{ $timeJogos->links() }}
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md">
+                                            <p class="text-yellow-700 dark:text-yellow-300">Nenhum jogo encontrado com os filtros selecionados.</p>
+                                        </div>
+                                    @endif
                                 @else
                                     <p class="text-gray-500 dark:text-gray-400">Você tem o perfil de Responsável de Time, mas
                                         nenhum time está vinculado ao seu usuário.</p>
