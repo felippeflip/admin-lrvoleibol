@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\atleta;
+use App\Models\Atleta;
 use App\Models\Time;
-use App\Models\Categoria; 
+use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Para manipulação de arquivos
 use Illuminate\Support\Str; // Para gerar nomes de arquivo únicos
@@ -18,7 +18,7 @@ class AtletaController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = atleta::with(['categoria', 'time']);
+        $query = Atleta::with(['categoria', 'time']);
 
         // Escopo baseado em Função (Role)
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
@@ -27,7 +27,7 @@ class AtletaController extends Controller
                 $query->where('atl_tim_id', $time->tim_id);
             } else {
                 // Se não tem time vinculado, retorna lista vazia
-                $atletas = atleta::where('atl_id', 0)->paginate(10);
+                $atletas = Atleta::where('atl_id', 0)->paginate(10);
                 return view('atletas.index', compact('atletas'));
             }
         }
@@ -36,7 +36,7 @@ class AtletaController extends Controller
         // 1. Ativo / Inativo (Padrão: Ativo)
         $ativo = $request->input('ativo', '1');
         if ($ativo !== 'todos') {
-             $query->where('atl_ativo', $ativo);
+            $query->where('atl_ativo', $ativo);
         }
 
         // 2. Categoria
@@ -61,10 +61,10 @@ class AtletaController extends Controller
 
         // Obtém categorias para o filtro
         $categorias = Categoria::orderBy('cto_nome')->get();
-        
+
         $times = [];
         if ($user->hasRole('Administrador')) {
-             $times = Time::orderBy('tim_nome')->get();
+            $times = Time::orderBy('tim_nome')->get();
         }
 
         $atletas = $query->paginate(10)->appends($request->all());
@@ -95,7 +95,7 @@ class AtletaController extends Controller
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
             $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time) {
-                 return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
+                return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
             }
             $request->merge(['atl_tim_id' => $time->tim_id]);
 
@@ -165,7 +165,7 @@ class AtletaController extends Controller
         // --- Fim do Processamento do Upload ---
 
         try {
-            atleta::create($data); // Cria um novo atleta com os dados preparados
+            Atleta::create($data); // Cria um novo atleta com os dados preparados
         } catch (\Exception $e) {
             Log::error("Erro ao criar o atleta: " . $e->getMessage(), [
                 'request_data' => $data,
@@ -180,7 +180,7 @@ class AtletaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(atleta $atleta)
+    public function show(Atleta $atleta)
     {
         return view('atletas.show', compact('atleta'));
     }
@@ -188,7 +188,7 @@ class AtletaController extends Controller
     /**
      * Display the specified resource for printing.
      */
-    public function print(atleta $atleta)
+    public function print(Atleta $atleta)
     {
         return view('atletas.print', compact('atleta'));
     }
@@ -196,7 +196,7 @@ class AtletaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(atleta $atleta)
+    public function edit(Atleta $atleta)
     {
         $user = auth()->user();
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
@@ -204,7 +204,7 @@ class AtletaController extends Controller
                 abort(403);
             }
         }
-        
+
         $times = [];
         if ($user->hasRole('Administrador')) {
             $times = Time::all();
@@ -217,12 +217,12 @@ class AtletaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, atleta $atleta)
+    public function update(Request $request, Atleta $atleta)
     {
         $user = auth()->user();
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
             $time = Time::where('tim_user_id', $user->id)->first();
-             if (!$time || $atleta->atl_tim_id != $time->tim_id) {
+            if (!$time || $atleta->atl_tim_id != $time->tim_id) {
                 abort(403);
             }
             $request->merge(['atl_tim_id' => $time->tim_id]);
@@ -336,14 +336,14 @@ class AtletaController extends Controller
     /**
      * Inactivate the specified athlete.
      */
-    public function inactivate(atleta $atleta)
+    public function inactivate(Atleta $atleta)
     {
         // Verificações de permissão
         $user = auth()->user();
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-             if ($atleta->atl_tim_id != Time::where('tim_user_id', $user->id)->value('tim_id')) {
-                 abort(403);
-             }
+            if ($atleta->atl_tim_id != Time::where('tim_user_id', $user->id)->value('tim_id')) {
+                abort(403);
+            }
         }
 
         $atleta->update(['atl_ativo' => false]);
