@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('notify:apontadores-resultados')->everyMinute(); // Para testes, depois mudar para ->hourly();
+Schedule::command('queue:work --stop-when-empty')->everyMinute();
+
