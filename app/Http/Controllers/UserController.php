@@ -6,6 +6,9 @@ use App\Models\User;
 use App\Models\Time;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 
 class UserController extends Controller
@@ -61,23 +64,39 @@ class UserController extends Controller
             'apelido' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'telefone' => 'nullable|string|max:15',
+            'telefone' => 'nullable|string|max:20',
             'cpf' => 'nullable|string|max:14',
-            'cref' => 'nullable|string|max:10',
+            'cref' => 'nullable|string|max:20',
             'endereco' => 'nullable|string|max:255',
             'numero' => 'nullable|string|max:20',
             'bairro' => 'nullable|string|max:255',
             'cidade' => 'nullable|string|max:255',
+            'estado' => 'nullable|string|max:50',
             'cep' => 'nullable|string|max:10',
+            'rg' => 'nullable|string|max:20',
+            'data_nascimento' => 'nullable|date',
+            'lrv' => 'nullable|string|max:20',
             'role' => 'nullable|exists:roles,name', // Validar Role
             'tipo_arbitro' => 'nullable|string|max:50',
+            'time_id' => 'nullable|exists:times,tim_id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
-        // Remover campos que não existem na tabela users se necessário, ou garantir que o fillable os ignore
-        // is_arbitro e is_resp_time podem ser removidos do validate se não usados mais no DB
-        // Mas por compatibilidade com banco legado, talvez mantê-los como false ou null
+        // --- Processamento do Upload da Foto ---
+        if ($request->hasFile('foto')) {
+            $file = $request->file('foto');
+            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+            try {
+                $path = Storage::disk('user_fotos')->putFileAs('/', $file, $filename);
+                $validated['foto'] = $filename;
+            } catch (\Exception $e) {
+                Log::error("Erro ao salvar a foto do usuário: " . $e->getMessage());
+                return redirect()->back()->with('error', 'Erro ao salvar a foto.');
+            }
+        }
 
         $user = User::create($validated);
 
@@ -113,24 +132,51 @@ class UserController extends Controller
         return view('users.edit', compact('user', 'times', 'roles'));
     }
 
+    public function show(User $user)
+    {
+        return view('users.show', compact('user'));
+    }
+
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:50',
-            'apelido' => 'nullable|string|max:50',
+            'name' => 'required|string|max:255',
+            'apelido' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'telefone' => 'nullable|string|max:15',
+            'telefone' => 'nullable|string|max:20',
             'cpf' => 'nullable|string|max:14',
-            'cref' => 'nullable|string|max:10',
+            'cref' => 'nullable|string|max:20',
             'endereco' => 'nullable|string|max:255',
             'numero' => 'nullable|string|max:20',
-            'bairro' => 'nullable|string|max:80',
-            'cidade' => 'nullable|string|max:50',
+            'bairro' => 'nullable|string|max:255',
+            'cidade' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:50',
             'cep' => 'nullable|string|max:10',
+            'rg' => 'nullable|string|max:20',
+            'data_nascimento' => 'nullable|date',
+            'lrv' => 'nullable|string|max:20',
             'role' => 'nullable|exists:roles,name',
             'tipo_arbitro' => 'nullable|string|max:50',
+            'time_id' => 'nullable|exists:times,tim_id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
+
+        // --- Processamento do Upload da Foto ---
+        if ($request->hasFile('foto')) {
+            $file = $request->file('foto');
+            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+            try {
+                if ($user->foto && Storage::disk('user_fotos')->exists($user->foto)) {
+                    Storage::disk('user_fotos')->delete($user->foto);
+                }
+                $path = Storage::disk('user_fotos')->putFileAs('/', $file, $filename);
+                $validated['foto'] = $filename;
+            } catch (\Exception $e) {
+                Log::error("Erro ao atualizar foto do usuário: " . $e->getMessage());
+                return redirect()->back()->with('error', 'Erro ao salvar a foto.');
+            }
+        }
 
         $user->update($validated);
 
@@ -138,8 +184,6 @@ class UserController extends Controller
         if ($request->filled('role')) {
             $user->syncRoles([$request->role]);
         } else {
-            // Se nenhum role enviado, remove todos? Ou mantém? 
-            // Geralmente select vazio = remover roles
             $user->syncRoles([]);
         }
 
@@ -147,14 +191,17 @@ class UserController extends Controller
         if ($request->role === 'ResponsavelTime' && $request->has('time_id')) {
             $time = Time::find($request->time_id);
             if ($time) {
+                // Remove existing responsible if any
                 Time::where('tim_user_id', $user->id)->update(['tim_user_id' => null]);
                 $time->tim_user_id = $user->id;
                 $time->save();
             }
-        } else {
-            // Se não for mais responsável, remove vínculo
+        } elseif ($request->role !== 'ResponsavelTime') {
+            // Se mudou de role e deixou de ser responsável, remove vínculo na tabela times
             Time::where('tim_user_id', $user->id)->update(['tim_user_id' => null]);
         }
+        
+        // Se for Juiz, o time_id já foi salvo via $validated no update() pois está no fillable.
 
         // Lógica Legada Arbitro
         $user->is_arbitro = ($request->role === 'Juiz');
@@ -165,6 +212,9 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if ($user->foto && Storage::disk('user_fotos')->exists($user->foto)) {
+            Storage::disk('user_fotos')->delete($user->foto);
+        }
         $user->delete();
         return redirect()->route('users.index')->with('success', 'Usuário deletado com sucesso.');
     }
@@ -184,6 +234,4 @@ class UserController extends Controller
 
         return redirect()->route('users.index', $id)->with('success', 'Senha redefinida com sucesso.');
     }
-
-
 }

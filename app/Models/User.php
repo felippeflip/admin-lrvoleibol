@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -35,6 +36,11 @@ class User extends Authenticatable
         'is_resp_time',
         'tipo_arbitro',
         'active',
+        'foto',
+        'data_nascimento',
+        'rg',
+        'lrv',
+        'time_id',
     ];
 
     /**
@@ -63,5 +69,18 @@ class User extends Authenticatable
     public function profile()
     {
         return $this->belongsTo(Profile::class);
+    }
+    
+    public function time()
+    {
+        return $this->belongsTo(Time::class, 'time_id', 'tim_id');
+    }
+
+    public function getFotoUrlAttribute()
+    {
+        if ($this->foto) {
+            return Storage::disk('user_fotos')->url($this->foto);
+        }
+        return asset('images/placeholder-atleta.png');
     }
 }
