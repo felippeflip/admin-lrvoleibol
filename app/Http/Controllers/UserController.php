@@ -17,6 +17,15 @@ class UserController extends Controller
     {
         $query = User::query();
 
+        // Filtro de Busca (Nome ou Apelido)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('apelido', 'like', "%{$search}%");
+            });
+        }
+
         // Filtro de Status
         $status = $request->input('status', 'active');
         if ($status === 'active') {

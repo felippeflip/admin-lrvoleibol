@@ -19,7 +19,11 @@
                         <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
                             <form method="GET" action="{{ route('users.index') }}">
                                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                    <!-- Status -->
+                                    <!-- Search -->
+                                    <div class="md:col-span-2">
+                                        <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pesquisar</label>
+                                        <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="Nome ou Apelido" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                    </div>
                                     <div>
                                         <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                                         <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
