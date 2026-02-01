@@ -29,6 +29,12 @@
                                         </select>
                                     </div>
 
+                                    <!-- Nome -->
+                                    <div class="col-span-1 md:col-span-2">
+                                        <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
+                                        <input type="text" name="nome" id="nome" value="{{ request('nome') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400" placeholder="Nome do Atleta">
+                                    </div>
+
                                     <!-- Categoria -->
                                     <div>
                                         <label for="categoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
@@ -40,18 +46,7 @@
                                         </select>
                                     </div>
 
-                                @if(!empty($times) && count($times) > 0)
-                                    <!-- Time -->
-                                    <div>
-                                        <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
-                                        <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
-                                            <option value="">Todos</option>
-                                            @foreach($times as $time)
-                                                <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                @endif
+
 
                                     <!-- Ano Inscrição -->
                                     <div>
@@ -122,13 +117,21 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </a>
-                                                    <form action="{{ route('atletas.inactivate', $atleta->atl_id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este atleta?');" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                                    <form action="{{ route('atletas.inactivate', $atleta->atl_id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja {{ $atleta->atl_ativo ? 'desativar' : 'ativar' }} este atleta?');" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <button type="submit" title="Desativar Atleta" class="flex items-center justify-center w-full h-full">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                                            </svg>
+                                                        <button type="submit" title="{{ $atleta->atl_ativo ? 'Desativar' : 'Ativar' }} Atleta" class="flex items-center justify-center w-full h-full">
+                                                            @if($atleta->atl_ativo)
+                                                                {{-- Ícone para Desativar (X ou Stop) --}}
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                                </svg>
+                                                            @else
+                                                                {{-- Ícone para Ativar (Check ou Play) --}}
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                            @endif
                                                         </button>
                                                     </form>
                                                     <form action="{{ route('atletas.destroy', $atleta->atl_id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este atleta?');" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">

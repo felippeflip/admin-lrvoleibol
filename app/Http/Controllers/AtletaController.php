@@ -39,6 +39,11 @@ class AtletaController extends Controller
             $query->where('atl_ativo', $ativo);
         }
 
+        // Filtro por Nome
+        if ($request->filled('nome')) {
+            $query->where('atl_nome', 'like', '%' . $request->nome . '%');
+        }
+
         // 2. Categoria
         if ($request->filled('categoria')) {
             $query->where('atl_categoria', $request->categoria);
@@ -346,7 +351,10 @@ class AtletaController extends Controller
             }
         }
 
-        $atleta->update(['atl_ativo' => false]);
-        return redirect()->route('atletas.index')->with('success', 'Atleta inativado com sucesso!');
+        $atleta->atl_ativo = !$atleta->atl_ativo;
+        $atleta->save();
+
+        $statusMessage = $atleta->atl_ativo ? 'ativado' : 'inativado';
+        return redirect()->route('atletas.index')->with('success', "Atleta $statusMessage com sucesso!");
     }
 }
