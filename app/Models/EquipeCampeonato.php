@@ -47,4 +47,20 @@ class EquipeCampeonato extends Pivot
     {
         return $this->hasMany(ElencoEquipeCampeonato::class, 'ele_fk_eqp_cpo_id', 'eqp_cpo_id');
     }
+
+    /**
+     * Relacionamento com jogos onde a equipe é mandante
+     */
+    public function jogosMandante()
+    {
+        return $this->hasMany(Jogo::class, 'jgo_eqp_cpo_mandante_id', 'eqp_cpo_id');
+    }
+
+    /**
+     * Relacionamento com jogos onde a equipe é visitante
+     */
+    public function jogosVisitante()
+    {
+        return $this->hasMany(Jogo::class, 'jgo_eqp_cpo_visitante_id', 'eqp_cpo_id');
+    }
 }

@@ -112,6 +112,36 @@ class EquipeCampeonatoController extends Controller
                     ];
                 }
             }
+            // Identifica as equipes que serão removidas
+            $equipesAtuaisIds = $campeonato->equipes()->pluck('equipes.eqp_id')->toArray();
+            $equipesMantidasIds = array_keys($dataToSync);
+            $equipesParaRemover = array_diff($equipesAtuaisIds, $equipesMantidasIds);
+
+            if (!empty($equipesParaRemover)) {
+                // Verifica se alguma das equipes a serem removidas possui elenco inscrito
+                $equipesComElenco = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
+                    ->whereIn('eqp_fk_id', $equipesParaRemover)
+                    ->whereHas('elenco')
+                    ->exists();
+
+                if ($equipesComElenco) {
+                     return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem elenco cadastrado neste campeonato e não podem ser removidas.']);
+                }
+
+                // Verifica se alguma das equipes a serem removidas possui jogos vinculados
+                $equipesComJogos = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
+                    ->whereIn('eqp_fk_id', $equipesParaRemover)
+                    ->where(function($query) {
+                        $query->whereHas('jogosMandante')
+                              ->orWhereHas('jogosVisitante');
+                    })
+                    ->exists();
+
+                if ($equipesComJogos) {
+                     return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem jogos agendados/realizados neste campeonato e não podem ser removidas.']);
+                }
+            }
+
             // Usa sync para remover as equipes que não foram selecionadas e adicionar as novas
             $campeonato->equipes()->sync($dataToSync);
 
@@ -133,6 +163,29 @@ class EquipeCampeonatoController extends Controller
                 ->withErrors(['error' => 'Campeonato inativo. Não é possível remover equipes.']);
         }
         try {
+            // Verifica se a equipe possui elenco cadastrado no campeonato
+            $possuiElenco = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
+                ->where('eqp_fk_id', $equipe->eqp_id)
+                ->whereHas('elenco') // Verifica relacionamento com elenco
+                ->exists();
+
+            if ($possuiElenco) {
+                return redirect()->back()->withErrors(['error' => 'Esta equipe já possui elenco cadastrado neste campeonato e não pode ser removida.']);
+            }
+
+            // Verifica se a equipe possui jogos vinculados no campeonato
+            $possuiJogos = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
+                ->where('eqp_fk_id', $equipe->eqp_id)
+                ->where(function($query) {
+                    $query->whereHas('jogosMandante')
+                          ->orWhereHas('jogosVisitante');
+                })
+                ->exists();
+
+            if ($possuiJogos) {
+                return redirect()->back()->withErrors(['error' => 'Esta equipe já possui jogos agendados/realizados neste campeonato e não pode ser removida.']);
+            }
+
             // Remove a associação da equipe com o campeonato na tabela pivot
             $campeonato->equipes()->detach($equipe->eqp_id);
 

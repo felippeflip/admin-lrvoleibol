@@ -16,17 +16,52 @@ class TimeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        // Recupera todos os times paginados para exibir na listagem
-        // Recupera todos os times paginados para exibir na listagem
         $user = auth()->user();
+        $query = Time::with('user');
+
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $times = Time::with('user')->where('tim_user_id', $user->id)->paginate(10);
-        } else {
-            $times = Time::with('user')->paginate(10);
+            $query->where('tim_user_id', $user->id);
         }
+
+        // Filters
+        // Nome
+        if ($request->filled('tim_nome')) {
+            $query->where('tim_nome', 'like', '%' . $request->tim_nome . '%');
+        }
+
+        // Status
+        if ($request->filled('status')) {
+             if ($request->status !== 'todos') {
+                $query->where('tim_status', $request->status);
+             }
+        } 
+        
+        // Responsável (Nome do Usuário Responsável)
+        if ($request->filled('responsavel')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->responsavel . '%');
+            });
+        }
+
+        $times = $query->paginate(10);
         return view('times.index', compact('times'));
+    }
+
+    /**
+     * Inactivate/Activate the specified resource.
+     */
+    public function inactivate(Time $time)
+    {
+        $time->tim_status = !$time->tim_status;
+        $time->save();
+        
+        $status = $time->tim_status ? 'ativado' : 'desativado';
+        return redirect()->back()->with('success', "Time $status com sucesso!");
     }
 
     /**

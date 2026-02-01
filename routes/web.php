@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     // ---------------------------------------------------------------------
     Route::middleware(['role:Administrador|ResponsavelTime'])->group(function () {
         
+        Route::patch('times/{time}/inactivate', [TimeController::class, 'inactivate'])->name('times.inactivate');
         Route::resource('times', TimeController::class);
         
         Route::get('atletas/{atleta}/print', [AtletaController::class, 'print'])->name('atletas.print');

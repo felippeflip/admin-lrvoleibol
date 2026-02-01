@@ -603,6 +603,7 @@ class JogosController extends Controller
         }
 
         if ($localJogo) {
+            $localJogo->resultadoSets()->delete();
             $localJogo->delete();
         }
 

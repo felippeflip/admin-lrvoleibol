@@ -123,7 +123,7 @@ class EquipesController extends Controller
              if ($request->has('time_id')) {
                 $times = Time::where('tim_id', $request->query('time_id'))->get();
             } else {
-                $times = Time::orderBy('tim_nome')->get();
+                $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
             }
         } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
              $times = Time::where('tim_user_id', $user->id)->get();

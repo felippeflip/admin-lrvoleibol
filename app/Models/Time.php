@@ -30,7 +30,8 @@ class Time extends Model
         'tim_celular',
         'tim_email',
         'tim_logo',
-        'tim_responsavel'
+        'tim_responsavel',
+        'tim_status'
     ];
     
      /**

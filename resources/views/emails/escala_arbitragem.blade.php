@@ -14,7 +14,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="{{ $message->embed(public_path('build/assets/images/LOGO_LRV-150x150.png')) }}" alt="Logo LRV" style="display: block; margin: 0 auto 10px auto; max-width: 150px;">
+            <img src="{{ $message->embed(public_path('images/LOGO_LRV-150x150.png')) }}" alt="Logo LRV" style="display: block; margin: 0 auto 10px auto; max-width: 150px;">
             <h2>Escala de Arbitragem</h2>
         </div>
         <div class="content">
