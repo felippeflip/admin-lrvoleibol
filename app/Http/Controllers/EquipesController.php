@@ -8,6 +8,7 @@ use App\Models\Time; // Para buscar Times para dropdowns (create/edit)
 use App\Models\Categoria; // Para buscar Categorias para dropdowns (create/edit), se 'Categorias' for o nome do seu modelo
 use App\Models\Campeonato; // Importar o modelo Campeonato
 use Illuminate\Support\Facades\Log; // Para logs de erro
+use Illuminate\Support\Facades\DB;
 
 class EquipesController extends Controller
 {
@@ -20,12 +21,16 @@ class EquipesController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        
+
         // Inicia a query base carregando relacionamentos
         // Carrega apenas campeonatos ATIVOS para visualização na lista de equipes
-        $query = Equipe::with(['time', 'categoria', 'campeonatos' => function($q) {
-            $q->where('cpo_ativo', true);
-        }]);
+        $query = Equipe::with([
+            'time',
+            'categoria',
+            'campeonatos' => function ($q) {
+                $q->where('cpo_ativo', true);
+            }
+        ]);
 
         // 1. Aplica o escopo de segurança (Quem vê o quê)
         if ($user->hasRole('Administrador')) {
@@ -50,9 +55,9 @@ class EquipesController extends Controller
             $searchTerm = '%' . $request->search . '%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('eqp_nome_detalhado', 'like', $searchTerm)
-                  ->orWhereHas('campeonatos', function ($q2) use ($searchTerm) {
-                      $q2->where('cpo_nome', 'like', $searchTerm);
-                  });
+                    ->orWhereHas('campeonatos', function ($q2) use ($searchTerm) {
+                        $q2->where('cpo_nome', 'like', $searchTerm);
+                    });
             });
         }
 
@@ -79,15 +84,15 @@ class EquipesController extends Controller
         // Carregar dados auxiliares para os dropdowns de filtro
         $categorias = Categoria::orderBy('cto_nome')->get();
         $campeonatos = Campeonato::orderBy('cpo_nome')->get();
-        
-        
+
+
         // Para o filtro de times, se for admin carrega todos, se for responsável, só o seu (já estaria filtrado na query, mas para o dropdown é bom restringir visualmente também)
         if ($user->hasRole('Administrador')) {
-            $times = Time::orderBy('tim_nome')->get();
+            $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
             $times = Time::where('tim_user_id', $user->id)->get();
         } else {
-             $times = Time::orderBy('tim_nome')->get();
+            $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         }
 
         return view('equipes.index', compact('equipes', 'categorias', 'times', 'campeonatos'));
@@ -101,16 +106,20 @@ class EquipesController extends Controller
         // Carrega as equipes com seus respectivos times e categorias para o time fornecido
         // Também filtra campeonatos ativos
         $equipes = Equipe::where('eqp_time_id', $time->tim_id)
-            ->with(['time', 'categoria', 'campeonatos' => function($q) {
-                $q->where('cpo_ativo', true);
-            }])
+            ->with([
+                'time',
+                'categoria',
+                'campeonatos' => function ($q) {
+                    $q->where('cpo_ativo', true);
+                }
+            ])
             ->paginate(10);
-        
+
         // Passa o objeto do time para a view para customizar o header
         return view('equipes.index', compact('equipes', 'time'));
     }
 
-   
+
     /**
      * Show the form for creating a new resource.
      * Recebe um time_id opcional para pré-selecionar no dropdown.
@@ -118,17 +127,17 @@ class EquipesController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        
+
         if ($user->hasRole('Administrador')) {
-             if ($request->has('time_id')) {
+            if ($request->has('time_id')) {
                 $times = Time::where('tim_id', $request->query('time_id'))->get();
             } else {
                 $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
             }
         } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
-             $times = Time::where('tim_user_id', $user->id)->get();
+            $times = Time::where('tim_user_id', $user->id)->get();
         } else {
-             // Comportamento padrão para outros usuários
+            // Comportamento padrão para outros usuários
             if ($request->has('time_id')) {
                 $times = Time::where('tim_id', $request->query('time_id'))->get();
             } else {
@@ -136,9 +145,10 @@ class EquipesController extends Controller
             }
         }
         $categorias = Categoria::orderBy('cto_nome')->get();
+        $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get(); // Buscando campeonatos ativos
         $timeId = $request->query('time_id'); // Pega o time_id da URL
 
-        return view('equipes.create', compact('times', 'categorias', 'timeId'));
+        return view('equipes.create', compact('times', 'categorias', 'timeId', 'campeonatos'));
     }
 
     /**
@@ -147,15 +157,15 @@ class EquipesController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        
+
         if (!$user->hasRole('Administrador') && ($user->is_resp_time || $user->hasRole('ResponsavelTime'))) {
             // Verifica se o time enviado pertence ao usuário
             $time = Time::where('tim_user_id', $user->id)->first();
-            
+
             if (!$time) {
-                 return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
+                return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
             }
-            
+
             // Força o ID do time para o time do usuário, ignorando o input se houver
             $request->merge(['eqp_time_id' => $time->tim_id]);
         }
@@ -167,9 +177,27 @@ class EquipesController extends Controller
         ]);
 
         try {
-            Equipe::create($request->all());
+            DB::beginTransaction();
+
+            $equipe = Equipe::create($request->except('campeonato_id'));
+
+            // Se um campeonato foi selecionado, inscreve a equipe
+            if ($request->filled('campeonato_id')) {
+                // Valida se o campeonato existe
+                $campeonato = Campeonato::find($request->campeonato_id);
+                if ($campeonato) {
+                    // Verifica se já não está inscrito (opcional, mas boa prática)
+                    if (!$equipe->campeonatos()->where('cpo_id', $campeonato->cpo_id)->exists()) {
+                        $equipe->campeonatos()->attach($campeonato->cpo_id, ['eqp_cpo_dt_inscricao' => now()]);
+                    }
+                }
+            }
+
+            DB::commit();
+
             return redirect()->route('equipes.index')->with('success', 'Equipe criada com sucesso!');
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Erro ao criar equipe: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->withErrors(['error' => 'Erro ao criar equipe.'])->withInput();
         }
@@ -191,20 +219,20 @@ class EquipesController extends Controller
     public function edit(Equipe $equipe) // Injeção de modelo para facilitar
     {
         $user = auth()->user();
-        
+
         if ($user->hasRole('Administrador')) {
-             $times = Time::orderBy('tim_nome')->get();
+            $times = Time::orderBy('tim_nome')->get();
         } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
-             // Security check: ensure the equipe belongs to the user's time
-             // O time do usuário
-             $userTime = Time::where('tim_user_id', $user->id)->first();
-             
-             if (!$userTime || $equipe->eqp_time_id != $userTime->tim_id) {
-                 abort(403, 'Você não tem permissão para editar esta equipe.');
-             }
-             
-             // Na edição, o responsável só deve ver seu próprio time no select
-             $times = Time::where('tim_user_id', $user->id)->get();
+            // Security check: ensure the equipe belongs to the user's time
+            // O time do usuário
+            $userTime = Time::where('tim_user_id', $user->id)->first();
+
+            if (!$userTime || $equipe->eqp_time_id != $userTime->tim_id) {
+                abort(403, 'Você não tem permissão para editar esta equipe.');
+            }
+
+            // Na edição, o responsável só deve ver seu próprio time no select
+            $times = Time::where('tim_user_id', $user->id)->get();
         } else {
             $times = Time::orderBy('tim_nome')->get();
         }
@@ -219,9 +247,9 @@ class EquipesController extends Controller
     {
         $user = auth()->user();
         if (!$user->hasRole('Administrador') && ($user->is_resp_time || $user->hasRole('ResponsavelTime'))) {
-             $time = Time::where('tim_user_id', $user->id)->first();
+            $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time || $equipe->eqp_time_id != $time->tim_id) {
-                 abort(403);
+                abort(403);
             }
             // Garante que o time não seja alterado para outro
             $request->merge(['eqp_time_id' => $time->tim_id]);

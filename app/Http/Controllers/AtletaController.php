@@ -44,6 +44,13 @@ class AtletaController extends Controller
             $query->where('atl_nome', 'like', '%' . $request->nome . '%');
         }
 
+        // Filtro por CPF
+        if ($request->filled('cpf')) {
+            // Remove máscara para busca
+            $cpfBusca = preg_replace('/[^0-9]/', '', $request->cpf);
+            $query->where('atl_cpf', 'like', '%' . $cpfBusca . '%');
+        }
+
         // 2. Categoria
         if ($request->filled('categoria')) {
             $query->where('atl_categoria', $request->categoria);

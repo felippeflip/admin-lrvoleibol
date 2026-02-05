@@ -26,8 +26,10 @@
 
                                 <!-- Time -->
                                 <div>
-                                    <label for="search_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
-                                    <select name="search_time" id="search_time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400">
+                                    <label for="search_time"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                                    <select name="search_time" id="search_time"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400">
                                         <option value="">Todos</option>
                                         @foreach($times as $time)
                                             <option value="{{ $time->tim_id }}" {{ request('search_time') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
@@ -37,11 +39,14 @@
 
                                 <!-- Categoria -->
                                 <div>
-                                    <label for="search_categoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
-                                    <select name="search_categoria" id="search_categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400">
+                                    <label for="search_categoria"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
+                                    <select name="search_categoria" id="search_categoria"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400">
                                         <option value="">Todas</option>
                                         @foreach($categorias as $categoria)
-                                            <option value="{{ $categoria->cto_id }}" {{ request('search_categoria') == $categoria->cto_id ? 'selected' : '' }}>{{ $categoria->cto_nome }}</option>
+                                            <option value="{{ $categoria->cto_id }}" {{ request('search_categoria') == $categoria->cto_id ? 'selected' : '' }}>
+                                                {{ $categoria->cto_nome }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -69,8 +74,7 @@
 
                     <div class="flex justify-start mb-4 gap-2">
                         <a href="{{ route('equipes.campeonato.create', $campeonato->cpo_id) }}"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">ADICIONAR
-                            EQUIPE</a>
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">ADICIONAR/EDITAR EQUIPES</a>
                         <a href="{{ route('eventos.index') }}"
                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">VOLTAR</a>
                     </div>
@@ -114,7 +118,24 @@
                                         <td class="px-6 py-4">{{ $equipe->time->tim_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">{{ $equipe->categoria->cto_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">{{ $equipe->eqp_nome_treinador ?? 'N/A' }}</td>
-                                        <td class="px-6 py-4 flex space-x-2 justify-center">
+                                        <td class="px-6 py-4 flex flex-row space-x-2 justify-center items-center">
+                                            {{-- Botão de Elenco --}}
+                                            @php
+                                                // Precisamos do ID da tabela pivot (equipe_campeonato) = eqp_cpo_id
+                                                // No model Equipe, o relacionamento 'campeonatos' traz o pivot.
+                                                // Mas aqui estamos iterando sobre $equipes que vieram de $campeonato->equipes() (BelongsToMany)
+                                                // Então o pivot deve estar disponível como $equipe->pivot
+                                                $pivotId = $equipe->pivot->eqp_cpo_id ?? null;
+                                            @endphp
+
+                                            @if($pivotId)
+                                                <a href="{{ route('elenco.index', ['campeonato' => $campeonato->cpo_id, 'equipe_campeonato' => $pivotId]) }}"
+                                                    class="text-blue-600 hover:text-blue-900 font-bold text-xs"
+                                                    title="Gerenciar Elenco">
+                                                    ELENCO
+                                                </a>
+                                            @endif
+
                                             {{-- Botão de remover a equipe do campeonato --}}
                                             <form
                                                 action="{{ route('equipes.campeonato.destroy', ['campeonato' => $campeonato->cpo_id, 'equipe' => $equipe->eqp_id]) }}"

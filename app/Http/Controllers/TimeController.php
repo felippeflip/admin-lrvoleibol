@@ -10,6 +10,7 @@ use Illuminate\Support\Str; // Importe Str para gerar nomes de arquivo únicos
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
 
 class TimeController extends Controller
 {
@@ -35,12 +36,15 @@ class TimeController extends Controller
         }
 
         // Status
+
         if ($request->filled('status')) {
-             if ($request->status !== 'todos') {
+            if ($request->status !== 'todos') {
                 $query->where('tim_status', $request->status);
-             }
-        } 
-        
+            }
+        } else {
+            $query->where('tim_status', 1);
+        }
+
         // Responsável (Nome do Usuário Responsável)
         if ($request->filled('responsavel')) {
             $query->whereHas('user', function ($q) use ($request) {
@@ -59,7 +63,7 @@ class TimeController extends Controller
     {
         $time->tim_status = !$time->tim_status;
         $time->save();
-        
+
         $status = $time->tim_status ? 'ativado' : 'desativado';
         return redirect()->back()->with('success', "Time $status com sucesso!");
     }
@@ -295,6 +299,50 @@ class TimeController extends Controller
     public function destroy(Time $time)
     {
         try {
+            DB::beginTransaction();
+
+            // Verifica se o time possui equipes
+            $equipes = \App\Models\Equipe::where('eqp_time_id', $time->tim_id)->get();
+            $hasActiveChampionships = false;
+
+            // Verifica se alguma equipe está em campeonato
+            foreach ($equipes as $equipe) {
+                if ($equipe->campeonatos()->count() > 0) {
+                    $hasActiveChampionships = true;
+                    break;
+                }
+            }
+
+            if ($hasActiveChampionships) {
+                // Se houver erro de lógica (não deve apagar), faz rollback só por precaução, 
+                // embora não tenhamos feito nada ainda.
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Este time não pode ser excluído pois possui equipes inscritas em campeonatos. Remova-as dos campeonatos antes de excluir.');
+            }
+
+            // Exclui as equipes associadas (Cascata Manual)
+            foreach ($equipes as $equipe) {
+                $equipe->delete();
+            }
+
+            // Excluir Atletas associados
+            $atletas = \App\Models\Atleta::where('atl_tim_id', $time->tim_id)->get();
+            foreach ($atletas as $atleta) {
+                // Se precisar deletar foto do atleta:
+                if ($atleta->atl_foto && Storage::disk('atletas_fotos')->exists($atleta->atl_foto)) {
+                    Storage::disk('atletas_fotos')->delete($atleta->atl_foto);
+                }
+                $atleta->delete();
+            }
+
+            // Excluir Ginásios associados (Se houver)
+            // Cuidado: Se o ginásio estiver em uso por Jogos, isso pode falhar.
+            // Vamos tentar deletar. Se falhar, o catch pega.
+            $ginasios = \App\Models\Ginasio::where('gin_tim_id', $time->tim_id)->get();
+            foreach ($ginasios as $ginasio) {
+                $ginasio->delete();
+            }
+
             // Se existe um logo, tenta deletá-lo antes de remover o registro do banco de dados
             if ($time->tim_logo && Storage::disk('times_logos')->exists($time->tim_logo)) {
                 Storage::disk('times_logos')->delete($time->tim_logo);
@@ -303,14 +351,25 @@ class TimeController extends Controller
 
             // Deleta o time do banco de dados
             $time->delete();
+
+            DB::commit();
+
             Log::info("Time com ID {$time->tim_id} excluído com sucesso.");
 
         } catch (\Exception $e) {
+            DB::rollBack();
+
             Log::error("Erro ao excluir o time com ID {$time->tim_id}: " . $e->getMessage(), [
                 'time_id' => $time->tim_id,
                 'logo_filename' => $time->tim_logo,
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // Verifica se o erro é de constraint violation
+            if (str_contains($e->getMessage(), 'Integrity constraint violation')) {
+                return redirect()->back()->with('error', 'Não foi possível excluir o time pois existem registros vinculados (Ex: Jogos no Ginásio, etc) que impedem a exclusão.');
+            }
+
             return redirect()->back()->with('error', 'Ocorreu um erro ao excluir o time. Por favor, tente novamente.');
         }
 
