@@ -12,20 +12,20 @@ use App\Models\Equipe; // Import do model Equipe
 
 class ElencoController extends Controller
 {
-    
+
     public function list(Request $request)
     {
         $user = auth()->user();
-        
+
         $participacoes = EquipeCampeonato::with(['equipe.time', 'campeonato'])
-            ->when(!$user->hasRole('Administrador'), function($query) use ($user) {
+            ->when(!$user->hasRole('Administrador'), function ($query) use ($user) {
                 // Se NÃO for Administrador, filtra pelas equipes do usuário
-                return $query->whereHas('equipe.time', function($q) use ($user) {
+                return $query->whereHas('equipe.time', function ($q) use ($user) {
                     $q->where('tim_user_id', $user->id);
                 });
             })
             // Exibir apenas campeonatos ATIVOS para gestão
-            ->whereHas('campeonato', function($q) {
+            ->whereHas('campeonato', function ($q) {
                 $q->where('cpo_ativo', true);
             })
             // Filtros da Pesquisa
@@ -40,7 +40,7 @@ class ElencoController extends Controller
             })
             ->when($request->filled('categoria_id'), function ($q) use ($request) {
                 $q->whereHas('equipe', function ($qEqp) use ($request) {
-                     $qEqp->where('eqp_categoria_id', $request->categoria_id);
+                    $qEqp->where('eqp_categoria_id', $request->categoria_id);
                 });
             })
 
@@ -52,14 +52,14 @@ class ElencoController extends Controller
         // Carregar listas para os dropdowns
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
-        
+
         // Equipes: se for admin carrega todas, se não, carrega só as do usuário
         if ($user->hasRole('Administrador')) {
-             $equipes = Equipe::orderBy('eqp_nome_detalhado')->get();
+            $equipes = Equipe::orderBy('eqp_nome_detalhado')->get();
         } else {
-             $equipes = Equipe::whereHas('time', function($q) use ($user) {
-                 $q->where('tim_user_id', $user->id);
-             })->orderBy('eqp_nome_detalhado')->get();
+            $equipes = Equipe::whereHas('time', function ($q) use ($user) {
+                $q->where('tim_user_id', $user->id);
+            })->orderBy('eqp_nome_detalhado')->get();
         }
 
         return view('campeonatos.elenco.list', compact('participacoes', 'campeonatos', 'categorias', 'equipes'));
@@ -82,7 +82,7 @@ class ElencoController extends Controller
         // IDs dos atletas já no elenco
         $atletasNoElencoIds = [];
         if ($equipeCampeonato->elenco) {
-            foreach($equipeCampeonato->elenco as $elencoItem) {
+            foreach ($equipeCampeonato->elenco as $elencoItem) {
                 // O relacionamento 'elenco' retorna ElencoEquipeCampeonato (pivot com dados extras)
                 // mas precisamos acessar o ID do atleta.
                 // Ajuste: A relação 'elenco' no model EquipeCampeonato não foi mostrada,
@@ -90,35 +90,61 @@ class ElencoController extends Controller
                 // Atleta::participacoes() -> belongsToMany(EquipeCampeonato)
                 // Então EquipeCampeonato::atletas() (ou similar) deveria existir.
                 // Vou assumir que vamos pegar via a tabela pivot ou criar a relação se não existir.
-                
+
                 // Vamos usar a query direta na pivot para garantir
                 $atletasNoElencoIds[] = $elencoItem->ele_fk_atl_id;
             }
         }
-        
+
         // Melhor abordagem: Usar a relação definida se houver, ou a tabela pivot.
         // No model Atleta temos 'participacoes'. 
         // No model EquipeCampeonato ainda não vi a relação 'atletas' ou 'elenco' (vi 'equipe' e 'campeonato').
         // Vou precisar verificar/adicionar a relação no model EquipeCampeonato ou usar query direta.
-        
+
         // Assumindo Query direta para ser mais seguro por enquanto:
         $atletasNoElencoIds = ElencoEquipeCampeonato::where('ele_fk_eqp_cpo_id', $equipeCampeonatoId)
-                                ->pluck('ele_fk_atl_id')
-                                ->toArray();
+            ->pluck('ele_fk_atl_id')
+            ->toArray();
 
-        $categoriaId = $equipeCampeonato->equipe->eqp_categoria_id; // ID da Categoria da Equipe
-        
+        // ID da Categoria da Equipe
+        $categoriaId = $equipeCampeonato->equipe->eqp_categoria_id;
+
+        // Dados da Categoria da Equipe (para pegar idade_maxima)
+        // Assume-se que a relação 'categoria' já foi carregada ou pode ser acessada.
+        // Se precisar carregar: $equipeCampeonato->equipe->load('categoria');
+        $categoriaEquipe = $equipeCampeonato->equipe->categoria;
+        $maxAge = $categoriaEquipe ? $categoriaEquipe->cto_idade_maxima : null;
+        $anoCampeonato = $equipeCampeonato->campeonato->cpo_ano ?? date('Y'); // Fallback para ano atual
+
         $atletasDisponiveis = Atleta::where('atl_tim_id', $timeId)
-            ->where('atl_categoria', $categoriaId) // Filtrar apenas atletas desta categoria
             ->whereNotIn('atl_id', $atletasNoElencoIds)
             ->where('atl_ativo', 1) // Opcional: apenas ativos
+
+            // Lógica de Idade / Categoria
+            ->where(function ($query) use ($categoriaId, $maxAge, $anoCampeonato) {
+                if (!is_null($maxAge)) {
+                    // Se tiver idade máxima definida, aplica regra de idade:
+                    // (AnoCampeonato - AnoNascimento) <= MaxAge
+                    // Usamos YEAR(atl_dt_nasc) para pegar o ano de nascimento.
+                    $query->whereRaw('(? - YEAR(atl_dt_nasc)) <= ?', [$anoCampeonato, $maxAge]);
+                } else {
+                    // Se NÃO tem idade máxima (ex: Adulto/Livre), permite todos? 
+                    // Ou mantém filtro estrito de categoria como fallback?
+                    // Geralmente "Livre" aceita todos (Younger playing Older).
+                    // Então se maxAge é null, não filtra nada (aceita tudo).
+                    // A menos que queira manter a regra antiga para categorias sem configuração de idade:
+                    // $query->where('atl_categoria', $categoriaId);
+    
+                    // Vamos assumir "Livre" = Aceita Todos.
+                }
+            })
             ->orderBy('atl_nome')
             ->get();
-            
+
         // Carregar os dados do elenco completos (com nome do atleta, camisa, posição)
         $elencoAtual = ElencoEquipeCampeonato::with('atleta')
-                        ->where('ele_fk_eqp_cpo_id', $equipeCampeonatoId)
-                        ->get();
+            ->where('ele_fk_eqp_cpo_id', $equipeCampeonatoId)
+            ->get();
 
         return view('campeonatos.elenco.index', compact('equipeCampeonato', 'atletasDisponiveis', 'elencoAtual'));
     }
@@ -141,10 +167,25 @@ class ElencoController extends Controller
 
         // Validação Adicional: O atleta pertence mesmo ao time desta equipe?
         $atleta = Atleta::findOrFail($request->atleta_id);
-        
+
         // Cuidado: $equipeCampeonato->equipe->time é o objeto time.
         if ($atleta->atl_tim_id !== $equipeCampeonato->equipe->time->tim_id) {
-             return back()->with('error', 'Este atleta não pertence ao time desta equipe.');
+            return back()->with('error', 'Este atleta não pertence ao time desta equipe.');
+        }
+
+        // Validação de Idade (Regra: Atleta pode jogar em categoria mais velha, mas não mais nova)
+        // Check se o atleta cumpre a idade máxima da categoria do campeonato
+        $categoriaEquipe = $equipeCampeonato->equipe->categoria;
+        $maxAge = $categoriaEquipe ? $categoriaEquipe->cto_idade_maxima : null;
+
+        if (!is_null($maxAge)) {
+            $anoCampeonato = $equipeCampeonato->campeonato->cpo_ano ?? date('Y');
+            $anoNascimento = date('Y', strtotime($atleta->atl_dt_nasc));
+            $idadeNoAno = $anoCampeonato - $anoNascimento;
+
+            if ($idadeNoAno > $maxAge) {
+                return back()->with('error', "Este atleta não possui idade permitida para esta categoria ({$categoriaEquipe->cto_nome}). Idade calculada: $idadeNoAno anos. Limite: $maxAge anos.");
+            }
         }
 
         // Verificar unicidade
@@ -169,14 +210,14 @@ class ElencoController extends Controller
     public function destroy($campeonatoId, $equipeCampeonatoId, $elencoId)
     {
         $elenco = ElencoEquipeCampeonato::findOrFail($elencoId);
-        
+
         // Carregar relacionamento para verificar permissão
         // Note: ele_fk_eqp_cpo_id relates to EquipeCampeonato
         $eqpCpo = EquipeCampeonato::with('equipe.time')->findOrFail($elenco->ele_fk_eqp_cpo_id);
 
         $user = auth()->user();
         if (!$user->hasRole('Administrador') && $eqpCpo->equipe->time->tim_user_id !== $user->id) {
-             abort(403, 'Ação não autorizada.');
+            abort(403, 'Ação não autorizada.');
         }
 
         $elenco->delete();

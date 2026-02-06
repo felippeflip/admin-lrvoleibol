@@ -135,8 +135,22 @@
                                                     class="h-8 w-8 object-cover rounded-full inline-block">
                                             </td>
                                             <td class="py-3 px-6 text-left whitespace-nowrap">
-                                                {{ $atleta->atl_cpf_formatted }}</td>
-                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_nome }}</td>
+                                                {{ $atleta->atl_cpf_formatted }}
+                                            </td>
+                                            <td class="py-3 px-6 text-left">
+                                                {{ $atleta->atl_nome }}
+                                                @if($atleta->cartaoImpresso())
+                                                    <span title="Cartão {{ date('Y') }} Impresso"
+                                                        class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-green-500 rounded-full">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td class="py-3 px-6 text-left">{{ $atleta->time->tim_nome ?? 'N/A' }}</td>
                                             <td class="py-3 px-6 text-left">
                                                 {{ $atleta->atl_dt_nasc ? \Carbon\Carbon::parse($atleta->atl_dt_nasc)->age : 'N/A' }}
@@ -210,6 +224,24 @@
                                                             </svg>
                                                         </button>
                                                     </form>
+
+                                                    @if(auth()->user()->hasRole('Administrador') && !$atleta->cartaoImpresso())
+                                                        <form action="{{ route('atletas.markPrinted', $atleta->atl_id) }}"
+                                                            method="POST"
+                                                            onsubmit="return confirm('Confirmar que o cartão foi impresso?');"
+                                                            class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110 flex items-center">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" title="Marcar Cartão como Impresso">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>

@@ -49,11 +49,12 @@ Route::middleware('auth')->group(function () {
     // 2. ADMIN + RESPONSAVEl TIME ONLY (Juiz/Apontador CANNOT Access)
     // ---------------------------------------------------------------------
     Route::middleware(['role:Administrador|ResponsavelTime'])->group(function () {
-        
+
         Route::patch('times/{time}/inactivate', [TimeController::class, 'inactivate'])->name('times.inactivate');
         Route::resource('times', TimeController::class);
-        
+
         Route::get('atletas/{atleta}/print', [AtletaController::class, 'print'])->name('atletas.print');
+        Route::patch('atletas/{atleta}/mark-printed', [AtletaController::class, 'markPrinted'])->name('atletas.markPrinted');
         Route::patch('atletas/{atleta}/inactivate', [AtletaController::class, 'inactivate'])->name('atletas.inactivate');
         Route::resource('atletas', AtletaController::class);
 
@@ -81,7 +82,7 @@ Route::middleware('auth')->group(function () {
     // 3. ADMIN ONLY (Restricted for everyone else)
     // ---------------------------------------------------------------------
     Route::middleware(['role:Administrador'])->group(function () {
-        
+
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
         Route::resource('users', UserController::class);
 
@@ -100,10 +101,10 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
         Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
-        
+
         Route::get('/resultados/import', [FuncoesController::class, 'showImport'])->name('resultados.showImportForm');
     });
 
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

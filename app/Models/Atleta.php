@@ -134,8 +134,21 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
     public function participacoes()
     {
         return $this->belongsToMany(EquipeCampeonato::class, 'elenco_equipe_campeonato', 'ele_fk_atl_id', 'ele_fk_eqp_cpo_id')
-                    ->using(ElencoEquipeCampeonato::class)
-                    ->withPivot('ele_num_camisa', 'ele_posicao_atuando')
-                    ->withTimestamps();
+            ->using(ElencoEquipeCampeonato::class)
+            ->withPivot('ele_num_camisa', 'ele_posicao_atuando')
+            ->withTimestamps();
+    }
+    // Relacionamento com Cartões
+    public function cartoes()
+    {
+        return $this->hasMany(AtletaCartao::class, 'atc_atl_id', 'atl_id');
+    }
+
+    // Helper para verificar se cartão de ano X está impresso
+    public function cartaoImpresso(?int $ano = null): bool
+    {
+        $ano = $ano ?? date('Y');
+        $cartao = $this->cartoes()->where('atc_ano', $ano)->first();
+        return $cartao ? (bool) $cartao->atc_impresso : false;
     }
 }

@@ -177,7 +177,17 @@ class AtletaController extends Controller
         // --- Fim do Processamento do Upload ---
 
         try {
-            Atleta::create($data); // Cria um novo atleta com os dados preparados
+            $atleta = Atleta::create($data); // Cria um novo atleta com os dados preparados
+
+            // Verificar checkbox de cartão impresso (Ano Atual)
+            if ($request->has('cartao_impresso_ano_atual')) {
+                \App\Models\AtletaCartao::create([
+                    'atc_atl_id' => $atleta->atl_id,
+                    'atc_ano' => date('Y'),
+                    'atc_impresso' => true,
+                ]);
+            }
+
         } catch (\Exception $e) {
             Log::error("Erro ao criar o atleta: " . $e->getMessage(), [
                 'request_data' => $data,
@@ -186,7 +196,7 @@ class AtletaController extends Controller
             return redirect()->back()->with('error', 'Ocorreu um erro ao criar o atleta. Por favor, tente novamente.');
         }
 
-        return redirect()->route('atletas.index')->with('success', 'Atleta adicionado com sucesso!');
+        return redirect()->route('atletas.index')->with('success', 'Atleta cadastrado com sucesso!');
     }
 
     /**
@@ -203,6 +213,27 @@ class AtletaController extends Controller
     public function print(Atleta $atleta)
     {
         return view('atletas.print', compact('atleta'));
+    }
+
+    /**
+     * Mark the athlete card as printed for the current year.
+     */
+    public function markPrinted(Atleta $atleta)
+    {
+        // Se for administrador, marca como impresso
+        if (auth()->user()->hasRole('Administrador')) {
+            $anoAtual = date('Y');
+            \App\Models\AtletaCartao::updateOrCreate(
+                [
+                    'atc_atl_id' => $atleta->atl_id,
+                    'atc_ano' => $anoAtual,
+                ],
+                ['atc_impresso' => true]
+            );
+            return redirect()->back()->with('success', 'Cartão marcado como impresso com sucesso!');
+        }
+
+        abort(403);
     }
 
     /**
@@ -306,6 +337,31 @@ class AtletaController extends Controller
 
         try {
             $atleta->update($data);
+
+            // Atualizar/Criar status do cartão do ano atual
+            $anoAtual = date('Y');
+            $cartao = \App\Models\AtletaCartao::where('atc_atl_id', $atleta->atl_id)
+                ->where('atc_ano', $anoAtual)
+                ->first();
+
+            if ($request->has('cartao_impresso_ano_atual')) {
+                // Se marcado, cria se não existir ou garante que está true
+                if ($cartao) {
+                    $cartao->update(['atc_impresso' => true]);
+                } else {
+                    \App\Models\AtletaCartao::create([
+                        'atc_atl_id' => $atleta->atl_id,
+                        'atc_ano' => $anoAtual,
+                        'atc_impresso' => true,
+                    ]);
+                }
+            } else {
+                // Se DESMARCADO, se existir registro, marca como false
+                if ($cartao) {
+                    $cartao->update(['atc_impresso' => false]);
+                }
+            }
+
         } catch (\Exception $e) {
             Log::error("Erro ao atualizar o atleta com ID {$atleta->atl_id}: " . $e->getMessage(), [
                 'atleta_id' => $atleta->atl_id,

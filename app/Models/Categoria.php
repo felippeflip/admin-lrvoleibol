@@ -18,6 +18,7 @@ class Categoria extends Model
         'cto_slug',
         'cto_term_tx_id',
         'cto_descricao',
+        'cto_idade_maxima',
     ];
 
     /**

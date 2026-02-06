@@ -9,7 +9,7 @@
         <div class="w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                   
+
                     <div class="container mx-auto p-4">
                         @if ($errors->any())
                             <div class="bg-red-500 text-white p-2 my-4">
@@ -25,21 +25,36 @@
                             @method('PUT')
                             <div class="mb-4">
                                 <label for="name" class="block text-gray-700">CATEGORIA:</label>
-                                <input type="text" name="name" id="name" class="w-full border border-gray-300 p-2 rounded" value="{{ old('name', $categoria->cto_nome) }}">
+                                <input type="text" name="name" id="name"
+                                    class="w-full border border-gray-300 p-2 rounded"
+                                    value="{{ old('name', $categoria->cto_nome) }}">
                             </div>
                             <div class="mb-4">
                                 <label for="slug" class="block text-gray-700">SLUG:</label>
-                                <input type="text" name="slug" id="slug" class="w-full border border-gray-300 p-2 rounded" value="{{ old('slug', $categoria->cto_slug) }}">
+                                <input type="text" name="slug" id="slug"
+                                    class="w-full border border-gray-300 p-2 rounded"
+                                    value="{{ old('slug', $categoria->cto_slug) }}">
+                            </div>
+                            <div class="mb-4">
+                                <label for="cto_idade_maxima" class="block text-gray-700">IDADE MÁXIMA (Opcional - Em
+                                    anos):</label>
+                                <input type="number" name="cto_idade_maxima" id="cto_idade_maxima"
+                                    class="w-full border border-gray-300 p-2 rounded"
+                                    value="{{ old('cto_idade_maxima', $categoria->cto_idade_maxima) }}"
+                                    placeholder="Ex: 15 para Sub-15">
                             </div>
                             <div class="mb-4">
                                 <label for="description" class="block text-gray-700">Descrição:</label>
-                                <textarea name="description" id="description" class="w-full border border-gray-300 p-2 rounded">{{ old('description', $categoria->cto_descricao)}}</textarea>
+                                <textarea name="description" id="description"
+                                    class="w-full border border-gray-300 p-2 rounded">{{ old('description', $categoria->cto_descricao)}}</textarea>
                             </div>
-                           
+
                             <div class="flex justify-between">
-                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Atualizar</button>
-                                
-                                <a href="{{ route('categorias.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
+                                <button type="submit"
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Atualizar</button>
+
+                                <a href="{{ route('categorias.index') }}"
+                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
                             </div>
                         </form>
                     </div>

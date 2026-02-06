@@ -12,7 +12,7 @@ class CategoriasController extends Controller
     public function index()
     {
         $categorias = Categoria::all();
-   
+
         return view('categorias.index', compact('categorias'));
     }
 
@@ -27,6 +27,7 @@ class CategoriasController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'cto_idade_maxima' => 'nullable|integer|min:1',
         ]);
 
 
@@ -38,11 +39,11 @@ class CategoriasController extends Controller
 
         // Inserir dados na tabela wp_term_taxonomy
         Wp_Term_Taxonomy::create([
-            'term_id'       => $wpTerm->term_id,
-            'taxonomy'      => 'event_listing_category',
-            'description'   => $request->input('description') ?? '',
-            'parent'        => 0,
-            'count'         => 0,
+            'term_id' => $wpTerm->term_id,
+            'taxonomy' => 'event_listing_category',
+            'description' => $request->input('description') ?? '',
+            'parent' => 0,
+            'count' => 0,
         ]);
 
         Categoria::create([
@@ -50,6 +51,7 @@ class CategoriasController extends Controller
             'cto_slug' => $request->input('slug'),
             'cto_term_tx_id' => $wpTerm->term_id,
             'cto_descricao' => $request->input('description') ?? '',
+            'cto_idade_maxima' => $request->input('cto_idade_maxima'),
         ]);
 
         return redirect()->route('categorias.index')->with('success', 'Categoria criada com sucesso');
@@ -69,6 +71,7 @@ class CategoriasController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'cto_idade_maxima' => 'nullable|integer|min:1',
         ]);
 
         $request->description ? empty($request->description) : ' ';
@@ -79,6 +82,7 @@ class CategoriasController extends Controller
             'cto_nome' => $request->input('name'),
             'cto_slug' => $request->input('slug'),
             'cto_descricao' => $request->input('description') ?? '',
+            'cto_idade_maxima' => $request->input('cto_idade_maxima'),
         ]);
 
         $wpTermTaxonomy = Wp_Term_Taxonomy::findOrFail($categoria->cto_term_tx_id);
@@ -93,8 +97,8 @@ class CategoriasController extends Controller
         // Garanta que o campo description não seja nulo
         $description = $request->input('description') ?? '';
 
-         // Atualize os dados de wp_term_taxonomy
-         $wpTermTaxonomy->update([
+        // Atualize os dados de wp_term_taxonomy
+        $wpTermTaxonomy->update([
             'description' => $description,
 
         ]);
@@ -105,23 +109,23 @@ class CategoriasController extends Controller
     public function destroy($id)
     {
         try {
-        $categoria = Categoria::findOrFail($id);
+            $categoria = Categoria::findOrFail($id);
 
-        $taxonomy = Wp_Term_Taxonomy::findOrFail($categoria->cto_term_tx_id);
+            $taxonomy = Wp_Term_Taxonomy::findOrFail($categoria->cto_term_tx_id);
 
-        // Primeiro, deletar o registro de wp_term_taxonomy
-        $taxonomy->delete();
+            // Primeiro, deletar o registro de wp_term_taxonomy
+            $taxonomy->delete();
 
-        // Depois, deletar o registro correspondente em wp_terms
-        Wp_Terms::where('term_id', $taxonomy->term_id)->delete();
+            // Depois, deletar o registro correspondente em wp_terms
+            Wp_Terms::where('term_id', $taxonomy->term_id)->delete();
 
-        $categoria->delete();
-        
+            $categoria->delete();
+
         } catch (\Exception $e) {
             logger()->error('Erro ao deletar categoria: ' . $e->getMessage());
         }
 
-         // Redirecionar com mensagem de sucesso
+        // Redirecionar com mensagem de sucesso
 
 
         return redirect()->route('categorias.index')->with('success', 'Categoria deletada com sucesso');
