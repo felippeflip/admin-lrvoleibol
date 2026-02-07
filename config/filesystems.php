@@ -70,6 +70,20 @@ return [
             'visibility' => 'public',
         ],
 
+        'comissao_fotos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/comissao_fotos'),
+            'url' => '/storage/comissao_fotos',
+            'visibility' => 'public',
+        ],
+
+        'comissao_docs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/comissao_docs'),
+            'url' => '/storage/comissao_docs',
+            'visibility' => 'public',
+        ],
+
         'user_fotos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/user_fotos'),

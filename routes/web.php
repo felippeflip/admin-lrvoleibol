@@ -16,6 +16,7 @@ use App\Http\Controllers\AtletaController;
 use App\Http\Controllers\EquipesController;
 use App\Http\Controllers\EquipeCampeonatoController;
 use App\Http\Controllers\GinasioController;
+use App\Http\Controllers\ComissaoTecnicaController;
 
 
 Route::get('/', function () {
@@ -60,6 +61,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('equipes/time/{time}', [EquipesController::class, 'indexForTime'])->name('equipes.index.for.time');
         Route::resource('equipes', EquipesController::class);
+        Route::patch('comissao-tecnica/{id}/toggle-status', [ComissaoTecnicaController::class, 'toggleStatus'])->name('comissao-tecnica.toggleStatus');
+        Route::resource('comissao-tecnica', ComissaoTecnicaController::class);
 
         Route::get('campeonatos/{campeonato}/equipes', [EquipeCampeonatoController::class, 'index'])->name('equipes.campeonato.index');
         Route::get('campeonatos/{campeonato}/equipes/create', [EquipeCampeonatoController::class, 'create'])->name('equipes.campeonato.create');

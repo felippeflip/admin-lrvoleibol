@@ -148,7 +148,25 @@ class EquipesController extends Controller
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get(); // Buscando campeonatos ativos
         $timeId = $request->query('time_id'); // Pega o time_id da URL
 
-        return view('equipes.create', compact('times', 'categorias', 'timeId', 'campeonatos'));
+        // Buscar Técnicos
+        $tecnicosQuery = \App\Models\ComissaoTecnica::where('funcao', 'Técnico')->where('status', true);
+        
+        if ($user->hasRole('Administrador')) {
+            // Admin vê todos
+            $tecnicos = $tecnicosQuery->with('time')->orderBy('nome')->get();
+        } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
+            $userTime = Time::where('tim_user_id', $user->id)->first();
+            if ($userTime) {
+                $tecnicosQuery->where('time_id', $userTime->tim_id);
+            } else {
+                $tecnicosQuery->where('id', 0);
+            }
+             $tecnicos = $tecnicosQuery->orderBy('nome')->get();
+        } else {
+             $tecnicos = collect();
+        }
+
+        return view('equipes.create', compact('times', 'categorias', 'timeId', 'campeonatos', 'tecnicos'));
     }
 
     /**
@@ -237,7 +255,24 @@ class EquipesController extends Controller
             $times = Time::orderBy('tim_nome')->get();
         }
         $categorias = Categoria::orderBy('cto_nome')->get(); // Assumindo 'cto_nome'
-        return view('equipes.edit', compact('equipe', 'times', 'categorias'));
+        // Buscar Técnicos
+        $tecnicosQuery = \App\Models\ComissaoTecnica::where('funcao', 'Técnico')->where('status', true);
+        
+        if ($user->hasRole('Administrador')) {
+             $tecnicos = $tecnicosQuery->with('time')->orderBy('nome')->get();
+        } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
+            $userTime = Time::where('tim_user_id', $user->id)->first();
+             if ($userTime) {
+                $tecnicosQuery->where('time_id', $userTime->tim_id);
+            } else {
+                $tecnicosQuery->where('id', 0);
+            }
+            $tecnicos = $tecnicosQuery->orderBy('nome')->get();
+        } else {
+             $tecnicos = collect();
+        }
+
+        return view('equipes.edit', compact('equipe', 'times', 'categorias', 'tecnicos'));
     }
 
     /**

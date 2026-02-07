@@ -75,11 +75,19 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="eqp_nome_treinador" class="block text-gray-700 dark:text-gray-300 mb-2">Nome
-                                    do Treinador:</label>
-                                <input type="text" name="eqp_nome_treinador" id="eqp_nome_treinador"
-                                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-                                    value="{{ old('eqp_nome_treinador') }}">
+                                <label for="eqp_nome_treinador" class="block text-gray-700 dark:text-gray-300 mb-2">Nome do Treinador:</label>
+                                <select name="eqp_nome_treinador" id="eqp_nome_treinador"
+                                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Selecione um Técnico</option>
+                                    @foreach ($tecnicos as $tecnico)
+                                        <option value="{{ $tecnico->nome }}" {{ old('eqp_nome_treinador') == $tecnico->nome ? 'selected' : '' }}>
+                                            {{ $tecnico->nome }}
+                                            @if(auth()->user()->hasRole('Administrador') && $tecnico->time)
+                                             - {{ $tecnico->time->tim_nome }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
                                 @error('eqp_nome_treinador')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror

@@ -59,8 +59,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const ginasioForm = document.getElementById('ginasioForm');
     const ginasioEditForm = document.getElementById('ginasioEditForm');
 
+    // --- Elementos do formulário de Comissão Técnica ---
+    // Reutilizando IDs genéricos onde possível, ou criando novos se houver conflito. 
+    // No create.blade.php usamos: cep, endereco, numbero, bairro, cidade, estado, celular, telefone, cpf, rg
+    // Mas 'cep', 'endereco' etc já são pegos em userCepInput etc.
+    // Vamos criar constantes específicas para garantir ou reutilizar se o ID for o mesmo.
+    // No comissao_tecnica/create.blade.php os IDs são genéricos (cep, endereco...) iguais ao userForm.
+    // Então userCepInput vai pegar o elemento se ele existir na página.
+
+    const comissaoForm = document.getElementById('comissaoTecnicaForm');
+    const comissaoEditForm = document.getElementById('comissaoTecnicaEditForm');
+
     // Referência ao formulário atual que está sendo carregado (atualizado para incluir userForm e userEditForm)
-    const currentForm = atletaForm || atletaFormEdit || timeForm || userForm || userEditForm || profileForm || ginasioForm || ginasioEditForm;
+    const currentForm = atletaForm || atletaFormEdit || timeForm || userForm || userEditForm || profileForm || ginasioForm || ginasioEditForm || comissaoForm || comissaoEditForm;
 
     // --- Funções de Máscara ---
     function unmask(value) {
@@ -279,6 +290,29 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ginTelefoneInput && ginTelefoneInput.value) ginTelefoneInput.value = maskTelefone(ginTelefoneInput.value);
     }
 
+    // Para formulários de Comissão Técnica
+    if (comissaoForm || comissaoEditForm) {
+        // IDs usados: cep, endereco, bairro, cidade, estado, numero (Mesmos do User, então userCepInput funciona)
+        // IDs usados: telefone, celular, cpf, rg (Alguns genéricos, outros específicos?)
+        // create.blade.php usa id="celular", id="telefone", id="cpf", id="rg".
+        // userTelefoneInput pega id="telefone".
+        // create.blade.php tem id="celular", precisamos pegar.
+        const comissaoCelularInput = document.getElementById('celular');
+        const comissaoRgInput = document.getElementById('rg');
+
+        setupCepLogic(userCepInput, userEnderecoInput, userBairroInput, userCidadeInput, userEstadoInput, userNumeroInput);
+
+        if (comissaoCelularInput) comissaoCelularInput.addEventListener('input', (e) => { e.target.value = maskCelular(e.target.value); });
+        if (userTelefoneInput) userTelefoneInput.addEventListener('input', (e) => { e.target.value = maskTelefone(e.target.value); });
+        if (userCpfInput) userCpfInput.addEventListener('input', (e) => { e.target.value = maskCPF(e.target.value); });
+        if (comissaoRgInput) comissaoRgInput.addEventListener('input', (e) => { e.target.value = maskRG(e.target.value); });
+
+        if (comissaoCelularInput && comissaoCelularInput.value) comissaoCelularInput.value = maskCelular(comissaoCelularInput.value);
+        if (userTelefoneInput && userTelefoneInput.value) userTelefoneInput.value = maskTelefone(userTelefoneInput.value);
+        if (userCpfInput && userCpfInput.value) userCpfInput.value = maskCPF(userCpfInput.value);
+        if (comissaoRgInput && comissaoRgInput.value) comissaoRgInput.value = maskRG(comissaoRgInput.value);
+    }
+
 
     // --- Pre-processamento antes de enviar o formulário (remove máscaras) ---
     if (currentForm) {
@@ -304,6 +338,13 @@ document.addEventListener('DOMContentLoaded', function () {
             // Para o formulário de ginásios
             if (ginTelefoneInput) ginTelefoneInput.value = unmask(ginTelefoneInput.value);
             if (ginCepInput) ginCepInput.value = unmask(ginCepInput.value);
+
+            // Para o formulário de comissão técnica
+            const comissaoCelularInput = document.getElementById('celular');
+            const comissaoRgInput = document.getElementById('rg');
+            if (comissaoCelularInput) comissaoCelularInput.value = unmask(comissaoCelularInput.value);
+            if (comissaoRgInput) comissaoRgInput.value = unmask(comissaoRgInput.value);
+            // cpf, cep, telefone já são desmascarados pelos ifs de user (pois compartilham IDs)
         });
     }
 
