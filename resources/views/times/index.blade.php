@@ -84,11 +84,13 @@
                             </form>
                         </div>
 
+                        @hasrole('Administrador')
                         <div class="flex justify-start mb-4">
                             <a href="{{ route('times.create') }}"
                                 class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO
                                 TIME</a>
                         </div>
+                        @endhasrole
 
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -135,6 +137,7 @@
                                                         </svg>
                                                     </a>
 
+                                                    @hasrole('Administrador')
                                                     {{-- Botão de Ativar/Desativar --}}
                                                     <form action="{{ route('times.inactivate', $time->tim_id) }}"
                                                         method="POST"
@@ -163,7 +166,9 @@
                                                             @endif
                                                         </button>
                                                     </form>
+                                                    @endhasrole
 
+                                                    @hasrole('Administrador')
                                                     <form action="{{ route('times.destroy', $time->tim_id) }}" method="POST"
                                                         class="inline-flex w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
                                                         onsubmit="return confirm('Tem certeza que deseja excluir este time? Se houver equipes associadas (sem campeonatos ativos), elas também serão excluídas.');">
@@ -179,6 +184,7 @@
                                                             </svg>
                                                         </button>
                                                     </form>
+                                                    @endhasrole
                                                 </div>
                                                 {{-- Botões de Ação para Equipes --}}
                                                 <div class="flex space-x-2 w-full justify-center items-center">

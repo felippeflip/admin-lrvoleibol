@@ -172,6 +172,29 @@
                         </div>
 
 
+                        @if(auth()->user()->hasRole('Administrador'))
+                            <div class="mt-6 border-t border-gray-200 pt-4">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Cartão da Liga</h3>
+                                <div class="flex items-center justify-between">
+                                    <label for="cartao_impresso_ano_atual" class="inline-flex items-center">
+                                        <input id="cartao_impresso_ano_atual" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" name="cartao_impresso_ano_atual" value="1" {{ $comissaoTecnica->cartaoImpresso() ? 'checked' : '' }}>
+                                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Cartão Impresso ({{ date('Y') }})</span>
+                                    </label>
+                                    
+                                    @if($comissaoTecnica->cartoes->where('impresso', true)->count() > 0)
+                                        <div class="text-sm text-gray-500">
+                                            <span class="font-bold">Histórico:</span>
+                                            @foreach($comissaoTecnica->cartoes->where('impresso', true)->sortByDesc('ano') as $cartao)
+                                                <span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-green-200 dark:text-green-900">
+                                                    {{ $cartao->ano }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="flex items-center justify-end mt-4">
                             <a href="{{ route('comissao-tecnica.index') }}" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 mr-4">Cancelar</a>
                             <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

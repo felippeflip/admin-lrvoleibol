@@ -10,7 +10,7 @@ use App\Http\Controllers\JogosController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\ProfileUserController;
-use App\Http\Controllers\FuncoesController;
+
 use App\Http\Controllers\TimeController;
 use App\Http\Controllers\AtletaController;
 use App\Http\Controllers\EquipesController;
@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('equipes/time/{time}', [EquipesController::class, 'indexForTime'])->name('equipes.index.for.time');
         Route::resource('equipes', EquipesController::class);
+        Route::patch('comissao-tecnica/{id}/mark-printed', [ComissaoTecnicaController::class, 'markPrinted'])->name('comissao-tecnica.markPrinted');
         Route::patch('comissao-tecnica/{id}/toggle-status', [ComissaoTecnicaController::class, 'toggleStatus'])->name('comissao-tecnica.toggleStatus');
         Route::resource('comissao-tecnica', ComissaoTecnicaController::class);
 
@@ -105,7 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
         Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
 
-        Route::get('/resultados/import', [FuncoesController::class, 'showImport'])->name('resultados.showImportForm');
+
     });
 
 });

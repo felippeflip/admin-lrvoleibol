@@ -99,6 +99,10 @@
                 <ul id="dropdown-funcoes" class="hidden py-2 space-y-2">
 
                     <li>
+                        <a href="{{ route('times.index') }}"
+                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Time</a>
+                    </li>
+                    <li>
                         <a href="{{ route('equipes.index') }}"
                             class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Equipes</a>
                     </li>
@@ -108,19 +112,14 @@
                     </li>
                     <li>
                         <a href="{{ route('comissao-tecnica.index') }}"
-                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Comissão Técnica</a>
+                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Comissão
+                            Técnica</a>
                     </li>
                     <li>
                         <a href="{{ route('elenco.list') }}"
                             class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Elenco</a>
                     </li>
-                    @hasrole('Administrador')
-                    <li>
-                        <a href="{{ route('resultados.showImportForm') }}"
-                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Importar
-                            Resultados</a>
-                    </li>
-                    @endhasrole
+
                 </ul>
             </li>
             @endhasanyrole

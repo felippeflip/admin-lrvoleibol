@@ -173,6 +173,11 @@ class ElencoController extends Controller
             return back()->with('error', 'Este atleta não pertence ao time desta equipe.');
         }
 
+        // Validação: Cartão Impresso
+        if (!$atleta->cartaoImpresso(date('Y'))) {
+            return back()->with('error', 'Este atleta não possui o cartão da liga impresso para o ano atual (' . date('Y') . '). Impressão necessária para adicionar ao elenco.');
+        }
+
         // Validação de Idade (Regra: Atleta pode jogar em categoria mais velha, mas não mais nova)
         // Check se o atleta cumpre a idade máxima da categoria do campeonato
         $categoriaEquipe = $equipeCampeonato->equipe->categoria;

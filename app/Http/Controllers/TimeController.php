@@ -73,6 +73,10 @@ class TimeController extends Controller
      */
     public function create()
     {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         // Buscando apenas usuários que possuem a ROLE de Responsável de Time
         $users = User::role('ResponsavelTime')->get();
 
@@ -85,6 +89,9 @@ class TimeController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'Acesso não autorizado.');
+        }
 
         // remover caracteres não numéricos do CNPJ
         if ($request->has('tim_cnpj')) {
@@ -188,6 +195,11 @@ class TimeController extends Controller
      */
     public function edit(Time $time)
     {
+        // Verifica permissão: Admin ou Dono do Time
+        if (!auth()->user()->hasRole('Administrador') && $time->tim_user_id !== auth()->id()) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         // Buscando apenas usuários que possuem a ROLE de Responsável de Time
         $users = User::role('ResponsavelTime')->get();
 
@@ -200,6 +212,10 @@ class TimeController extends Controller
      */
     public function update(Request $request, Time $time)
     {
+        // Verifica permissão: Admin ou Dono do Time
+        if (!auth()->user()->hasRole('Administrador') && $time->tim_user_id !== auth()->id()) {
+            abort(403, 'Acesso não autorizado.');
+        }
 
         // remover caracteres não numéricos do CNPJ
         if ($request->has('tim_cnpj')) {
@@ -229,10 +245,15 @@ class TimeController extends Controller
         ]);
 
         // Inicia um array com todos os dados da requisição, exceto 'tim_logo'
+        // IMPORTANTE: Se não for admin, removemos 'tim_user_id' do request para garantir que não mudem o dono
+        if (!auth()->user()->hasRole('Administrador')) {
+            $request->request->remove('tim_user_id');
+        }
+
         $data = $request->except(['tim_logo']);
 
         // --- Lógica para vincular usuário na atualização ---
-        if ($request->filled('tim_user_id')) {
+        if ($request->filled('tim_user_id') && auth()->user()->hasRole('Administrador')) {
             $user = User::find($request->tim_user_id);
             if ($user) {
                 $user->assignRole('ResponsavelTime');
@@ -298,6 +319,9 @@ class TimeController extends Controller
      */
     public function destroy(Time $time)
     {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'Acesso não autorizado.');
+        }
         try {
             DB::beginTransaction();
 

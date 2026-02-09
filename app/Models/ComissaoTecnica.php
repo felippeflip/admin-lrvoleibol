@@ -46,12 +46,23 @@ class ComissaoTecnica extends Model
         }
         return asset('images/default-user.png'); // Or generic placeholder
     }
-    
+
     public function getComprovanteUrlAttribute()
     {
-         if ($this->comprovante_documento) {
+        if ($this->comprovante_documento) {
             return Storage::disk('comissao_docs')->url($this->comprovante_documento);
         }
         return null;
+    }
+    public function cartoes()
+    {
+        return $this->hasMany(ComissaoTecnicaCartao::class, 'comissao_tecnica_id');
+    }
+
+    public function cartaoImpresso(?int $ano = null): bool
+    {
+        $ano = $ano ?? date('Y');
+        $cartao = $this->cartoes()->where('ano', $ano)->first();
+        return $cartao ? (bool) $cartao->impresso : false;
     }
 }

@@ -21,15 +21,17 @@
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <!-- Nome -->
                                     <div class="col-span-1 md:col-span-1">
-                                        <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
+                                        <label for="nome"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
                                         <input type="text" name="nome" id="nome" value="{{ request('nome') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400"
                                             placeholder="Nome">
                                     </div>
-                                    
+
                                     <!-- CPF -->
                                     <div class="col-span-1 md:col-span-1">
-                                        <label for="cpf" class="block text-sm font-medium text-gray-700 dark:text-gray-300">CPF</label>
+                                        <label for="cpf"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">CPF</label>
                                         <input type="text" name="cpf" id="cpf" value="{{ request('cpf') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400"
                                             placeholder="CPF">
@@ -37,8 +39,10 @@
 
                                     <!-- Função -->
                                     <div class="col-span-1 md:col-span-1">
-                                        <label for="funcao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Função</label>
-                                        <select name="funcao" id="funcao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <label for="funcao"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Função</label>
+                                        <select name="funcao" id="funcao"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
                                             <option value="">Todas</option>
                                             @foreach ($funcoes as $funcao)
                                                 <option value="{{ $funcao }}" {{ request('funcao') == $funcao ? 'selected' : '' }}>{{ $funcao }}</option>
@@ -48,25 +52,31 @@
 
                                     <!-- Status -->
                                     <div class="col-span-1 md:col-span-1">
-                                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                                        <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <label for="status"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                        <select name="status" id="status"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
                                             <option value="">Todos</option>
-                                            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Ativo</option>
-                                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inativo</option>
+                                            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Ativo
+                                            </option>
+                                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inativo
+                                            </option>
                                         </select>
                                     </div>
 
                                     <!-- Time (Admin Only) -->
                                     @if(auth()->user()->hasRole('Administrador'))
-                                    <div class="col-span-1 md:col-span-4">
-                                        <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
-                                        <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
-                                            <option value="">Todos os Times</option>
-                                            @foreach ($times as $time)
-                                                <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                        <div class="col-span-1 md:col-span-4">
+                                            <label for="time_id"
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                                            <select name="time_id" id="time_id"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                                <option value="">Todos os Times</option>
+                                                @foreach ($times as $time)
+                                                    <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     @endif
 
                                     <!-- Botões -->
@@ -82,7 +92,8 @@
 
                         <div class="flex justify-start mb-4">
                             <a href="{{ route('comissao-tecnica.create') }}"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Novo Membro</a>
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Novo
+                                Membro</a>
                         </div>
 
                         <div class="overflow-x-auto">
@@ -108,7 +119,21 @@
                                                     class="h-10 w-10 object-cover rounded-full inline-block border-2 border-gray-300">
                                             </td>
                                             <td class="py-3 px-6 text-left whitespace-nowrap">
-                                                {{ $membro->nome }}<br>
+                                                <div class="flex items-center">
+                                                    {{ $membro->nome }}
+                                                    @if($membro->cartaoImpresso())
+                                                        <span class="ml-2 text-green-500"
+                                                            title="Cartão Impresso ({{ date('Y') }})">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <br>
                                                 <span class="text-xs text-gray-500">{{ $membro->cpf }}</span>
                                             </td>
                                             <td class="py-3 px-6 text-left">
@@ -119,32 +144,75 @@
                                             </td>
                                             <td class="py-3 px-6 text-left">{{ $membro->time->tim_nome ?? 'N/A' }}</td>
                                             <td class="py-3 px-6 text-left">
-                                                <span class="{{ $membro->status ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600' }} py-1 px-3 rounded-full text-xs">
+                                                <span
+                                                    class="{{ $membro->status ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600' }} py-1 px-3 rounded-full text-xs">
                                                     {{ $membro->status ? 'Ativo' : 'Inativo' }}
                                                 </span>
                                             </td>
                                             <td class="py-3 px-6 text-center">
                                                 <div class="flex item-center justify-center">
+                                                    <!-- Show -->
+                                                    <a href="{{ route('comissao-tecnica.show', $membro->id) }}"
+                                                        class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110"
+                                                        title="Ver Detalhes">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    </a>
+
                                                     <!-- Toggle Status -->
-                                                    <form action="{{ route('comissao-tecnica.toggleStatus', $membro->id) }}" method="POST" class="mr-2">
+                                                    <form action="{{ route('comissao-tecnica.toggleStatus', $membro->id) }}"
+                                                        method="POST" class="mr-2">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <button type="submit" class="w-4 transform hover:scale-110" title="{{ $membro->status ? 'Desativar' : 'Ativar' }}">
+                                                        <button type="submit"
+                                                            class="w-4 transform hover:scale-110 {{ $membro->status ? 'hover:text-red-500' : 'hover:text-green-500' }}"
+                                                            title="{{ $membro->status ? 'Desativar' : 'Ativar' }}">
                                                             @if($membro->status)
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-500">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
                                                                 </svg>
                                                             @else
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-500">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                                 </svg>
                                                             @endif
                                                         </button>
                                                     </form>
 
+                                                    <!-- Print Action (Admin Only) -->
+                                                    @if(auth()->user()->hasRole('Administrador') && !$membro->cartaoImpresso())
+                                                        <form action="{{ route('comissao-tecnica.markPrinted', $membro->id) }}"
+                                                            method="POST" class="mr-2"
+                                                            onsubmit="return confirm('Marcar cartão como impresso?');">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit"
+                                                                class="w-4 transform hover:text-green-500 hover:scale-110"
+                                                                title="Marcar como Impresso">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+
                                                     <!-- Edit -->
                                                     <a href="{{ route('comissao-tecnica.edit', $membro->id) }}"
-                                                        class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" title="Editar">
+                                                        class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
+                                                        title="Editar">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none"
                                                             viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -169,12 +237,15 @@
                                                         </button>
                                                     </form>
                                                     @if($membro->comprovante_documento)
-                                                     <a href="{{ $membro->comprovante_url }}" target="_blank"
-                                                        class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver Documento">
-                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                                        </svg>
-                                                    </a>
+                                                        <a href="{{ $membro->comprovante_url }}" target="_blank"
+                                                            class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110"
+                                                            title="Ver Documento">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                            </svg>
+                                                        </a>
                                                     @endif
                                                 </div>
                                             </td>

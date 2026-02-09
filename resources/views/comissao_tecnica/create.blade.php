@@ -205,6 +205,15 @@
                         </div>
 
 
+                        @if(auth()->user()->hasRole('Administrador'))
+                            <div class="mt-4">
+                                <label for="cartao_impresso_ano_atual" class="inline-flex items-center">
+                                    <input id="cartao_impresso_ano_atual" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" name="cartao_impresso_ano_atual" value="1">
+                                    <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Cartão Impresso ({{ date('Y') }})</span>
+                                </label>
+                            </div>
+                        @endif
+
                         <div class="flex items-center justify-end mt-4">
                             <a href="{{ route('comissao-tecnica.index') }}" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 mr-4">Cancelar</a>
                             <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

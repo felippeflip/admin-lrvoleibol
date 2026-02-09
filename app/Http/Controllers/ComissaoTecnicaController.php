@@ -41,21 +41,21 @@ class ComissaoTecnicaController extends Controller
             $query->where('time_id', $request->time_id);
         }
         if ($request->filled('cpf')) {
-             $cpf = preg_replace('/[^0-9]/', '', $request->cpf);
+            $cpf = preg_replace('/[^0-9]/', '', $request->cpf);
             $query->where('cpf', 'like', '%' . $cpf . '%');
         }
         if ($request->filled('funcao')) {
             $query->where('funcao', $request->funcao);
         }
-         if ($request->filled('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $comissao = $query->paginate(10)->appends($request->all());
-        
+
         $times = [];
         if (auth()->user()->hasRole('Administrador')) {
-             $times = Time::orderBy('tim_nome')->get();
+            $times = Time::orderBy('tim_nome')->get();
         }
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];
 
@@ -69,8 +69,8 @@ class ComissaoTecnicaController extends Controller
         $comissaoTecnica = ComissaoTecnica::findOrFail($id);
         $user = auth()->user();
 
-         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-             $time = Time::where('tim_user_id', $user->id)->first();
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
                 abort(403);
             }
@@ -91,7 +91,7 @@ class ComissaoTecnicaController extends Controller
         if (auth()->user()->hasRole('Administrador')) {
             $times = Time::orderBy('tim_nome')->get();
         }
-        
+
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];
 
         return view('comissao_tecnica.create', compact('times', 'funcoes'));
@@ -160,9 +160,27 @@ class ComissaoTecnicaController extends Controller
             $data['comprovante_documento'] = $filename;
         }
 
-        ComissaoTecnica::create($data);
+        $comissaoTecnica = ComissaoTecnica::create($data);
+
+        // Verificar checkbox de cartão impresso (Ano Atual)
+        if ($request->has('cartao_impresso_ano_atual')) {
+            \App\Models\ComissaoTecnicaCartao::create([
+                'comissao_tecnica_id' => $comissaoTecnica->id,
+                'ano' => date('Y'),
+                'impresso' => true,
+            ]);
+        }
 
         return redirect()->route('comissao-tecnica.index')->with('success', 'Membro da comissão técnica cadastrado com sucesso!');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $comissaoTecnica = ComissaoTecnica::findOrFail($id);
+        return view('comissao_tecnica.show', compact('comissaoTecnica'));
     }
 
     /**
@@ -185,7 +203,7 @@ class ComissaoTecnicaController extends Controller
         if ($user->hasRole('Administrador')) {
             $times = Time::orderBy('tim_nome')->get();
         }
-        
+
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];
 
         return view('comissao_tecnica.edit', compact('comissaoTecnica', 'times', 'funcoes'));
@@ -200,15 +218,15 @@ class ComissaoTecnicaController extends Controller
         $user = auth()->user();
 
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-             $time = Time::where('tim_user_id', $user->id)->first();
+            $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
                 abort(403);
             }
-             $request->merge(['time_id' => $time->tim_id]);
+            $request->merge(['time_id' => $time->tim_id]);
         }
 
         // Limpeza
-         $request->merge([
+        $request->merge([
             'cpf' => preg_replace('/[^0-9]/', '', $request->cpf ?? ''),
             'rg' => preg_replace('/[^0-9]/', '', $request->rg ?? ''),
             'celular' => preg_replace('/[^0-9]/', '', $request->celular ?? ''),
@@ -241,7 +259,7 @@ class ComissaoTecnicaController extends Controller
         // Upload Foto
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-             // Delete old
+            // Delete old
             if ($comissaoTecnica->foto && Storage::disk('comissao_fotos')->exists($comissaoTecnica->foto)) {
                 Storage::disk('comissao_fotos')->delete($comissaoTecnica->foto);
             }
@@ -254,7 +272,7 @@ class ComissaoTecnicaController extends Controller
         // Upload Comprovante
         if ($request->hasFile('comprovante_documento')) {
             $file = $request->file('comprovante_documento');
-             // Delete old
+            // Delete old
             if ($comissaoTecnica->comprovante_documento && Storage::disk('comissao_docs')->exists($comissaoTecnica->comprovante_documento)) {
                 Storage::disk('comissao_docs')->delete($comissaoTecnica->comprovante_documento);
             }
@@ -265,7 +283,54 @@ class ComissaoTecnicaController extends Controller
 
         $comissaoTecnica->update($data);
 
+        // Atualizar/Criar status do cartão do ano atual
+        $anoAtual = date('Y');
+        $cartao = \App\Models\ComissaoTecnicaCartao::where('comissao_tecnica_id', $comissaoTecnica->id)
+            ->where('ano', $anoAtual)
+            ->first();
+
+        if ($request->has('cartao_impresso_ano_atual')) {
+            // Se marcado, cria se não existir ou garante que está true
+            if ($cartao) {
+                $cartao->update(['impresso' => true]);
+            } else {
+                \App\Models\ComissaoTecnicaCartao::create([
+                    'comissao_tecnica_id' => $comissaoTecnica->id,
+                    'ano' => $anoAtual,
+                    'impresso' => true,
+                ]);
+            }
+        } else {
+            // Se DESMARCADO, se existir registro, marca como false
+            if ($cartao) {
+                $cartao->update(['impresso' => false]);
+            }
+        }
+
         return redirect()->route('comissao-tecnica.index')->with('success', 'Membro atualizado com sucesso!');
+    }
+
+    /**
+     * Mark the technical staff card as printed for the current year.
+     */
+    public function markPrinted($id)
+    {
+        $comissaoTecnica = ComissaoTecnica::findOrFail($id);
+
+        // Se for administrador, marca como impresso
+        if (auth()->user()->hasRole('Administrador')) {
+            $anoAtual = date('Y');
+            \App\Models\ComissaoTecnicaCartao::updateOrCreate(
+                [
+                    'comissao_tecnica_id' => $comissaoTecnica->id,
+                    'ano' => $anoAtual,
+                ],
+                ['impresso' => true]
+            );
+            return redirect()->back()->with('success', 'Cartão marcado como impresso com sucesso!');
+        }
+
+        abort(403);
     }
 
     /**
@@ -277,7 +342,7 @@ class ComissaoTecnicaController extends Controller
         $user = auth()->user();
 
         if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-             $time = Time::where('tim_user_id', $user->id)->first();
+            $time = Time::where('tim_user_id', $user->id)->first();
             if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
                 abort(403);
             }

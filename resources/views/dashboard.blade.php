@@ -73,7 +73,7 @@
                         @if(isset($juizStats))
                             <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-6 border-l-4 border-yellow-500">
                                 <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">Painel do
-                                    Árbitro / Mesário</h3>
+                                    Árbitro / Apontador </h3>
 
                                 <dl class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                                     <div
