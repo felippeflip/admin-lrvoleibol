@@ -13,9 +13,27 @@
         @csrf
     </form>
 
-    <form id="profileForm" method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form id="profileForm" method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6"
+        enctype="multipart/form-data">
         @csrf
         @method('patch')
+
+        <div class="mb-4">
+            <label class="block font-medium text-sm text-gray-700 dark:text-gray-300" for="foto">
+                {{ __('Foto') }}
+            </label>
+
+            <div class="mt-2 flex items-center">
+                @if($user->foto)
+                    <img src="{{ $user->foto_url }}" alt="{{ $user->name }}"
+                        class="h-20 w-20 object-cover rounded-full mr-4 border border-gray-300">
+                @endif
+                <input id="foto" name="foto" type="file"
+                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                    accept="image/*">
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('foto')" />
+        </div>
 
         <div>
             <x-input-label for="apelido" :value="__('Apelido')" />
@@ -24,7 +42,8 @@
         </div>
         <div>
             <x-input-label for="name" :value="__('Nome')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)"
+                required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
@@ -33,12 +52,13 @@
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
                 <div>
                     <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
                         {{ __('Seu endereço de e-mail não está verificado.') }}
 
-                        <button form="send-verification" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+                        <button form="send-verification"
+                            class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
                             {{ __('Clique aqui para reenviar o e-mail de verificação.') }}
                         </button>
                     </p>
@@ -51,15 +71,50 @@
                 </div>
             @endif
         </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <x-input-label for="rg" :value="__('RG')" />
+                <x-text-input id="rg" name="rg" type="text" class="mt-1 block w-full" :value="old('rg', $user->rg)"
+                    required autofocus autocomplete="rg" />
+                <x-input-error class="mt-2" :messages="$errors->get('rg')" />
+            </div>
+            <div>
+                <x-input-label for="data_nascimento" :value="__('Data de Nascimento')" />
+                <x-text-input id="data_nascimento" name="data_nascimento" type="date" class="mt-1 block w-full"
+                    :value="old('data_nascimento', $user->data_nascimento)" required autofocus autocomplete="bday" />
+                <x-input-error class="mt-2" :messages="$errors->get('data_nascimento')" />
+            </div>
+        </div>
+
+        @hasrole('Juiz')
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <x-input-label for="cref" :value="__('Registro CREF')" />
+                <x-text-input id="cref" name="cref" type="text" class="mt-1 block w-full" :value="old('cref', $user->cref)" autofocus autocomplete="cref" />
+                <x-input-error class="mt-2" :messages="$errors->get('cref')" />
+            </div>
+            <div>
+                <x-input-label for="lrv" :value="__('Registro LRV')" />
+                <x-text-input id="lrv" name="lrv" type="text" class="mt-1 block w-full" :value="old('lrv', $user->lrv)"
+                    autofocus autocomplete="lrv" />
+                <x-input-error class="mt-2" :messages="$errors->get('lrv')" />
+            </div>
+        </div>
+        @endhasrole
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <x-input-label for="telefone" :value="__('Telefone')" />
-                <x-text-input id="telefone" name="telefone" type="text" class="mt-1 block w-full" :value="old('telefone', $user->telefone)" required autofocus autocomplete="telefone" />
+                <x-text-input id="telefone" name="telefone" type="text" class="mt-1 block w-full"
+                    :value="old('telefone', $user->telefone)" required autofocus autocomplete="telefone" />
                 <x-input-error class="mt-2" :messages="$errors->get('telefone')" />
             </div>
             <div>
                 <x-input-label for="cpf" :value="__('CPF')" />
-                <x-text-input id="cpf" name="cpf" type="text" class="mt-1 block w-full" :value="old('cpf', $user->cpf)" required autofocus autocomplete="cpf" />
+                <x-text-input id="cpf" name="cpf" type="text" class="mt-1 block w-full" :value="old('cpf', $user->cpf)"
+                    required autofocus autocomplete="cpf" />
                 <x-input-error class="mt-2" :messages="$errors->get('cpf')" />
             </div>
         </div>
@@ -67,13 +122,16 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div class="col-span-12 md:col-span-3">
                 <x-input-label for="cep" :value="__('CEP')" />
-                <x-text-input id="cep" name="cep" type="text" class="mt-1 block w-full" :value="old('cep', $user->cep)" required autofocus autocomplete="cep" />
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">Informe o CEP para preenchimento automático do endereço.</p>
+                <x-text-input id="cep" name="cep" type="text" class="mt-1 block w-full" :value="old('cep', $user->cep)"
+                    required autofocus autocomplete="cep" />
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">Informe o CEP para preenchimento automático do
+                    endereço.</p>
                 <x-input-error class="mt-2" :messages="$errors->get('cep')" />
             </div>
             <div class="col-span-12 md:col-span-7">
                 <x-input-label for="endereco" :value="__('Endereço')" />
-                <x-text-input id="endereco" name="endereco" type="text" class="mt-1 block w-full" :value="old('endereco', $user->endereco)" required autofocus autocomplete="endereco" />
+                <x-text-input id="endereco" name="endereco" type="text" class="mt-1 block w-full"
+                    :value="old('endereco', $user->endereco)" required autofocus autocomplete="endereco" />
                 <x-input-error class="mt-2" :messages="$errors->get('endereco')" />
             </div>
             <div class="col-span-12 md:col-span-2">
@@ -104,13 +162,8 @@
             <x-primary-button>{{ __('Salvar') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600 dark:text-gray-400"
-                >{{ __('Salvar.') }}</p>
+                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)"
+                    class="text-sm text-gray-600 dark:text-gray-400">{{ __('Salvar.') }}</p>
             @endif
         </div>
     </form>

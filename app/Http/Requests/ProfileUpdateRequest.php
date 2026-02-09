@@ -21,17 +21,22 @@ class ProfileUpdateRequest extends FormRequest
         // Remove caracteres especiais do CPF antes de validá-lo
         $this->merge(['cpf' => removeSpecialCharsFromCPF($this->cpf)]);
         return [
-            'name'              => ['required', 'string', 'max:255'],
-            'email'             => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
-            'apelido'           => ['nullable', 'string', 'max:255'],
-            'telefone'          => ['nullable', 'string', 'max:20'],
-            'cpf'               => ['required', 'string', 'max:11'],
-            'endereco'          => ['nullable', 'string', 'max:255'],
-            'numero'            => ['nullable', 'string', 'max:20'],
-            'bairro'            => ['nullable', 'string', 'max:255'],
-            'cidade'            => ['nullable', 'string', 'max:255'],
-            'estado'            => ['nullable', 'string', 'max:255'],
-            'cep'               => ['nullable', 'string', 'max:10'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
+            'apelido' => ['nullable', 'string', 'max:255'],
+            'telefone' => ['nullable', 'string', 'max:20'],
+            'cpf' => ['required', 'string', 'max:11'],
+            'endereco' => ['nullable', 'string', 'max:255'],
+            'numero' => ['nullable', 'string', 'max:20'],
+            'bairro' => ['nullable', 'string', 'max:255'],
+            'cidade' => ['nullable', 'string', 'max:255'],
+            'estado' => ['nullable', 'string', 'max:255'],
+            'cep' => ['nullable', 'string', 'max:10'],
+            'foto' => ['nullable', 'image', 'max:2048'],
+            'rg' => ['nullable', 'string', 'max:20'],
+            'data_nascimento' => ['nullable', 'date'],
+            'cref' => ['nullable', 'string', 'max:50'],
+            'lrv' => ['nullable', 'string', 'max:50'],
         ];
     }
 }
