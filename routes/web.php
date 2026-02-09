@@ -109,6 +109,13 @@ Route::middleware('auth')->group(function () {
 
     });
 
+    // ---------------------------------------------------------------------
+    // 4. JUIZ ONLY
+    // ---------------------------------------------------------------------
+    Route::middleware(['role:Juiz'])->group(function () {
+        Route::get('/arbitros', [App\Http\Controllers\ArbitroController::class, 'index'])->name('arbitros.index');
+    });
+
 });
 
 require __DIR__ . '/auth.php';
