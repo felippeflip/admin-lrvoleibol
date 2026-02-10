@@ -40,10 +40,17 @@ Route::middleware('auth')->group(function () {
     // Let's assume JogosController handles fine-grained access or we leave it open for now as requested "Juiz visualiza jogos".
     Route::resource('jogos', JogosController::class);
 
+
     // Resultados (Scorer/Apontador needs access)
     Route::get('/jogos/{id}/resultado/create', [App\Http\Controllers\ResultadosController::class, 'create'])->name('resultados.create');
     Route::post('/jogos/{id}/resultado', [App\Http\Controllers\ResultadosController::class, 'store'])->name('resultados.store');
     Route::patch('/jogos/{id}/approve', [App\Http\Controllers\ResultadosController::class, 'approve'])->name('resultados.approve');
+
+    // Documentos (Visível para todos autenticados)
+    Route::get('/documentos', [App\Http\Controllers\DocumentoController::class, 'index'])->name('documentos.index');
+
+    // Ginásios (Visível para todos autenticados)
+    Route::get('/ginasios', [GinasioController::class, 'index'])->name('ginasios.index');
 
 
     // ---------------------------------------------------------------------
@@ -91,7 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
 
         Route::resource('categorias', CategoriasController::class);
-        Route::resource('ginasios', GinasioController::class);
+        Route::resource('ginasios', GinasioController::class)->except(['index']);
         Route::resource('eventos', TiposEventosController::class);
 
         Route::get('/test-create-roles', [JogosController::class, 'test']);
@@ -105,6 +112,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
         Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
+
+        // CRUD Documentos (Admin)
+        Route::resource('documentos', App\Http\Controllers\DocumentoController::class)->except(['index', 'show']);
 
 
     });

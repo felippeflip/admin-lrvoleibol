@@ -10,9 +10,11 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
+                    @hasrole('Administrador')
                     <div class="flex justify-between">
                         <a href="{{ route('ginasios.create') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO GINÁSIO</a>
                     </div>
+                    @endhasrole
 
                     @if (session('success'))
                         <div class="bg-green-500 text-white font-bold py-2 px-4 rounded mb-4 flash-message" role="alert">
@@ -59,30 +61,33 @@
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">Nome</th>
+                                    <th scope="col" class="px-6 py-3">Loc.</th>
+                                    <th scope="col" class="px-6 py-3">Nome do Ginásio</th>
                                     <th scope="col" class="px-6 py-3">Cidade/UF</th>
-                                    <th scope="col" class="px-6 py-3">Time</th>
+                                    <th scope="col" class="px-6 py-3">Time Responsável</th>
+                                    <th scope="col" class="px-6 py-3">Telefone</th>
+                                    @hasrole('Administrador')
                                     <th scope="col" class="px-6 py-3 text-center">Ações</th>
+                                    @endhasrole
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($ginasios as $ginasio)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <td class="px-6 py-4 flex space-x-2">
+                                             <a href="{{ $ginasio->google_maps_link }}" target="_blank" class="w-6 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver no Google Maps">
+                                                <svg class="h-6 w-6 text-green-600" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M12 2a8 8 0 0 1 8 8c0 5 -8 13 -8 13s-8 -8 -8 -13a8 8 0 0 1 8 -8z" />  <circle cx="12" cy="10" r="3" /></svg>
+                                            </a>
+                                            <a href="{{ $ginasio->waze_link }}" target="_blank" class="w-6 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver no Waze">
+                                                <svg class="h-6 w-6 text-blue-400"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <circle cx="12" cy="12" r="9" />  <line x1="12" y1="3" x2="12" y2="7" />  <line x1="12" y1="21" x2="12" y2="18" />  <line x1="3" y1="12" x2="7" y2="12" />  <line x1="21" y1="12" x2="18" y2="12" />  <line x1="12" y1="12" x2="12" y2="12.01" /></svg>
+                                            </a>
+                                        </td>
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $ginasio->gin_nome }}</th>
                                         <td class="px-6 py-4">{{ $ginasio->gin_cidade }} / {{ $ginasio->gin_estado }}</td>
                                         <td class="px-6 py-4">{{ $ginasio->time->tim_nome ?? 'N/A' }}</td>
+                                        <td class="px-6 py-4">{{ $ginasio->gin_telefone ?? '-' }}</td>
+                                        @hasrole('Administrador')
                                         <td class="px-6 py-4 flex space-x-2 justify-center">
-                                            <a href="{{ $ginasio->google_maps_link }}" target="_blank" class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver no Google Maps">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                            </a>
-                                            <a href="{{ $ginasio->waze_link }}" target="_blank" class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver no Waze">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
-                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm4 0h-2v-2h2v2zm-2-4H9V7h6v6z" /> <!-- Simplificado, ícone genérico de localização/mapa -->
-                                                </svg>
-                                            </a>
                                             <a href="{{ route('ginasios.edit', $ginasio->gin_id) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" title="Editar Ginásio">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -98,6 +103,7 @@
                                                 </button>
                                             </form>
                                         </td>
+                                        @endhasrole
                                     </tr>
                                 @endforeach
                             </tbody>

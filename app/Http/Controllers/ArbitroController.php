@@ -15,13 +15,15 @@ class ArbitroController extends Controller
         // Busca usuários com role 'Juiz' ou 'Apontador' que estejam ativos
         // Nota: O pedido diz "listar somente os Juizes Ativos", mas o menu é "Arbitros/Apontadores",
         // então faz sentido listar ambos para consulta.
-        $query = User::role(['Juiz', 'Apontador'])->where('active', true);
+        // Busca usuários com role 'Juiz' que estejam ativos
+        $query = User::role('Juiz')->where('active', true);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('apelido', 'like', "%{$search}%");
+                    ->orWhere('apelido', 'like', "%{$search}%")
+                    ->orWhere('telefone', 'like', "%{$search}%");
             });
         }
 

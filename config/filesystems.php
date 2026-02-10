@@ -59,35 +59,42 @@ return [
         'times_logos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/times_logos'), 
-            'url' => '/storage/times_logos',
+            'url' => env('APP_URL').'/storage/times_logos',
             'visibility' => 'public',
         ],
 
         'atletas_fotos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/atletas_fotos'), 
-            'url' => '/storage/atletas_fotos', 
+            'url' => env('APP_URL').'/storage/atletas_fotos', 
             'visibility' => 'public',
         ],
 
         'comissao_fotos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/comissao_fotos'),
-            'url' => '/storage/comissao_fotos',
+            'url' => env('APP_URL').'/storage/comissao_fotos',
             'visibility' => 'public',
         ],
 
         'comissao_docs' => [
             'driver' => 'local',
             'root' => storage_path('app/public/comissao_docs'),
-            'url' => '/storage/comissao_docs',
+            'url' => env('APP_URL').'/storage/comissao_docs',
             'visibility' => 'public',
         ],
 
         'user_fotos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/user_fotos'),
-            'url' => '/storage/user_fotos',
+            'url' => env('APP_URL').'/storage/user_fotos',
+            'visibility' => 'public',
+        ],
+
+        'documentos_uploads' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/documentos_uploads'),
+            'url' => env('APP_URL').'/storage/documentos_uploads',
             'visibility' => 'public',
         ],
 
