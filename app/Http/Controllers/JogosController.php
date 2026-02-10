@@ -292,7 +292,7 @@ class JogosController extends Controller
 
     public function create()
     {
-        $juizes = User::where('is_arbitro', true)->get();
+        $juizes = User::role('Juiz')->where('active', true)->orderBy('name')->get();
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
         $ginasios = Ginasio::orderBy('gin_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
@@ -359,7 +359,7 @@ class JogosController extends Controller
         // $id is the WP ID (because route uses WP ID)
         $jogo = WpPosts::with(['eventTypes.term', 'eventCategories.term', 'meta'])->findOrFail($id);
 
-        $juizes = User::where('is_arbitro', true)->get();
+        $juizes = User::role('Juiz')->where('active', true)->orderBy('name')->get();
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
         $ginasios = Ginasio::orderBy('gin_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
