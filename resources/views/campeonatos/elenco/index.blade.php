@@ -78,7 +78,8 @@
                                         $impresso = $atleta->cartaoImpresso(date('Y'));
                                     @endphp
                                     <option value="{{ $atleta->atl_id }}" {{ !$impresso ? 'disabled' : '' }}>
-                                        {{ $atleta->atl_nome }} ({{ $atleta->atl_posicao_preferida ?? 'Sem posição' }})
+                                        {{ $atleta->atl_nome }} - Cat: {{ $atleta->categoria->cto_nome ?? 'N/A' }}
+                                        ({{ $atleta->atl_posicao_preferida ?? 'Sem posição' }})
                                         {{ !$impresso ? '- Cartão não impresso (' . date('Y') . ')' : '' }}
                                     </option>
                                 @endforeach
@@ -136,6 +137,7 @@
                                 <tr>
                                     <th scope="col" class="px-3 py-3">Camisa</th>
                                     <th scope="col" class="px-3 py-3">Nome</th>
+                                    <th scope="col" class="px-3 py-3">Categoria</th>
                                     <th scope="col" class="px-3 py-3">Posição</th>
                                     <th scope="col" class="px-3 py-3 text-right">Ações</th>
                                 </tr>
@@ -149,6 +151,9 @@
                                         </th>
                                         <td class="px-3 py-4">
                                             {{ $elenco->atleta->atl_nome }}
+                                        </td>
+                                        <td class="px-3 py-4">
+                                            {{ $elenco->atleta->categoria->cto_nome ?? 'N/A' }}
                                         </td>
                                         <td class="px-3 py-4">
                                             {{ $elenco->ele_posicao_atuando }}
@@ -167,7 +172,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-3 py-4 text-center">Nenhum atleta inscrito neste
+                                        <td colspan="5" class="px-3 py-4 text-center">Nenhum atleta inscrito neste
                                             campeonato ainda.</td>
                                     </tr>
                                 @endforelse

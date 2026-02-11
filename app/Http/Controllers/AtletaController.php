@@ -76,7 +76,7 @@ class AtletaController extends Controller
 
         $times = [];
         if ($user->hasRole('Administrador')) {
-            $times = Time::orderBy('tim_nome')->get();
+            $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         }
 
         $atletas = $query->paginate(10)->appends($request->all());

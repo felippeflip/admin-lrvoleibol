@@ -116,33 +116,30 @@ class ElencoController extends Controller
         $maxAge = $categoriaEquipe ? $categoriaEquipe->cto_idade_maxima : null;
         $anoCampeonato = $equipeCampeonato->campeonato->cpo_ano ?? date('Y'); // Fallback para ano atual
 
-        $atletasDisponiveis = Atleta::where('atl_tim_id', $timeId)
+        $atletasDisponiveis = Atleta::with('categoria')
+            ->where('atl_tim_id', $timeId)
             ->whereNotIn('atl_id', $atletasNoElencoIds)
             ->where('atl_ativo', 1) // Opcional: apenas ativos
 
             // Lógica de Idade / Categoria
             ->where(function ($query) use ($categoriaId, $maxAge, $anoCampeonato) {
                 if (!is_null($maxAge)) {
-                    // Se tiver idade máxima definida, aplica regra de idade:
-                    // (AnoCampeonato - AnoNascimento) <= MaxAge
-                    // Usamos YEAR(atl_dt_nasc) para pegar o ano de nascimento.
-                    $query->whereRaw('(? - YEAR(atl_dt_nasc)) <= ?', [$anoCampeonato, $maxAge]);
-                } else {
-                    // Se NÃO tem idade máxima (ex: Adulto/Livre), permite todos? 
-                    // Ou mantém filtro estrito de categoria como fallback?
-                    // Geralmente "Livre" aceita todos (Younger playing Older).
-                    // Então se maxAge é null, não filtra nada (aceita tudo).
-                    // A menos que queira manter a regra antiga para categorias sem configuração de idade:
-                    // $query->where('atl_categoria', $categoriaId);
+                    // Regra: Atletas mais velhos NÃO podem jogar em categorias mais novas.
+                    // Isso significa que a idade do atleta (AnoCamp - AnoNasc) deve ser <= MaxAge.
+                    // (AnoCamp - AnoNasc) <= MaxAge
+                    // AnoCamp - MaxAge <= AnoNasc
+                    // Ou seja, AnoNasc >= (AnoCamp - MaxAge)
     
-                    // Vamos assumir "Livre" = Aceita Todos.
+                    $anoNascimentoMinimo = $anoCampeonato - $maxAge;
+                    $query->whereYear('atl_dt_nasc', '>=', $anoNascimentoMinimo);
                 }
+                // Se maxAge for null (Categoria Livre), não aplica filtro de idade.
             })
             ->orderBy('atl_nome')
             ->get();
 
         // Carregar os dados do elenco completos (com nome do atleta, camisa, posição)
-        $elencoAtual = ElencoEquipeCampeonato::with('atleta')
+        $elencoAtual = ElencoEquipeCampeonato::with('atleta.categoria')
             ->where('ele_fk_eqp_cpo_id', $equipeCampeonatoId)
             ->get();
 
