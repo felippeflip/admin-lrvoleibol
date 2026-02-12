@@ -122,21 +122,29 @@ class ElencoController extends Controller
             ->where('atl_ativo', 1) // Opcional: apenas ativos
 
             // Lógica de Idade / Categoria
-            ->where(function ($query) use ($categoriaId, $maxAge, $anoCampeonato) {
-                if (!is_null($maxAge)) {
-                    // Regra: Atletas mais velhos NÃO podem jogar em categorias mais novas.
-                    // Isso significa que a idade do atleta (AnoCamp - AnoNasc) deve ser <= MaxAge.
-                    // (AnoCamp - AnoNasc) <= MaxAge
-                    // AnoCamp - MaxAge <= AnoNasc
-                    // Ou seja, AnoNasc >= (AnoCamp - MaxAge)
-    
-                    $anoNascimentoMinimo = $anoCampeonato - $maxAge;
-                    $query->whereYear('atl_dt_nasc', '>=', $anoNascimentoMinimo);
+            // 1. Carrega todos os candidatos (filtro leve de banco)
+            // 2. Filtra a idade exata no PHP para precisão (considerando meses e dias)
+            ->get()
+            ->filter(function ($atleta) use ($categoriaId, $maxAge) {
+                if (is_null($maxAge)) {
+                    return true; // Categoria Livre
                 }
-                // Se maxAge for null (Categoria Livre), não aplica filtro de idade.
-            })
-            ->orderBy('atl_nome')
-            ->get();
+
+                // Idade exata hoje (Carbon considera dia e mês)
+                // Ex: Nascido em 16/09/2011. Hoje 12/02/2026.
+                // 2026 - 2011 = 15 anos (pelo ano).
+                // Mas ainda não fez aniversário, então tem 14 anos.
+    
+                $idadeReal = \Carbon\Carbon::parse($atleta->atl_dt_nasc)->age;
+
+                // Regra: Atleta deve ter idade <= maxAge.
+                // Atletas mais novos podem jogar em categorias mais velhas.
+                return $idadeReal <= $maxAge;
+            });
+
+        // O filter retorna uma Collection com chaves preservadas, o que pode ser estranho para o frontend se esperar array indexado sequencialmente.
+        // Vamos usar values() para reindexar.
+        $atletasDisponiveis = $atletasDisponiveis->values();
 
         // Carregar os dados do elenco completos (com nome do atleta, camisa, posição)
         $elencoAtual = ElencoEquipeCampeonato::with('atleta.categoria')
@@ -181,12 +189,15 @@ class ElencoController extends Controller
         $maxAge = $categoriaEquipe ? $categoriaEquipe->cto_idade_maxima : null;
 
         if (!is_null($maxAge)) {
-            $anoCampeonato = $equipeCampeonato->campeonato->cpo_ano ?? date('Y');
-            $anoNascimento = date('Y', strtotime($atleta->atl_dt_nasc));
-            $idadeNoAno = $anoCampeonato - $anoNascimento;
+            // $anoCampeonato = $equipeCampeonato->campeonato->cpo_ano ?? date('Y');
+            // $anoNascimento = date('Y', strtotime($atleta->atl_dt_nasc));
+            // $idadeNoAno = $anoCampeonato - $anoNascimento;
 
-            if ($idadeNoAno > $maxAge) {
-                return back()->with('error', "Este atleta não possui idade permitida para esta categoria ({$categoriaEquipe->cto_nome}). Idade calculada: $idadeNoAno anos. Limite: $maxAge anos.");
+            // Usando Idade Real (hoje)
+            $idadeReal = \Carbon\Carbon::parse($atleta->atl_dt_nasc)->age;
+
+            if ($idadeReal > $maxAge) {
+                return back()->with('error', "Este atleta não possui idade permitida para esta categoria ({$categoriaEquipe->cto_nome}). Idade atual: $idadeReal anos. Limite: $maxAge anos.");
             }
         }
 

@@ -21,17 +21,21 @@ class EquipeCampeonatoController extends Controller
 
         // Filtro por Nome da Equipe
         if ($request->filled('search_equipe')) {
-            $query->where('eqp_nome', 'like', '%' . $request->search_equipe . '%');
+            $query->where('eqp_nome_detalhado', 'like', '%' . $request->search_equipe . '%');
         }
 
         // Filtro por Time (Select)
         if ($request->filled('search_time')) {
-            $query->where('tim_fk_id', $request->search_time);
+            $query->whereHas('time', function ($q) use ($request) {
+                $q->where('tim_id', $request->search_time);
+            });
         }
 
         // Filtro por Categoria (Select)
         if ($request->filled('search_categoria')) {
-            $query->where('cto_fk_id', $request->search_categoria);
+            $query->whereHas('categoria', function ($q) use ($request) {
+                $q->where('cto_id', $request->search_categoria);
+            });
         }
 
         // Filtro por Nome do Treinador
@@ -42,7 +46,7 @@ class EquipeCampeonatoController extends Controller
         $equipes = $query->paginate(10)->appends($request->all());
 
         // Carregar opções para os selects de filtro
-        $times = Time::orderBy('tim_nome')->get();
+        $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
 
         // Passa o objeto do campeonato e as equipes para a view.
@@ -125,20 +129,20 @@ class EquipeCampeonatoController extends Controller
                     ->exists();
 
                 if ($equipesComElenco) {
-                     return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem elenco cadastrado neste campeonato e não podem ser removidas.']);
+                    return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem elenco cadastrado neste campeonato e não podem ser removidas.']);
                 }
 
                 // Verifica se alguma das equipes a serem removidas possui jogos vinculados
                 $equipesComJogos = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
                     ->whereIn('eqp_fk_id', $equipesParaRemover)
-                    ->where(function($query) {
+                    ->where(function ($query) {
                         $query->whereHas('jogosMandante')
-                              ->orWhereHas('jogosVisitante');
+                            ->orWhereHas('jogosVisitante');
                     })
                     ->exists();
 
                 if ($equipesComJogos) {
-                     return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem jogos agendados/realizados neste campeonato e não podem ser removidas.']);
+                    return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem jogos agendados/realizados neste campeonato e não podem ser removidas.']);
                 }
             }
 
@@ -176,9 +180,9 @@ class EquipeCampeonatoController extends Controller
             // Verifica se a equipe possui jogos vinculados no campeonato
             $possuiJogos = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
                 ->where('eqp_fk_id', $equipe->eqp_id)
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->whereHas('jogosMandante')
-                          ->orWhereHas('jogosVisitante');
+                        ->orWhereHas('jogosVisitante');
                 })
                 ->exists();
 

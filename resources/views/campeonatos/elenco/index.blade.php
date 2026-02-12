@@ -76,11 +76,13 @@
                                 @foreach($atletasDisponiveis as $atleta)
                                     @php
                                         $impresso = $atleta->cartaoImpresso(date('Y'));
+                                        $idade = $atleta->atl_dt_nasc ? \Carbon\Carbon::parse($atleta->atl_dt_nasc)->age : null;
                                     @endphp
                                     <option value="{{ $atleta->atl_id }}" {{ !$impresso ? 'disabled' : '' }}>
-                                        {{ $atleta->atl_nome }} - Cat: {{ $atleta->categoria->cto_nome ?? 'N/A' }}
-                                        ({{ $atleta->atl_posicao_preferida ?? 'Sem posição' }})
-                                        {{ !$impresso ? '- Cartão não impresso (' . date('Y') . ')' : '' }}
+                                        {{ $atleta->atl_nome }} {{ $idade ? '(' . $idade . ' anos)' : '' }} - Cat:
+                                        {{ $atleta->categoria->cto_nome ?? 'N/A' }}
+                                        {{ $atleta->atl_posicao_preferida ? ' - ' . $atleta->atl_posicao_preferida : '' }}
+                                        {{ !$impresso ? ' - ⚠️ Cartão Pendente' : '' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -137,6 +139,7 @@
                                 <tr>
                                     <th scope="col" class="px-3 py-3">Camisa</th>
                                     <th scope="col" class="px-3 py-3">Nome</th>
+                                    <th scope="col" class="px-3 py-3">Idade</th>
                                     <th scope="col" class="px-3 py-3">Categoria</th>
                                     <th scope="col" class="px-3 py-3">Posição</th>
                                     <th scope="col" class="px-3 py-3 text-right">Ações</th>
@@ -151,6 +154,9 @@
                                         </th>
                                         <td class="px-3 py-4">
                                             {{ $elenco->atleta->atl_nome }}
+                                        </td>
+                                        <td class="px-3 py-4">
+                                            {{ $elenco->atleta->atl_dt_nasc ? \Carbon\Carbon::parse($elenco->atleta->atl_dt_nasc)->age : '-' }}
                                         </td>
                                         <td class="px-3 py-4">
                                             {{ $elenco->atleta->categoria->cto_nome ?? 'N/A' }}
@@ -172,7 +178,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-3 py-4 text-center">Nenhum atleta inscrito neste
+                                        <td colspan="6" class="px-3 py-4 text-center">Nenhum atleta inscrito neste
                                             campeonato ainda.</td>
                                     </tr>
                                 @endforelse
