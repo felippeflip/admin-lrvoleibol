@@ -94,6 +94,12 @@
                         </div>
                     @endif
 
+                    @if (session('error'))
+                        <div class="bg-red-500 text-white font-bold py-2 px-4 rounded mb-4 flash-message" role="alert">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
                     @if ($errors->any())
                         <div class="bg-red-500 text-white p-2 my-4 rounded">
                             <ul>

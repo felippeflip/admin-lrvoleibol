@@ -193,7 +193,7 @@ class JogosController extends Controller
         // --- 2. JUIZ ---
         if ($user->hasRole('Juiz') || $user->is_arbitro) {
             // Games where user is selected assigned
-            $meusJogos = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio'])
+            $meusJogos = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                 ->where(function ($q) use ($user) {
                 $q->where('jgo_arbitro_principal', $user->id)
                     ->orWhere('jgo_arbitro_secundario', $user->id)
@@ -224,7 +224,7 @@ class JogosController extends Controller
                     ->join('equipe_campeonato', 'equipes.eqp_id', '=', 'equipe_campeonato.eqp_fk_id')
                     ->pluck('equipe_campeonato.eqp_cpo_id');
 
-                $jogosQuery = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio'])
+                $jogosQuery = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                     ->where(function ($query) use ($equipeIds) {
                         $query->whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
                               ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds);

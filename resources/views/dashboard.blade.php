@@ -150,7 +150,14 @@
                                                                     Local não definido
                                                                 </span>
                                                             @endif
+
                                                         </div>
+                                                    </div>
+                                                    <div class="mt-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-2">
+                                                        <span class="font-bold text-gray-700 dark:text-gray-300">Arbitragem:</span>
+                                                        @if($jogo->arbitroPrincipal) <span class="ml-1">PRINC: {{ $jogo->arbitroPrincipal->name ?? '' }}</span> @endif
+                                                        @if($jogo->arbitroSecundario) <span class="ml-2">SEC: {{ $jogo->arbitroSecundario->name ?? '' }}</span> @endif
+                                                        @if($jogo->apontador) <span class="ml-2">APONT: {{ $jogo->apontador->name ?? '' }}</span> @endif
                                                     </div>
                                                 </li>
                                             @endforeach
@@ -231,6 +238,7 @@
                                                         <th scope="col" class="px-6 py-3">Número</th>
                                                         <th scope="col" class="px-6 py-3">Campeonato</th>
                                                         <th scope="col" class="px-6 py-3">Equipes</th>
+                                                        <th scope="col" class="px-6 py-3">Árbitros</th>
                                                         <th scope="col" class="px-6 py-3">Local</th>
                                                         <th scope="col" class="px-6 py-3">Data/Hora</th>
                                                         <th scope="col" class="px-6 py-3">Status</th>
@@ -254,6 +262,22 @@
                                                                     <span class="font-bold text-gray-900 dark:text-white">
                                                                         {{ $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : '?' }}
                                                                     </span>
+                                                                </div>
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                <div class="text-xs text-gray-700 dark:text-gray-300">
+                                                                    @if($jogo->arbitroPrincipal) 
+                                                                        <div class="whitespace-nowrap"><span class="font-bold">Pri:</span> {{ $jogo->arbitroPrincipal->name }}</div> 
+                                                                    @endif
+                                                                    @if($jogo->arbitroSecundario) 
+                                                                        <div class="whitespace-nowrap"><span class="font-bold">Sec:</span> {{ $jogo->arbitroSecundario->name }}</div> 
+                                                                    @endif
+                                                                    @if($jogo->apontador) 
+                                                                        <div class="whitespace-nowrap"><span class="font-bold">Apo:</span> {{ $jogo->apontador->name }}</div> 
+                                                                    @endif
+                                                                     @if(!$jogo->arbitroPrincipal && !$jogo->arbitroSecundario && !$jogo->apontador)
+                                                                        <span class="text-gray-400 italic">Não definidos</span>
+                                                                     @endif
                                                                 </div>
                                                             </td>
                                                             <td class="px-6 py-4">

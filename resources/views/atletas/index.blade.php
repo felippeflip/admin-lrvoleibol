@@ -16,6 +16,12 @@
                             </div>
                         @endif
 
+                        @if (session('error'))
+                            <div class="bg-red-500 text-white p-2 my-4 rounded flash-message" role="alert">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
                         <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
                             <form method="GET" action="{{ route('atletas.index') }}">
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4">

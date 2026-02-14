@@ -89,6 +89,16 @@ class AtletaController extends Controller
      */
     public function create()
     {
+        $user = auth()->user();
+
+        // Verifica se o Responsável pelo Time possui um time vinculado
+        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
+            $hasTime = Time::where('tim_user_id', $user->id)->exists();
+            if (!$hasTime) {
+                return redirect()->route('atletas.index')->with('error', 'Você precisa estar vinculado a um Time para cadastrar um atleta.');
+            }
+        }
+
         $times = [];
         if (auth()->user()->hasRole('Administrador')) {
             $times = Time::all();

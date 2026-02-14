@@ -22,13 +22,19 @@
             <p>Você foi escalado(a) como <strong>{{ $funcao }}</strong> para a seguinte partida:</p>
             
             <div class="details">
-                <p><strong>Partida:</strong> {{ $jogo->mandante->equipe->time->tim_nome ?? 'Mandante' }} x {{ $jogo->visitante->equipe->time->tim_nome ?? 'Visitante' }}</p>
+                <p><strong>Campeonato:</strong> {{ $jogo->mandante->campeonato->cpo_nome ?? 'N/A' }}</p>
+                <p><strong>Categoria:</strong> {{ $jogo->mandante->equipe->categoria->cto_nome ?? 'N/A' }}</p>
+                <p><strong>Partida:</strong> {{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }} x {{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</p>
                 <p><strong>Data:</strong> {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }}</p>
                 <p><strong>Horário:</strong> {{ $jogo->jgo_hora_jogo }}</p>
                 <p><strong>Local:</strong> {{ $jogo->ginasio->gin_nome ?? 'Local a definir' }}</p>
                 @if($jogo->ginasio)
                     <p><strong>Endereço:</strong> {{ $jogo->ginasio->gin_endereco }}, {{ $jogo->ginasio->gin_numero }} - {{ $jogo->ginasio->gin_bairro }}, {{ $jogo->ginasio->gin_cidade }}</p>
                 @endif
+                <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
+                <p><strong>Árbitro Principal:</strong> {{ $jogo->arbitroPrincipal->name ?? 'Não definido' }}</p>
+                <p><strong>Árbitro Secundário:</strong> {{ $jogo->arbitroSecundario->name ?? 'Não definido' }}</p>
+                <p><strong>Apontador:</strong> {{ $jogo->apontador->name ?? 'Não definido' }}</p>
             </div>
 
             @if($jogo->ginasio)
