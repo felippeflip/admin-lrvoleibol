@@ -123,7 +123,8 @@ Route::middleware('auth')->group(function () {
     // 4. JUIZ ONLY
     // ---------------------------------------------------------------------
     Route::middleware(['role:Juiz'])->group(function () {
-        Route::get('/arbitros', [App\Http\Controllers\ArbitroController::class, 'index'])->name('arbitros.index');
+        Route::get('/arbitros/{id}', [App\Http\Controllers\ArbitroController::class, 'show'])->name('arbitros.show');
+Route::get('/arbitros', [App\Http\Controllers\ArbitroController::class, 'index'])->name('arbitros.index');
     });
 
 });

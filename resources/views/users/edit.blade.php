@@ -56,12 +56,7 @@
 
                                         <div x-show="role === 'Juiz'">
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div class="mb-4">
-                                                    <label for="cref" class="block text-gray-700 dark:text-gray-300">CREF (REGISTRO):</label>
-                                                    <input type="text" name="cref" id="cref"
-                                                        class="w-full border border-gray-300 p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                                                        value="{{ $user->cref }}">
-                                                </div>
+
                                                 <div class="mb-4">
                                                     <label for="lrv" class="block text-gray-700 dark:text-gray-300">REGISTRO (LRV):</label>
                                                     <input type="text" name="lrv" id="lrv"

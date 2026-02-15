@@ -31,4 +31,9 @@ class ArbitroController extends Controller
 
         return view('arbitros.index', compact('arbitros'));
     }
+    public function show($id)
+    {
+        $arbitro = User::findOrFail($id);
+        return view('arbitros.show', compact('arbitro'));
+    }
 }

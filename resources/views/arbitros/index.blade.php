@@ -38,7 +38,7 @@
                                     <th scope="col" class="py-3 px-6">Nome</th>
                                     <th scope="col" class="py-3 px-6">Apelido</th>
                                     <th scope="col" class="py-3 px-6">Telefone</th>
-                                    <th scope="col" class="py-3 px-6">E-mail</th>
+                                    <th scope="col" class="py-3 px-6">Registro LRV</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -54,7 +54,9 @@
                                             @endif
                                         </td>
                                         <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $arbitro->name }}
+                                            <a href="{{ route('arbitros.show', $arbitro->id) }}" class="text-indigo-600 hover:text-indigo-900 hover:underline">
+                                                {{ $arbitro->name }}
+                                            </a>
                                         </td>
                                         <td class="py-4 px-6">
                                             {{ $arbitro->apelido ?? '-' }}
@@ -63,7 +65,7 @@
                                             {{ $arbitro->telefone ?? '-' }}
                                         </td>
                                         <td class="py-4 px-6">
-                                            {{ $arbitro->email }}
+                                            {{ $arbitro->lrv ?? '-' }}
                                         </td>
                                     </tr>
                                 @empty

@@ -192,25 +192,54 @@ class JogosController extends Controller
 
         // --- 2. JUIZ ---
         if ($user->hasRole('Juiz') || $user->is_arbitro) {
-            // Games where user is selected assigned
-            $meusJogos = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            // Base Query for User's Games
+            $juizQuery = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                 ->where(function ($q) use ($user) {
                 $q->where('jgo_arbitro_principal', $user->id)
                     ->orWhere('jgo_arbitro_secundario', $user->id)
                     ->orWhere('jgo_apontador', $user->id);
-            })->get();
+            });
+
+            // 2.1 Calculate Stats (using a clone to not affect the query object)
+            $statsQuery = clone $juizQuery;
+            $meusJogos = $statsQuery->get();
 
             $juizStats = [
                 'total_participacao' => $meusJogos->count(),
                 'novos' => $meusJogos->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count(),
                 'realizados' => $meusJogos->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count(),
             ];
-
-            // Pass the listing of upcoming games for convenience if needed, 
-            // but the prompt asked for "Quantidade", so stats focused.
-            // I'll pass the upcoming games collection just in case we want to show a list.
             $data['juizStats'] = $juizStats;
-            $data['juizJogosFuturos'] = $meusJogos->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'));
+
+            // 2.2 Apply Filters and Pagination for the List
+            $statusFilter = $request->input('status', 'ativo'); // Default to 'ativo'
+            
+            if ($statusFilter && $statusFilter !== 'todos') {
+                $juizQuery->where('jgo_status', $statusFilter);
+            }
+
+            if ($request->filled('search')) {
+                 $term = $request->search;
+                 // Search by ID or Championship Name
+                 $juizQuery->where(function($q) use ($term) {
+                     $q->where('jgo_id', 'like', "%{$term}%")
+                       ->orWhereHas('mandante.campeonato', function($sq) use ($term){
+                           $sq->where('cpo_nome', 'like', "%{$term}%");
+                       });
+                 });
+            }
+
+            // Pagination
+            $juizJogos = $juizQuery->orderBy('jgo_dt_jogo', 'desc')
+                                   ->paginate(10)
+                                   ->appends($request->all());
+
+            $data['juizJogos'] = $juizJogos;
+            
+            // Shared filter for View (if not already set)
+            if(!isset($data['statusFilter'])) {
+                 $data['statusFilter'] = $statusFilter;
+            }
         }
 
         // --- 3. RESPONSAVEL PELO TIME ---
