@@ -14,6 +14,7 @@ class Documento extends Model
         'descricao',
         'caminho_arquivo',
         'tipo', // 'pdf', 'imagem'
+        'permissao', // 'Todos', 'Administrador', 'Juiz', 'ResponsavelTime'
         'ativo',
     ];
 

@@ -46,11 +46,18 @@
                                 <x-input-error :messages="$errors->get('foto')" class="mt-2" />
                             </div>
 
-                            <!-- Nome -->
+                                <!-- Nome -->
                             <div>
                                 <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo *</label>
                                 <input type="text" name="nome" id="nome" value="{{ old('nome', $comissaoTecnica->nome) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
                                 <x-input-error :messages="$errors->get('nome')" class="mt-2" />
+                            </div>
+
+                            <!-- Registro LRV -->
+                            <div>
+                                <label for="registro_lrv" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro LRV</label>
+                                <input type="text" name="registro_lrv" id="registro_lrv" value="{{ old('registro_lrv', $comissaoTecnica->registro_lrv ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
+                                <x-input-error :messages="$errors->get('registro_lrv')" class="mt-2" />
                             </div>
 
                             <!-- CPF -->
@@ -81,8 +88,8 @@
 
                             <!-- Documento Registro -->
                             <div>
-                                <label for="documento_registro" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro (CREF, CRM, etc) *</label>
-                                <input type="text" name="documento_registro" id="documento_registro" value="{{ old('documento_registro', $comissaoTecnica->documento_registro) }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
+                                <label for="documento_registro" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro (CREF, CRM, etc)</label>
+                                <input type="text" name="documento_registro" id="documento_registro" value="{{ old('documento_registro', $comissaoTecnica->documento_registro) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
                                 <x-input-error :messages="$errors->get('documento_registro')" class="mt-2" />
                             </div>
                             

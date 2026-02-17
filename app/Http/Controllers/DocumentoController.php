@@ -18,11 +18,23 @@ use Illuminate\Http\Request;
 
     public function index()
     {
-        // Todos podem ver documentos ativos. Admins veem tudo.
-        if (auth()->user()->hasRole('Administrador')) {
+        $user = auth()->user();
+
+        if ($user->hasRole('Administrador')) {
             $documentos = Documento::orderBy('created_at', 'desc')->paginate(10);
         } else {
-            $documentos = Documento::where('ativo', true)->orderBy('created_at', 'desc')->paginate(10);
+            $documentos = Documento::where('ativo', true)
+                ->where(function ($query) use ($user) {
+                    $query->where('permissao', 'Todos');
+                    if ($user->hasRole('Juiz')) {
+                        $query->orWhere('permissao', 'Arbitros');
+                    }
+                    if ($user->hasRole('ResponsavelTime')) {
+                        $query->orWhere('permissao', 'ResponsavelTime');
+                    }
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
         }
         return view('documentos.index', compact('documentos'));
     }
@@ -51,6 +63,7 @@ use Illuminate\Http\Request;
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'arquivo' => 'required|file|mimes:pdf,jpeg,png,jpg|max:10240', // 10MB
+            'permissao' => 'required|string|in:Todos,Administrador,Arbitros,ResponsavelTime',
         ]);
 
         $file = $request->file('arquivo');
@@ -69,6 +82,7 @@ use Illuminate\Http\Request;
             'descricao' => $request->descricao,
             'caminho_arquivo' => $filename,
             'tipo' => $tipo,
+            'permissao' => $request->permissao,
             'ativo' => true,
         ]);
 
@@ -110,6 +124,7 @@ use Illuminate\Http\Request;
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'arquivo' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:10240',
+            'permissao' => 'required|string|in:Todos,Administrador,Arbitros,ResponsavelTime',
             'ativo' => 'boolean',
         ]);
 
@@ -135,6 +150,7 @@ use Illuminate\Http\Request;
 
         $documento->titulo = $request->titulo;
         $documento->descricao = $request->descricao;
+        $documento->permissao = $request->permissao;
         $documento->ativo = $request->has('ativo'); // Checkbox handling
         $documento->save();
 

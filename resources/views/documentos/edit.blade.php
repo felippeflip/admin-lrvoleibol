@@ -25,6 +25,16 @@
                         </div>
 
                         <div class="mb-4">
+                            <label for="permissao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Visibilidade / Permissão</label>
+                            <select name="permissao" id="permissao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
+                                <option value="Todos" {{ $documento->permissao == 'Todos' ? 'selected' : '' }}>Todos</option>
+                                <option value="Administrador" {{ $documento->permissao == 'Administrador' ? 'selected' : '' }}>Apenas Administradores</option>
+                                <option value="Arbitros" {{ $documento->permissao == 'Arbitros' ? 'selected' : '' }}>Árbitros (Juiz)</option>
+                                <option value="ResponsavelTime" {{ $documento->permissao == 'ResponsavelTime' ? 'selected' : '' }}>Responsável Time</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
                             <label for="ativo" class="inline-flex items-center">
                                 <input type="checkbox" id="ativo" name="ativo" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" {{ $documento->ativo ? 'checked' : '' }}>
                                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Ativo</span>

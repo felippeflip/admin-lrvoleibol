@@ -15,6 +15,7 @@ class ComissaoTecnica extends Model
     protected $fillable = [
         'time_id',
         'nome',
+        'registro_lrv',
         'cpf',
         'rg',
         'funcao',

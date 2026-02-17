@@ -75,9 +75,11 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">RG</p>
-                                        <p class="mt-1">{{ $atleta->atl_rg_formatted ?? '-' }} @if($atleta->atl_resg)
-                                        <span class="text-xs text-gray-400">({{ $atleta->atl_resg }})</span> @endif
-                                        </p>
+                                        <p class="mt-1">{{ $atleta->atl_rg_formatted ?? '-' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Registro LRV</p>
+                                        <p class="mt-1">{{ $atleta->atl_resg ?? '-' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Data de

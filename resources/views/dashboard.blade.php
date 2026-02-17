@@ -69,6 +69,130 @@
                             </div>
                         @endif
 
+                        {{-- 1.1 WEEKLY GAMES CARDS (ADMIN) --}}
+                        @if(isset($adminJogos) && count($adminJogos) > 0)
+                            <div class="mt-8">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">
+                                    Jogos da Semana (Recentes e Próximos)
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    @foreach($adminJogos as $jogo)
+                                        @php
+                                            // Define border color based on status
+                                            $borderColor = 'border-gray-200';
+                                            $statusColor = 'text-gray-600';
+                                            
+                                            if ($jogo->jgo_status == 'ativo') {
+                                                $borderColor = 'border-blue-400';
+                                                $statusColor = 'text-blue-600';
+                                            } elseif ($jogo->jgo_status == 'inativo') {
+                                                $borderColor = 'border-red-400';
+                                                $statusColor = 'text-red-600';
+                                            }
+                                            
+                                            // Result status logic
+                                            $resStatus = $jogo->jgo_res_status ?? 'nao_informado';
+                                            $resBadgeClass = 'bg-gray-100 text-gray-800';
+                                            $resLabel = 'Não Informado';
+
+                                            if ($resStatus == 'aprovado') {
+                                                $resBadgeClass = 'bg-green-100 text-green-800';
+                                                $resLabel = 'Aprovado';
+                                            } elseif ($resStatus == 'pendente') {
+                                                $resBadgeClass = 'bg-yellow-100 text-yellow-800';
+                                                $resLabel = 'Pendente';
+                                            }
+                                        @endphp
+                                    
+                                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 {{ $borderColor }} p-4 flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
+                                            
+                                            <!-- Validar Objetos Relacionados -->
+                                            @php
+                                                $campeonatoNome = $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : 'Camp. N/A';
+                                                $mandanteNome = $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : 'Mandante N/A';
+                                                $visitanteNome = $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : 'Visitante N/A';
+                                                $localNome = $jogo->ginasio ? $jogo->ginasio->gin_nome : 'Local não definido';
+                                            @endphp
+
+                                            <!-- Header: Date & Camp -->
+                                            <div class="mb-3">
+                                                 <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
+                                                    {{ $campeonatoNome }}
+                                                </span>
+                                                <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
+                                                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                    {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
+                                                    <span class="mx-2 text-gray-300">|</span>
+                                                    {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Teams -->
+                                            <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                                <div class="flex flex-col items-center w-[45%]">
+                                                    <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                        {{ $mandanteNome }}
+                                                    </div>
+                                                </div>
+                                                <div class="text-xs font-bold text-gray-400">VS</div>
+                                                <div class="flex flex-col items-center w-[45%]">
+                                                    <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                        {{ $visitanteNome }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Location -->
+                                            <div class="mb-3 flex items-start space-x-2 text-xs text-gray-600 dark:text-gray-300">
+                                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                <span class="mt-0.5">{{ $localNome }}</span>
+                                            </div>
+                                            
+                                            <!-- Separator -->
+                                            <hr class="border-gray-100 dark:border-gray-700 mb-3">
+                                            
+                                            <!-- Referees -->
+                                            <div class="text-xs space-y-1 mb-3 bg-white dark:bg-gray-800">
+                                                 <div class="font-semibold text-gray-400 text-[10px] uppercase mb-1">Arbitragem</div>
+                                                 @if($jogo->arbitroPrincipal)
+                                                    <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                                        <span class="w-5 font-bold text-blue-500">P:</span>
+                                                        <span class="truncate">{{ $jogo->arbitroPrincipal->name }}</span>
+                                                    </div>
+                                                 @endif
+                                                 @if($jogo->arbitroSecundario)
+                                                     <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                                        <span class="w-5 font-bold text-blue-500">S:</span>
+                                                        <span class="truncate">{{ $jogo->arbitroSecundario->name }}</span>
+                                                    </div>
+                                                 @endif
+                                                 @if($jogo->apontador)
+                                                     <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                                        <span class="w-5 font-bold text-blue-500">A:</span>
+                                                        <span class="truncate">{{ $jogo->apontador->name }}</span>
+                                                    </div>
+                                                 @endif
+                                                 @if(!$jogo->arbitroPrincipal && !$jogo->arbitroSecundario && !$jogo->apontador)
+                                                     <div class="text-gray-400 italic pl-1">Não definida</div>
+                                                 @endif
+                                            </div>
+                                            
+                                            <!-- Footer Status -->
+                                            <div class="flex justify-between items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
+                                                    {{ $resLabel }}
+                                                </span>
+                                                <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
+                                                    {{ ucfirst($jogo->jgo_status) }}
+                                                </span>
+                                            </div>
+
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- 2. SECTION: JUIZ/ARBITRO --}}
                         @if(isset($juizStats))
                             <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-6 border-l-4 border-yellow-500">
@@ -130,85 +254,135 @@
                                     </form>
                                 </div>
 
-                                {{-- List Games for Juiz --}}
-                                @if(isset($juizJogos) && $juizJogos->count() > 0)
-                                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                                <tr>
-                                                    <th scope="col" class="px-6 py-3">Número</th>
-                                                    <th scope="col" class="px-6 py-3">Campeonato</th>
-                                                    <th scope="col" class="px-6 py-3">Equipes</th>
-                                                    <th scope="col" class="px-6 py-3">Árbitros</th>
-                                                    <th scope="col" class="px-6 py-3">Local</th>
-                                                    <th scope="col" class="px-6 py-3">Data/Hora</th>
-                                                    <th scope="col" class="px-6 py-3">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($juizJogos as $jogo)
-                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                            #{{ $jogo->jgo_id }}
-                                                        </td>
-                                                        <td class="px-6 py-4">
-                                                            {{ $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : '-' }}
-                                                        </td>
-                                                        <td class="px-6 py-4">
-                                                            <div class="flex flex-col">
-                                                                <span class="font-bold text-gray-900 dark:text-white">
-                                                                    {{ $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : '?' }}
-                                                                </span>
-                                                                <span class="text-xs text-center text-gray-400">vs</span>
-                                                                <span class="font-bold text-gray-900 dark:text-white">
-                                                                    {{ $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : '?' }}
-                                                                </span>
-                                                            </div>
-                                                        </td>
-                                                        <td class="px-6 py-4">
-                                                            <div class="text-xs text-gray-700 dark:text-gray-300">
-                                                                @if($jogo->arbitroPrincipal) 
-                                                                    <div class="whitespace-nowrap"><span class="font-bold">Pri:</span> {{ $jogo->arbitroPrincipal->name }}</div> 
-                                                                @endif
-                                                                @if($jogo->arbitroSecundario) 
-                                                                    <div class="whitespace-nowrap"><span class="font-bold">Sec:</span> {{ $jogo->arbitroSecundario->name }}</div> 
-                                                                @endif
-                                                                @if($jogo->apontador) 
-                                                                    <div class="whitespace-nowrap"><span class="font-bold">Apo:</span> {{ $jogo->apontador->name }}</div> 
-                                                                @endif
-                                                                 @if(!$jogo->arbitroPrincipal && !$jogo->arbitroSecundario && !$jogo->apontador)
-                                                                    <span class="text-gray-400 italic">Não definidos</span>
-                                                                 @endif
-                                                            </div>
-                                                        </td>
-                                                        <td class="px-6 py-4">
-                                                            @if($jogo->ginasio)
-                                                                <a href="{{ $jogo->ginasio->google_maps_link }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                                    {{ $jogo->ginasio->gin_nome }}
-                                                                </a>
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                        <td class="px-6 py-4">
-                                                            {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} <br>
-                                                            {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
-                                                        </td>
-                                                        <td class="px-6 py-4">
-                                                            @if($jogo->jgo_status == 'ativo')
-                                                                <span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Ativo</span>
-                                                            @else
-                                                                <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Inativo</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                        <div class="mt-4 px-2">
-                                            {{ $juizJogos->links() }}
-                                        </div>
+                                {{-- List Games for Juiz (Cards) --}}
+                                @if(isset($juizJogos) && count($juizJogos) > 0)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                        @foreach($juizJogos as $jogo)
+                                            @php
+                                                // Define border color based on status
+                                                $borderColor = 'border-gray-200';
+                                                $statusColor = 'text-gray-600';
+                                                
+                                                if ($jogo->jgo_status == 'ativo') {
+                                                    $borderColor = 'border-yellow-400';
+                                                    $statusColor = 'text-yellow-600';
+                                                } elseif ($jogo->jgo_status == 'inativo') {
+                                                    $borderColor = 'border-red-400';
+                                                    $statusColor = 'text-red-600';
+                                                }
+                                                
+                                                // Result status logic
+                                                $resStatus = $jogo->jgo_res_status ?? 'nao_informado';
+                                                $resBadgeClass = 'bg-gray-100 text-gray-800';
+                                                $resLabel = 'Não Informado';
+
+                                                if ($resStatus == 'aprovado') {
+                                                    $resBadgeClass = 'bg-green-100 text-green-800';
+                                                    $resLabel = 'Aprovado';
+                                                } elseif ($resStatus == 'pendente') {
+                                                    $resBadgeClass = 'bg-yellow-100 text-yellow-800';
+                                                    $resLabel = 'Pendente';
+                                                }
+                                                
+                                                // Validar Objetos Relacionados
+                                                $campeonatoNome = $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : 'Camp. N/A';
+                                                $mandanteNome = $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : 'Mandante N/A';
+                                                $visitanteNome = $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : 'Visitante N/A';
+                                                $localNome = $jogo->ginasio ? $jogo->ginasio->gin_nome : 'Local não definido';
+                                            @endphp
+                                        
+                                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 {{ $borderColor }} p-4 flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
+                                                
+                                                <!-- Header: Date & Camp -->
+                                                <div class="mb-3">
+                                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
+                                                        {{ $campeonatoNome }}
+                                                    </span>
+                                                    <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
+                                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                        {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
+                                                        <span class="mx-2 text-gray-300">|</span>
+                                                        {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Teams -->
+                                                <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                                    <div class="flex flex-col items-center w-[45%]">
+                                                        <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                            {{ $mandanteNome }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-xs font-bold text-gray-400">VS</div>
+                                                    <div class="flex flex-col items-center w-[45%]">
+                                                        <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                            {{ $visitanteNome }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Location -->
+                                                <div class="mb-3 flex items-start space-x-2 text-xs text-gray-600 dark:text-gray-300">
+                                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                    <span class="mt-0.5 text-blue-600 hover:underline">
+                                                        @if($jogo->ginasio)
+                                                            <a href="{{ $jogo->ginasio->google_maps_link }}" target="_blank">
+                                                                {{ $localNome }}
+                                                            </a>
+                                                        @else
+                                                            {{ $localNome }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Separator -->
+                                                <hr class="border-gray-100 dark:border-gray-700 mb-3">
+                                                
+                                                <!-- Referees -->
+                                                <div class="text-xs space-y-1 mb-3 bg-white dark:bg-gray-800">
+                                                     <div class="font-semibold text-gray-400 text-[10px] uppercase mb-1">Arbitragem</div>
+                                                     @if($jogo->arbitroPrincipal)
+                                                        <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                                            <span class="w-5 font-bold text-blue-500">P:</span>
+                                                            <span class="truncate">{{ $jogo->arbitroPrincipal->name }}</span>
+                                                        </div>
+                                                     @endif
+                                                     @if($jogo->arbitroSecundario)
+                                                         <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                                            <span class="w-5 font-bold text-blue-500">S:</span>
+                                                            <span class="truncate">{{ $jogo->arbitroSecundario->name }}</span>
+                                                        </div>
+                                                     @endif
+                                                     @if($jogo->apontador)
+                                                         <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                                            <span class="w-5 font-bold text-blue-500">A:</span>
+                                                            <span class="truncate">{{ $jogo->apontador->name }}</span>
+                                                        </div>
+                                                     @endif
+                                                     @if(!$jogo->arbitroPrincipal && !$jogo->arbitroSecundario && !$jogo->apontador)
+                                                         <div class="text-gray-400 italic pl-1">Não definida</div>
+                                                     @endif
+                                                </div>
+                                                
+                                                <!-- Footer Status -->
+                                                <div class="flex justify-between items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 font-sans">
+                                                    @if(Auth::id() == $jogo->jgo_apontador)
+                                                        <a href="{{ route('resultados.create', $jogo->jgo_id) }}" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded transition-colors duration-200">
+                                                            Informar Resultado
+                                                        </a>
+                                                    @else
+                                                        <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
+                                                            {{ $resLabel }}
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
+                                                        {{ ucfirst($jogo->jgo_status) }}
+                                                    </span>
+                                                </div>
+
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @else
                                     <div class="mt-6 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md">
@@ -280,85 +454,102 @@
                                         </form>
                                     </div>
 
-                                    <!-- Games List -->
-                                    @if(isset($timeJogos) && $timeJogos->count() > 0)
-                                        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                                    <tr>
-                                                        <th scope="col" class="px-6 py-3">Número</th>
-                                                        <th scope="col" class="px-6 py-3">Campeonato</th>
-                                                        <th scope="col" class="px-6 py-3">Equipes</th>
-                                                        <th scope="col" class="px-6 py-3">Árbitros</th>
-                                                        <th scope="col" class="px-6 py-3">Local</th>
-                                                        <th scope="col" class="px-6 py-3">Data/Hora</th>
-                                                        <th scope="col" class="px-6 py-3">Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($timeJogos as $jogo)
-                                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                #{{ $jogo->jgo_id }}
-                                                            </td>
-                                                            <td class="px-6 py-4">
-                                                                {{ $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : '-' }}
-                                                            </td>
-                                                            <td class="px-6 py-4">
-                                                                <div class="flex flex-col">
-                                                                    <span class="font-bold text-gray-900 dark:text-white">
-                                                                        {{ $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : '?' }}
-                                                                    </span>
-                                                                    <span class="text-xs text-center text-gray-400">vs</span>
-                                                                    <span class="font-bold text-gray-900 dark:text-white">
-                                                                        {{ $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : '?' }}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
-                                                            <td class="px-6 py-4">
-                                                                <div class="text-xs text-gray-700 dark:text-gray-300">
-                                                                    @if($jogo->arbitroPrincipal) 
-                                                                        <div class="whitespace-nowrap"><span class="font-bold">Pri:</span> {{ $jogo->arbitroPrincipal->name }}</div> 
-                                                                    @endif
-                                                                    @if($jogo->arbitroSecundario) 
-                                                                        <div class="whitespace-nowrap"><span class="font-bold">Sec:</span> {{ $jogo->arbitroSecundario->name }}</div> 
-                                                                    @endif
-                                                                    @if($jogo->apontador) 
-                                                                        <div class="whitespace-nowrap"><span class="font-bold">Apo:</span> {{ $jogo->apontador->name }}</div> 
-                                                                    @endif
-                                                                     @if(!$jogo->arbitroPrincipal && !$jogo->arbitroSecundario && !$jogo->apontador)
-                                                                        <span class="text-gray-400 italic">Não definidos</span>
-                                                                     @endif
-                                                                </div>
-                                                            </td>
-                                                            <td class="px-6 py-4">
-                                                                @if($jogo->ginasio)
-                                                                    <a href="{{ $jogo->ginasio->google_maps_link }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
-                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                                        {{ $jogo->ginasio->gin_nome }}
-                                                                    </a>
-                                                                @else
-                                                                    -
-                                                                @endif
-                                                            </td>
-                                                            <td class="px-6 py-4">
-                                                                {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} <br>
-                                                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
-                                                            </td>
-                                                            <td class="px-6 py-4">
-                                                                @if($jogo->jgo_status == 'ativo')
-                                                                    <span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Ativo</span>
-                                                                @else
-                                                                    <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Inativo</span>
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                            <div class="mt-4 px-2">
-                                                {{ $timeJogos->links() }}
-                                            </div>
+                                    <!-- Games List (Cards) -->
+                                    @if(isset($timeJogos) && count($timeJogos) > 0)
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                            @foreach($timeJogos as $jogo)
+                                                @php
+                                                    // Define border color based on status
+                                                    $borderColor = 'border-gray-200';
+                                                    $statusColor = 'text-gray-600';
+                                                    
+                                                    if ($jogo->jgo_status == 'ativo') {
+                                                        $borderColor = 'border-indigo-400';
+                                                        $statusColor = 'text-indigo-600';
+                                                    } elseif ($jogo->jgo_status == 'inativo') {
+                                                        $borderColor = 'border-red-400';
+                                                        $statusColor = 'text-red-600';
+                                                    }
+                                                    
+                                                    // Result status logic
+                                                    $resStatus = $jogo->jgo_res_status ?? 'nao_informado';
+                                                    $resBadgeClass = 'bg-gray-100 text-gray-800';
+                                                    $resLabel = 'Não Informado';
+
+                                                    if ($resStatus == 'aprovado') {
+                                                        $resBadgeClass = 'bg-green-100 text-green-800';
+                                                        $resLabel = 'Aprovado';
+                                                    } elseif ($resStatus == 'pendente') {
+                                                        $resBadgeClass = 'bg-yellow-100 text-yellow-800';
+                                                        $resLabel = 'Pendente';
+                                                    }
+                                                    
+                                                    // Validar Objetos Relacionados
+                                                    $campeonatoNome = $jogo->mandante && $jogo->mandante->campeonato ? $jogo->mandante->campeonato->cpo_nome : 'Camp. N/A';
+                                                    $mandanteNome = $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : 'Mandante N/A';
+                                                    $visitanteNome = $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : 'Visitante N/A';
+                                                    $localNome = $jogo->ginasio ? $jogo->ginasio->gin_nome : 'Local não definido';
+                                                @endphp
+                                            
+                                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 {{ $borderColor }} p-4 flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
+                                                    
+                                                    <!-- Header: Date & Camp -->
+                                                    <div class="mb-3">
+                                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
+                                                            {{ $campeonatoNome }}
+                                                        </span>
+                                                        <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
+                                                            <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
+                                                            <span class="mx-2 text-gray-300">|</span>
+                                                            {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Teams -->
+                                                    <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                                        <div class="flex flex-col items-center w-[45%]">
+                                                            <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                                {{ $mandanteNome }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-xs font-bold text-gray-400">VS</div>
+                                                        <div class="flex flex-col items-center w-[45%]">
+                                                            <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                                {{ $visitanteNome }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Location -->
+                                                    <div class="mb-3 flex items-start space-x-2 text-xs text-gray-600 dark:text-gray-300">
+                                                        <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                        <span class="mt-0.5 text-blue-600 hover:underline">
+                                                            @if($jogo->ginasio)
+                                                                <a href="{{ $jogo->ginasio->google_maps_link }}" target="_blank">
+                                                                    {{ $localNome }}
+                                                                </a>
+                                                            @else
+                                                                {{ $localNome }}
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- Separator -->
+                                                    <hr class="border-gray-100 dark:border-gray-700 mb-3">
+                                                    
+                                                    <!-- Footer Status -->
+                                                    <div class="flex justify-between items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                        <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
+                                                            {{ $resLabel }}
+                                                        </span>
+                                                        <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
+                                                            {{ ucfirst($jogo->jgo_status) }}
+                                                        </span>
+                                                    </div>
+
+                                                </div>
+                                            @endforeach
                                         </div>
                                     @else
                                         <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md">

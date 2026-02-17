@@ -12,27 +12,18 @@ use Illuminate\Support\Facades\Log;
 
 class ResultadosController extends Controller
 {
-    public function create($wpId)
+    public function create($id)
     {
-        // 1. Find or Create Local Jogo (Auto-healing logic similar to JogosController)
-        $jogo = Jogo::where('jgo_wp_id', $wpId)->first();
+        // 1. Find Local Jogo by ID (Primary Key)
+        $jogo = Jogo::find($id);
         
+        // Fallback: If not found by ID, try finding by WP ID (for legacy links support)
         if (!$jogo) {
-            $wpPost = WpPosts::find($wpId);
-            if (!$wpPost) abort(404, 'Jogo não encontrado');
+             $jogo = Jogo::where('jgo_wp_id', $id)->first();
+        }
 
-            $localId = $wpPost->getMetaValue('_local_jogo_id');
-            if ($localId) {
-                $jogo = Jogo::find($localId);
-                if ($jogo && !$jogo->jgo_wp_id) $jogo->update(['jgo_wp_id' => $wpId]);
-            }
-            
-            // If still no local record, we might need to create it strictly?
-            // Usually we assume the game was edited/synced. But if it's raw legacy?
-            // For now, let's assume valid games are synced. If not, redirect to Edit?
-            if (!$jogo) {
-                return redirect()->route('jogos.edit', $wpId)->with('error', 'Por favor, salve o jogo primeiro para sincronizar antes de adicionar resultados.');
-            }
+        if (!$jogo) {
+            abort(404, 'Jogo não encontrado.');
         }
 
         // Load existing results if any
@@ -120,8 +111,13 @@ class ResultadosController extends Controller
             }
 
             // Rule: Game must have a winner (Best of 5)
+            // If the loop finished without declaring a winner (3 sets), and we processed all inputs
             if ($setsWonMandante < 3 && $setsWonVisitante < 3) {
-                return back()->with('error', "Resultado inválido. A partida deve ter um vencedor (melhor de 5 sets). Nenhuma equipe venceu 3 sets.")->withInput();
+                 return back()->with('error', "Resultado inválido. A partida não foi concluída. Nenhuma equipe venceu 3 sets. Verifique se informou todos os sets necessários.")->withInput();
+            }
+
+            if (empty($resultsToSave)) {
+                return back()->with('error', "Nenhum resultado válido encontrado para salvar.")->withInput();
             }
 
             // Save Validated Results
@@ -142,7 +138,7 @@ class ResultadosController extends Controller
 
             DB::commit();
 
-            return redirect()->route('jogos.index')->with('success', 'Resultado enviado com sucesso! Aguardando aprovação.');
+            return redirect()->route('dashboard')->with('success', 'Resultado enviado com sucesso! Aguardando aprovação.');
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -10,7 +10,7 @@ class RolePermissionController extends Controller
 {
     public function index()
     {
-        $roles = Role::with('permissions')->get();
+        $roles = Role::where('name', '!=', 'Responsável pelo Time')->with('permissions')->get();
         $permissions = Permission::all();
 
         return view('role-permission.index', compact('roles', 'permissions'));

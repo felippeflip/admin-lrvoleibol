@@ -49,6 +49,18 @@
                         @endif
                     </div>
 
+                    {{-- Display Standard Validation Errors --}}
+                    @if ($errors->any())
+                        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm" role="alert">
+                            <p class="font-bold">Erros de Validação:</p>
+                            <ul class="list-disc ml-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     @if (session('error'))
                         <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm" role="alert">
                             <p class="font-bold">Atenção</p>
@@ -94,7 +106,7 @@
                                                         {{ $mandante }}
                                                     </span>
                                                     <input type="number" name="sets[{{ $i }}][mandante]" 
-                                                        value="{{ isset($sets[$i]) ? $sets[$i]->set_pontos_mandante : '' }}"
+                                                        value="{{ old('sets.'.$i.'.mandante', isset($sets[$i]) ? $sets[$i]->set_pontos_mandante : '') }}"
                                                         class="w-14 md:w-16 text-center text-lg font-bold border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 p-1 flex-shrink-0"
                                                         placeholder="0"
                                                         min="0">
@@ -105,7 +117,7 @@
                                                 {{-- Visitante Side --}}
                                                 <div class="flex items-center justify-start flex-1 space-x-2 md:space-x-3">
                                                     <input type="number" name="sets[{{ $i }}][visitante]" 
-                                                        value="{{ isset($sets[$i]) ? $sets[$i]->set_pontos_visitante : '' }}"
+                                                        value="{{ old('sets.'.$i.'.visitante', isset($sets[$i]) ? $sets[$i]->set_pontos_visitante : '') }}"
                                                         class="w-14 md:w-16 text-center text-lg font-bold border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded focus:ring-red-500 focus:border-red-500 disabled:bg-gray-100 p-1 flex-shrink-0"
                                                         placeholder="0"
                                                         min="0">

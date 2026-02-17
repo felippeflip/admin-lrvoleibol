@@ -62,6 +62,13 @@
                                             class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
                                             value="{{ old('atl_nome') }}" required>
                                     </div>
+                                    <div class="mb-4">
+                                        <label for="atl_resg" class="block text-gray-700 dark:text-gray-300 mb-2">Registro
+                                            LRV:</label>
+                                        <input type="text" name="atl_resg" id="atl_resg"
+                                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
+                                            value="{{ old('atl_resg') }}">
+                                    </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label for="atl_cpf"
@@ -124,13 +131,6 @@
                                     <input type="date" name="atl_dt_nasc" id="atl_dt_nasc"
                                         class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
                                         value="{{ old('atl_dt_nasc') }}">
-                                </div>
-                                <div>
-                                    <label for="atl_resg" class="block text-gray-700 dark:text-gray-300 mb-2">Registro
-                                        Geral (RG):</label>
-                                    <input type="text" name="atl_resg" id="atl_resg"
-                                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-                                        value="{{ old('atl_resg') }}">
                                 </div>
                             </div>
 

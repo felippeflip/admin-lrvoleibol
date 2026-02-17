@@ -62,7 +62,7 @@ class UserController extends Controller
     public function create()
     {
         $times = Time::all();
-        $roles = \Spatie\Permission\Models\Role::all();
+        $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'Responsável pelo Time')->get();
         return view('users.create', compact('times', 'roles'));
     }
 
@@ -137,7 +137,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $times = Time::all();
-        $roles = \Spatie\Permission\Models\Role::all();
+        $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'Responsável pelo Time')->get();
         return view('users.edit', compact('user', 'times', 'roles'));
     }
 

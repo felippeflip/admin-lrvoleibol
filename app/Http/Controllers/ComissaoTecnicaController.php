@@ -133,12 +133,13 @@ class ComissaoTecnicaController extends Controller
 
         $request->validate([
             'nome' => 'required|string|max:255',
+            'registro_lrv' => 'nullable|string|max:20',
             'cpf' => 'required|string|max:11|unique:comissao_tecnicas,cpf',
             'rg' => 'nullable|string|max:20',
             'funcao' => 'required|string|in:Técnico,Assistente Técnico,Médico,Fisioterapeuta,Massagista',
-            'documento_registro' => 'required|string|max:50', // CREF, CRM, etc.
+            'documento_registro' => 'nullable|string|max:50', // CREF, CRM, etc.
             'foto' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Foto 3x4
-            'comprovante_documento' => 'required|file|mimes:pdf,jpeg,png,jpg|max:5120', // Diploma/Carteira
+            'comprovante_documento' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120', // Diploma/Carteira
             'celular' => 'nullable|string|max:15',
             'telefone' => 'nullable|string|max:15',
             'email' => 'nullable|email|max:255',
@@ -246,10 +247,11 @@ class ComissaoTecnicaController extends Controller
 
         $request->validate([
             'nome' => 'required|string|max:255',
+            'registro_lrv' => 'nullable|string|max:20',
             'cpf' => 'required|string|max:11|unique:comissao_tecnicas,cpf,' . $id,
             'rg' => 'nullable|string|max:20',
             'funcao' => 'required|string|in:Técnico,Assistente Técnico,Médico,Fisioterapeuta,Massagista',
-            'documento_registro' => 'required|string|max:50',
+            'documento_registro' => 'nullable|string|max:50',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'comprovante_documento' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
             'celular' => 'nullable|string|max:15',

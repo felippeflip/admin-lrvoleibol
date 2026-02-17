@@ -32,6 +32,10 @@
                                             @else
                                                 <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">Imagem</span>
                                             @endif
+                                            
+                                            <span class="bg-gray-100 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-gray-600 dark:text-gray-300 border border-gray-500">
+                                                {{ $documento->permissao }}
+                                            </span>
                                             <a href="{{ $documento->url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 text-sm font-medium">Visualizar/Baixar</a>
                                         </div>
 

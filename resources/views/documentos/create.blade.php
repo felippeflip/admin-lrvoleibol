@@ -24,6 +24,16 @@
                         </div>
 
                         <div class="mb-4">
+                            <label for="permissao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Visibilidade / Permissão</label>
+                            <select name="permissao" id="permissao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
+                                <option value="Todos">Todos</option>
+                                <option value="Administrador">Apenas Administradores</option>
+                                <option value="Arbitros">Árbitros (Juiz)</option>
+                                <option value="ResponsavelTime">Responsável Time</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
                             <label for="arquivo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Arquivo (PDF ou Imagem)</label>
                             <input type="file" name="arquivo" id="arquivo" class="mt-1 block w-full text-sm text-gray-500
                                 file:mr-4 file:py-2 file:px-4

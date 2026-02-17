@@ -123,6 +123,9 @@
                                     <th scope="col" class="px-6 py-3">Data</th>
                                     <th scope="col" class="px-6 py-3">Hora</th>
                                     <th scope="col" class="px-6 py-3">Status</th>
+                                    @hasrole('Administrador')
+                                        <th scope="col" class="px-6 py-3">Equipe de Arbitragem</th>
+                                    @endhasrole
                                     <th scope="col" class="px-6 py-3 text-center">Apontamento</th>
                                     <th scope="col" class="px-6 py-3">Ações</th>
                                 </tr>
@@ -174,6 +177,22 @@
                                                     class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">{{ ucfirst($jogo->jgo_status ?? 'Desconhecido') }}</span>
                                             @endif
                                         </td>
+                                        @hasrole('Administrador')
+                                            <td class="px-6 py-4 text-xs">
+                                                @if($jogo->arbitro_principal_nome)
+                                                    <div class="mb-1"><span class="font-bold text-gray-700 dark:text-gray-300">Principal:</span> {{ $jogo->arbitro_principal_nome }}</div>
+                                                @endif
+                                                @if($jogo->arbitro_secundario_nome)
+                                                    <div class="mb-1"><span class="font-bold text-gray-700 dark:text-gray-300">Secundário:</span> {{ $jogo->arbitro_secundario_nome }}</div>
+                                                @endif
+                                                @if($jogo->apontador_nome)
+                                                    <div class="mb-1"><span class="font-bold text-gray-700 dark:text-gray-300">Apontador:</span> {{ $jogo->apontador_nome }}</div>
+                                                @endif
+                                                @if(!$jogo->arbitro_principal_nome && !$jogo->arbitro_secundario_nome && !$jogo->apontador_nome)
+                                                    <span class="text-gray-400 italic">Não definidos</span>
+                                                @endif
+                                            </td>
+                                        @endhasrole
                                         <td class="px-6 py-4 text-center">
                                             @php
                                                 $statusApontamento = 'neutro';
@@ -186,7 +205,7 @@
                                                         $start = \Carbon\Carbon::parse($dtOnly . ' ' . $horaStr);
                                                         $now = \Carbon\Carbon::now();
                                                         $endWindow = $start->copy()->addHours(3);
-                                                        $hasResult = !empty($jogo->jgo_res_status);
+                                                        $hasResult = in_array($jogo->jgo_res_status, ['pendente', 'aprovado']);
 
                                                         if ($now < $start) {
                                                             $statusApontamento = 'verde';

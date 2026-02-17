@@ -119,7 +119,16 @@
                                                     class="h-10 w-13 object-contain inline-block">
                                             </td>
                                             <td class="px-6 py-4">{{ $time->tim_nome }}</td>
-                                            <td class="px-6 py-4">{{ $time->user ? $time->user->name : 'N/A' }}</td>
+                                            <td class="px-6 py-4">
+                                                {{ $time->user ? $time->user->name : 'N/A' }}
+                                                @if($time->user && !$time->user->active)
+                                                    <span class="ml-1 text-red-500" title="Usuário Inativo">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                        </svg>
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4">{{ $time->tim_celular_formatted }}</td>
                                             <td class="px-6 py-4">{{ $time->tim_email }}</td>
                                             <td class="px-6 py-4 flex flex-col space-y-2 justify-center items-center">

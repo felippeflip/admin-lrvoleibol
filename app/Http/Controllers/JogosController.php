@@ -42,7 +42,7 @@ class JogosController extends Controller
             ->where('post_type', 'event_listing')
             // Join local table to get Status
             ->leftJoin('jogos', 'wp_posts.ID', '=', 'jogos.jgo_wp_id')
-            ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id', 'jogos.jgo_apontador');
+            ->select('wp_posts.*', 'jogos.jgo_status', 'jogos.jgo_res_status', 'jogos.jgo_res_usuario_id', 'jogos.jgo_id as local_id', 'jogos.jgo_apontador', 'jogos.jgo_arbitro_principal', 'jogos.jgo_arbitro_secundario');
 
         $user = Auth::user();
         if ($user->hasRole('Juiz') && !$user->hasRole('Administrador')) {
@@ -143,6 +143,11 @@ class JogosController extends Controller
                 $jogo->jgo_status = 'ativo'; // Default for WP
             }
 
+            // Attach Referee user info explicitly
+            $jogo->arbitro_principal_nome = $jogo->jgo_arbitro_principal ? User::find($jogo->jgo_arbitro_principal)?->name : null;
+            $jogo->arbitro_secundario_nome = $jogo->jgo_arbitro_secundario ? User::find($jogo->jgo_arbitro_secundario)?->name : null;
+            $jogo->apontador_nome = $jogo->jgo_apontador ? User::find($jogo->jgo_apontador)?->name : null;
+
             return $jogo;
         });
 
@@ -171,11 +176,13 @@ class JogosController extends Controller
 
                 $novos = $jogosDoCampeonato->where('jgo_dt_jogo', '>=', now()->format('Y-m-d'))->count();
                 $finalizados_total = $jogosDoCampeonato->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))->count();
-                $com_apontamento = $jogosDoCampeonato->whereNotNull('jgo_res_status')->count();
+                $com_apontamento = $jogosDoCampeonato->whereIn('jgo_res_status', ['pendente', 'aprovado'])->count();
 
-                // Calculated: Finished games that HAVE NO result submitted yet
+                // Calculated: Finished games that HAVE NO result submitted yet (Null or invalid/empty or 'nao_informado')
                 $sem_apontamento = $jogosDoCampeonato->where('jgo_dt_jogo', '<', now()->format('Y-m-d'))
-                    ->whereNull('jgo_res_status')
+                    ->filter(function ($jogo) {
+                        return !in_array($jogo->jgo_res_status, ['pendente', 'aprovado']);
+                    })
                     ->count();
 
                 $adminStats[] = [
@@ -188,6 +195,18 @@ class JogosController extends Controller
                 ];
             }
             $data['adminStats'] = $adminStats;
+
+            // Dashboard Cards: Games from -7 to +30 days (Expanded to show more games)
+            $startDate = now()->subDays(7)->startOfDay();
+            $endDate = now()->addDays(30)->endOfDay();
+            
+            $adminJogos = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+                ->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
+                ->orderBy('jgo_dt_jogo')
+                ->orderBy('jgo_hora_jogo')
+                ->get();
+
+            $data['adminJogos'] = $adminJogos;
         }
 
         // --- 2. JUIZ ---
@@ -229,10 +248,9 @@ class JogosController extends Controller
                  });
             }
 
-            // Pagination
+            // Pagination - Changed to get() for card view
             $juizJogos = $juizQuery->orderBy('jgo_dt_jogo', 'desc')
-                                   ->paginate(10)
-                                   ->appends($request->all());
+                                   ->get(); // Using get() for card view instead of pagination
 
             $data['juizJogos'] = $juizJogos;
             
@@ -298,7 +316,7 @@ class JogosController extends Controller
                      });
                 }
 
-                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'desc')->paginate(10)->appends($request->all());
+                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'asc')->get(); // Changed to get() for card view
                 
                 $data['timeJogos'] = $timeJogos;
                 $data['statusFilter'] = $statusFilter;

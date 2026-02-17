@@ -66,6 +66,13 @@
                                     <x-input-error :messages="$errors->get('nome')" class="mt-2" />
                                 </div>
 
+                                <!-- Registro LRV -->
+                                <div class="md:col-span-2">
+                                    <label for="registro_lrv" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro LRV</label>
+                                    <input type="text" name="registro_lrv" id="registro_lrv" value="{{ old('registro_lrv') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
+                                    <x-input-error :messages="$errors->get('registro_lrv')" class="mt-2" />
+                                </div>
+
                                 <!-- CPF -->
                                 <div>
                                     <label for="cpf" class="block text-sm font-medium text-gray-700 dark:text-gray-300">CPF *</label>
@@ -94,8 +101,8 @@
 
                                 <!-- Documento Registro -->
                                 <div>
-                                    <label for="documento_registro" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro (CREF, CRM, etc) *</label>
-                                    <input type="text" name="documento_registro" id="documento_registro" value="{{ old('documento_registro') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
+                                    <label for="documento_registro" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro (CREF, CRM, etc)</label>
+                                    <input type="text" name="documento_registro" id="documento_registro" value="{{ old('documento_registro') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
                                     <x-input-error :messages="$errors->get('documento_registro')" class="mt-2" />
                                 </div>
 
@@ -126,8 +133,8 @@
 
                              <!-- Comprovante Documento -->
                             <div class="col-span-1 md:col-span-2">
-                                <label for="comprovante_documento" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comprovante do Registro/Diploma *</label>
-                                <input type="file" name="comprovante_documento" id="comprovante_documento" accept=".pdf,image/*" required class="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                                <label for="comprovante_documento" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comprovante do Registro/Diploma</label>
+                                <input type="file" name="comprovante_documento" id="comprovante_documento" accept=".pdf,image/*" class="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-300" id="file_input_help">PDF ou Imagem (Max. 5MB).</p>
                                 <x-input-error :messages="$errors->get('comprovante_documento')" class="mt-2" />
                             </div>

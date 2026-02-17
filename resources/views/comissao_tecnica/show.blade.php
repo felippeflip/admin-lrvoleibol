@@ -64,8 +64,11 @@
                                         <p class="mt-1">{{ $comissaoTecnica->rg ?? '-' }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Registro
-                                            Profissional</p>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Registro LRV</p>
+                                        <p class="mt-1">{{ $comissaoTecnica->registro_lrv ?? '-' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Registro (CREF, CRM, etc)</p>
                                         <p class="mt-1">{{ $comissaoTecnica->documento_registro ?? '-' }}</p>
                                     </div>
                                     @if($comissaoTecnica->comprovante_documento)
