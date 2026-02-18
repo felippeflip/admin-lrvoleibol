@@ -20,10 +20,18 @@ class ComissaoTecnicaController extends Controller
         $query = ComissaoTecnica::with('time');
 
         // Escopo baseado em Função (Role)
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if ($time) {
-                $query->where('time_id', $time->tim_id);
+        // Escopo baseado em Função (Role)
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if ($timeId) {
+                $query->where('time_id', $timeId);
             } else {
                 // Se não tem time vinculado, retorna lista vazia
                 $comissao = ComissaoTecnica::where('id', 0)->paginate(10);
@@ -69,9 +77,16 @@ class ComissaoTecnicaController extends Controller
         $comissaoTecnica = ComissaoTecnica::findOrFail($id);
         $user = auth()->user();
 
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId || $comissaoTecnica->time_id != $timeId) {
                 abort(403);
             }
         }
@@ -90,8 +105,15 @@ class ComissaoTecnicaController extends Controller
         $user = auth()->user();
 
         // Verifica se o Responsável pelo Time possui um time vinculado
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $hasTime = Time::where('tim_user_id', $user->id)->exists();
+        // Verifica se o Responsável pelo Time ou Comissão Técnica possui um time vinculado
+        if (!$user->hasRole('Administrador')) {
+            $hasTime = false;
+            if ($user->hasRole('ResponsavelTime')) {
+                $hasTime = Time::where('tim_user_id', $user->id)->exists();
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $hasTime = !is_null($user->time_id);
+            }
+
             if (!$hasTime) {
                 return redirect()->route('comissao-tecnica.index')->with('error', 'Você precisa estar vinculado a um Time para cadastrar membros da comissão técnica.');
             }
@@ -114,12 +136,19 @@ class ComissaoTecnicaController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId) {
                 return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
             }
-            $request->merge(['time_id' => $time->tim_id]);
+            $request->merge(['time_id' => $timeId]);
         }
 
         // Limpeza de campos
@@ -203,9 +232,17 @@ class ComissaoTecnicaController extends Controller
         $user = auth()->user();
 
         // Check permission
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
+        // Check permission
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId || $comissaoTecnica->time_id != $timeId) {
                 abort(403);
             }
         }
@@ -228,12 +265,19 @@ class ComissaoTecnicaController extends Controller
         $comissaoTecnica = ComissaoTecnica::findOrFail($id);
         $user = auth()->user();
 
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId || $comissaoTecnica->time_id != $timeId) {
                 abort(403);
             }
-            $request->merge(['time_id' => $time->tim_id]);
+            $request->merge(['time_id' => $timeId]);
         }
 
         // Limpeza
@@ -353,9 +397,16 @@ class ComissaoTecnicaController extends Controller
         $comissaoTecnica = ComissaoTecnica::findOrFail($id);
         $user = auth()->user();
 
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time || $comissaoTecnica->time_id != $time->tim_id) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId || $comissaoTecnica->time_id != $timeId) {
                 abort(403);
             }
         }

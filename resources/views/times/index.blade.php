@@ -134,6 +134,7 @@
                                             <td class="px-6 py-4 flex flex-col space-y-2 justify-center items-center">
                                                 {{-- Botões de Ação para o Time --}}
                                                 <div class="flex space-x-2 w-full justify-center items-center">
+                                                    @if(!auth()->user()->hasRole('ComissaoTecnica'))
                                                     <a href="{{ route('times.edit', $time->tim_id) }}"
                                                         class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
                                                         title="Editar Time">
@@ -145,6 +146,7 @@
                                                                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </a>
+                                                    @endif
 
                                                     @hasrole('Administrador')
                                                     {{-- Botão de Ativar/Desativar --}}
@@ -197,6 +199,7 @@
                                                 </div>
                                                 {{-- Botões de Ação para Equipes --}}
                                                 <div class="flex space-x-2 w-full justify-center items-center">
+                                                    @if(!auth()->user()->hasRole('ComissaoTecnica'))
                                                     <a href="{{ route('equipes.create', ['time_id' => $time->tim_id]) }}"
                                                         class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
                                                         title="Adicionar Equipe">
@@ -208,6 +211,7 @@
                                                                 d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                                         </svg>
                                                     </a>
+                                                    @endif
                                                     <a href="{{ route('equipes.index.for.time', $time->tim_id) }}"
                                                         class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
                                                         title="Visualizar Equipes">

@@ -21,10 +21,18 @@ class AtletaController extends Controller
         $query = Atleta::with(['categoria', 'time']);
 
         // Escopo baseado em Função (Role)
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if ($time) {
-                $query->where('atl_tim_id', $time->tim_id);
+        // Escopo baseado em Função (Role)
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if ($timeId) {
+                $query->where('atl_tim_id', $timeId);
             } else {
                 // Se não tem time vinculado, retorna lista vazia
                 $atletas = Atleta::where('atl_id', 0)->paginate(10);
@@ -92,8 +100,15 @@ class AtletaController extends Controller
         $user = auth()->user();
 
         // Verifica se o Responsável pelo Time possui um time vinculado
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $hasTime = Time::where('tim_user_id', $user->id)->exists();
+        // Verifica se o Responsável pelo Time ou Comissão Técnica possui um time vinculado
+        if (!$user->hasRole('Administrador')) {
+            $hasTime = false;
+            if ($user->hasRole('ResponsavelTime')) {
+                $hasTime = Time::where('tim_user_id', $user->id)->exists();
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $hasTime = !is_null($user->time_id);
+            }
+
             if (!$hasTime) {
                 return redirect()->route('atletas.index')->with('error', 'Você precisa estar vinculado a um Time para cadastrar um atleta.');
             }
@@ -114,12 +129,19 @@ class AtletaController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId) {
                 return redirect()->back()->withErrors(['error' => 'Você não possui um time vinculado.']);
             }
-            $request->merge(['atl_tim_id' => $time->tim_id]);
+            $request->merge(['atl_tim_id' => $timeId]);
 
         }
 
@@ -252,8 +274,16 @@ class AtletaController extends Controller
     public function edit(Atleta $atleta)
     {
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            if ($atleta->atl_tim_id != Time::where('tim_user_id', $user->id)->value('tim_id')) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if ($atleta->atl_tim_id != $timeId) {
                 abort(403);
             }
         }
@@ -273,12 +303,19 @@ class AtletaController extends Controller
     public function update(Request $request, Atleta $atleta)
     {
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
-            if (!$time || $atleta->atl_tim_id != $time->tim_id) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if (!$timeId || $atleta->atl_tim_id != $timeId) {
                 abort(403);
             }
-            $request->merge(['atl_tim_id' => $time->tim_id]);
+            $request->merge(['atl_tim_id' => $timeId]);
         }
         $request->validate([
             'atl_nome' => 'required|string|max:100',
@@ -418,8 +455,16 @@ class AtletaController extends Controller
     {
         // Verificações de permissão
         $user = auth()->user();
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            if ($atleta->atl_tim_id != Time::where('tim_user_id', $user->id)->value('tim_id')) {
+        if (!$user->hasRole('Administrador')) {
+            $timeId = null;
+            if ($user->hasRole('ResponsavelTime')) {
+                $time = Time::where('tim_user_id', $user->id)->first();
+                $timeId = $time ? $time->tim_id : null;
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $timeId = $user->time_id;
+            }
+
+            if ($atleta->atl_tim_id != $timeId) {
                 abort(403);
             }
         }

@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
     // ---------------------------------------------------------------------
     // 2. ADMIN + RESPONSAVEl TIME ONLY (Juiz/Apontador CANNOT Access)
     // ---------------------------------------------------------------------
-    Route::middleware(['role:Administrador|ResponsavelTime'])->group(function () {
+    Route::middleware(['role:Administrador|ResponsavelTime|ComissaoTecnica'])->group(function () {
 
         Route::patch('times/{time}/inactivate', [TimeController::class, 'inactivate'])->name('times.inactivate');
         Route::resource('times', TimeController::class);

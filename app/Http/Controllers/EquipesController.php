@@ -43,6 +43,8 @@ class EquipesController extends Controller
                 // Responsável sem time não vê nada
                 $query->where('eqp_id', 0);
             }
+        } elseif ($user->hasRole('ComissaoTecnica')) {
+            $query->where('eqp_time_id', $user->time_id);
         } else {
             // Outros usuários
             // Se a regra for ver tudo, não faz nada. Se for restritiva, adicione aqui.
@@ -133,6 +135,10 @@ class EquipesController extends Controller
                 return redirect()->route('equipes.index')->with('error', 'Você precisa estar vinculado a um Time para criar uma equipe.');
             }
         }
+        
+        if ($user->hasRole('ComissaoTecnica')) {
+            abort(403, 'Acesso não autorizado. Membros da comissão técnica não podem criar equipes.');
+        }
 
         if ($user->hasRole('Administrador')) {
             if ($request->has('time_id')) {
@@ -193,6 +199,10 @@ class EquipesController extends Controller
             // Força o ID do time para o time do usuário, ignorando o input se houver
             $request->merge(['eqp_time_id' => $time->tim_id]);
         }
+        if ($user->hasRole('ComissaoTecnica')) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         $request->validate([
             'eqp_time_id' => 'required|exists:times,tim_id',
             'eqp_categoria_id' => 'required|exists:categorias,cto_id', // cto_id é a PK da sua tabela categorias
@@ -259,6 +269,8 @@ class EquipesController extends Controller
 
             // Na edição, o responsável só deve ver seu próprio time no select
             $times = Time::where('tim_user_id', $user->id)->get();
+        } elseif ($user->hasRole('ComissaoTecnica')) {
+            abort(403, 'Acesso não autorizado.'); // Deny Edit
         } else {
             $times = Time::orderBy('tim_nome')->get();
         }
@@ -297,6 +309,10 @@ class EquipesController extends Controller
             // Garante que o time não seja alterado para outro
             $request->merge(['eqp_time_id' => $time->tim_id]);
         }
+        
+        if ($user->hasRole('ComissaoTecnica')) {
+            abort(403);
+        }
         $request->validate([
             'eqp_time_id' => 'required|exists:times,tim_id',
             'eqp_categoria_id' => 'required|exists:categorias,cto_id',
@@ -320,6 +336,9 @@ class EquipesController extends Controller
      */
     public function destroy(Equipe $equipe) // Injeção de modelo para facilitar
     {
+        if (auth()->user()->hasRole('ComissaoTecnica')) {
+            abort(403);
+        }
         try {
             $equipe->delete();
 

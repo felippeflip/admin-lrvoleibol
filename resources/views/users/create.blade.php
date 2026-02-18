@@ -66,7 +66,7 @@
                                             </div>
                                         </div>
 
-                                        <div x-show="role === 'ResponsavelTime' || role === 'Juiz'">
+                                        <div x-show="role === 'ResponsavelTime' || role === 'Juiz' || role === 'ComissaoTecnica'">
                                             <label for="time_id" class="block text-gray-700 dark:text-gray-300 mb-1">Selecione o Time / Entidade:</label>
                                             <select name="time_id" id="time_id"
                                                 class="w-full border border-gray-300 p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600">

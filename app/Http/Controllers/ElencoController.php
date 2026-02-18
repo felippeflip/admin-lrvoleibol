@@ -21,7 +21,13 @@ class ElencoController extends Controller
             ->when(!$user->hasRole('Administrador'), function ($query) use ($user) {
                 // Se NÃO for Administrador, filtra pelas equipes do usuário
                 return $query->whereHas('equipe.time', function ($q) use ($user) {
-                    $q->where('tim_user_id', $user->id);
+                    if ($user->hasRole('ResponsavelTime')) {
+                        $q->where('tim_user_id', $user->id);
+                    } elseif ($user->hasRole('ComissaoTecnica')) {
+                        $q->where('tim_id', $user->time_id);
+                    } else {
+                        $q->where('tim_id', 0); // Deny others
+                    }
                 });
             })
             // Exibir apenas campeonatos ATIVOS para gestão
@@ -58,7 +64,11 @@ class ElencoController extends Controller
             $equipes = Equipe::orderBy('eqp_nome_detalhado')->get();
         } else {
             $equipes = Equipe::whereHas('time', function ($q) use ($user) {
-                $q->where('tim_user_id', $user->id);
+                if ($user->hasRole('ResponsavelTime')) {
+                    $q->where('tim_user_id', $user->id);
+                } elseif ($user->hasRole('ComissaoTecnica')) {
+                    $q->where('tim_id', $user->time_id);
+                }
             })->orderBy('eqp_nome_detalhado')->get();
         }
 
@@ -71,9 +81,22 @@ class ElencoController extends Controller
             ->findOrFail($equipeCampeonatoId);
 
         // Verificação de Autorização (Isolamento)
+        // Verificação de Autorização (Isolamento)
         $user = auth()->user();
-        if (!$user->hasRole('Administrador') && $equipeCampeonato->equipe->time->tim_user_id !== $user->id) {
-            abort(403, 'Acesso não autorizado a esta equipe.');
+        if (!$user->hasRole('Administrador')) {
+            $allowed = false;
+            // Check Responsavel
+            if ($user->hasRole('ResponsavelTime') && $equipeCampeonato->equipe->time->tim_user_id === $user->id) {
+                $allowed = true;
+            }
+            // Check Comissao
+            if ($user->hasRole('ComissaoTecnica') && $equipeCampeonato->equipe->time->tim_id === $user->time_id) {
+                $allowed = true;
+            }
+            
+            if (!$allowed) {
+                abort(403, 'Acesso não autorizado a esta equipe.');
+            }
         }
 
         $timeId = $equipeCampeonato->equipe->time->tim_id; // ID do Time dono da Equipe
@@ -165,9 +188,19 @@ class ElencoController extends Controller
         $equipeCampeonato = EquipeCampeonato::with('equipe.time')->findOrFail($equipeCampeonatoId);
 
         // Verificação de Autorização (Novamente para garantir segurança no POST)
+        // Verificação de Autorização (Novamente para garantir segurança no POST)
         $user = auth()->user();
-        if (!$user->hasRole('Administrador') && $equipeCampeonato->equipe->time->tim_user_id !== $user->id) {
-            abort(403, 'Ação não autorizada.');
+        if (!$user->hasRole('Administrador')) {
+            $allowed = false;
+            if ($user->hasRole('ResponsavelTime') && $equipeCampeonato->equipe->time->tim_user_id === $user->id) {
+                $allowed = true;
+            }
+            if ($user->hasRole('ComissaoTecnica') && $equipeCampeonato->equipe->time->tim_id === $user->time_id) {
+                $allowed = true;
+            }
+            if (!$allowed) {
+                abort(403, 'Ação não autorizada.');
+            }
         }
 
         // Validação Adicional: O atleta pertence mesmo ao time desta equipe?
@@ -229,8 +262,17 @@ class ElencoController extends Controller
         $eqpCpo = EquipeCampeonato::with('equipe.time')->findOrFail($elenco->ele_fk_eqp_cpo_id);
 
         $user = auth()->user();
-        if (!$user->hasRole('Administrador') && $eqpCpo->equipe->time->tim_user_id !== $user->id) {
-            abort(403, 'Ação não autorizada.');
+        if (!$user->hasRole('Administrador')) {
+            $allowed = false;
+            if ($user->hasRole('ResponsavelTime') && $eqpCpo->equipe->time->tim_user_id === $user->id) {
+                $allowed = true;
+            }
+            if ($user->hasRole('ComissaoTecnica') && $eqpCpo->equipe->time->tim_id === $user->time_id) {
+                $allowed = true;
+            }
+            if (!$allowed) {
+                abort(403, 'Ação não autorizada.');
+            }
         }
 
         $elenco->delete();

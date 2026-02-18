@@ -72,7 +72,7 @@
                                             </div>
                                         </div>
 
-                                        <div x-show="role === 'ResponsavelTime' || role === 'Juiz'">
+                                        <div x-show="role === 'ResponsavelTime' || role === 'Juiz' || role === 'ComissaoTecnica'">
                                             <label for="time_id" class="block text-gray-700 dark:text-gray-300 mb-1">Selecione o Time / Entidade:</label>
                                             @php
                                                 $responsibleTime = $times->firstWhere('tim_user_id', $user->id);

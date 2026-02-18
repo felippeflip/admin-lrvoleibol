@@ -25,8 +25,12 @@ class TimeController extends Controller
         $user = auth()->user();
         $query = Time::with('user');
 
-        if ($user->hasRole('ResponsavelTime') && !$user->hasRole('Administrador')) {
-            $query->where('tim_user_id', $user->id);
+        if (!$user->hasRole('Administrador')) {
+            if ($user->hasRole('ResponsavelTime')) {
+                $query->where('tim_user_id', $user->id);
+            } elseif ($user->hasRole('ComissaoTecnica')) {
+                $query->where('tim_id', $user->time_id);
+            }
         }
 
         // Filters
@@ -186,6 +190,17 @@ class TimeController extends Controller
      */
     public function show(Time $time)
     {
+        // Authorization Check
+        $user = auth()->user();
+        if (!$user->hasRole('Administrador')) {
+            if ($user->hasRole('ResponsavelTime') && $time->tim_user_id !== $user->id) {
+                abort(403);
+            }
+            if ($user->hasRole('ComissaoTecnica') && $time->tim_id !== $user->time_id) {
+                abort(403);
+            }
+        }
+
         // Retorna a view para exibir detalhes de um time específico
         return view('times.show', compact('time'));
     }

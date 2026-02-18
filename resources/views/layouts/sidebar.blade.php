@@ -8,7 +8,7 @@
     <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
         <ul class="space-y-2 font-medium">
             {{-- Seus itens de menu aqui --}}
-            @hasanyrole(['Administrador', 'Juiz', 'ResponsavelTime'])
+            @hasanyrole(['Administrador', 'Juiz', 'ResponsavelTime', 'ComissaoTecnica'])
             <li>
                 <a href="{{ route('dashboard') }}"
                     class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
@@ -73,7 +73,7 @@
             </li>
             @endhasrole
 
-            @hasanyrole(['Administrador', 'ResponsavelTime'])
+            @hasanyrole(['Administrador', 'ResponsavelTime', 'ComissaoTecnica'])
             <li>
                 <button type="button"
                     class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"

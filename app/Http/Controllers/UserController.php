@@ -61,7 +61,7 @@ class UserController extends Controller
 
     public function create()
     {
-        $times = Time::all();
+        $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'Responsável pelo Time')->get();
         return view('users.create', compact('times', 'roles'));
     }
@@ -108,6 +108,13 @@ class UserController extends Controller
         }
 
         $user = User::create($validated);
+        
+        // Se for Comissão Técnica, o time_id deve vir no request e ser salvo no usuário
+        // O $validated já permite time_id, então o create acima já deve ter pego se veio no request.
+        // Apenas para garantir que não haja sobrescrita ou lógica extra necessária.
+        // O time_id está no user table? Sim, user->time_id.
+        // O create($validated) já resolveu isso se 'time_id' estiver no fillable do User e no $validated.
+        // (Já verificado: time_id está no validated)
 
         // Atribuir Role
         if ($request->filled('role')) {
@@ -136,7 +143,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $times = Time::all();
+        $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'Responsável pelo Time')->get();
         return view('users.edit', compact('user', 'times', 'roles'));
     }
