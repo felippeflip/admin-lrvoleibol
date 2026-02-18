@@ -211,8 +211,8 @@ class AtletaController extends Controller
         try {
             $atleta = Atleta::create($data); // Cria um novo atleta com os dados preparados
 
-            // Verificar checkbox de cartão impresso (Ano Atual)
-            if ($request->has('cartao_impresso_ano_atual')) {
+            // Verificar checkbox de cartão impresso (Ano Atual) - Apenas Admin
+            if ($user->hasRole('Administrador') && $request->has('cartao_impresso_ano_atual')) {
                 \App\Models\AtletaCartao::create([
                     'atc_atl_id' => $atleta->atl_id,
                     'atc_ano' => date('Y'),
@@ -391,21 +391,23 @@ class AtletaController extends Controller
                 ->where('atc_ano', $anoAtual)
                 ->first();
 
-            if ($request->has('cartao_impresso_ano_atual')) {
-                // Se marcado, cria se não existir ou garante que está true
-                if ($cartao) {
-                    $cartao->update(['atc_impresso' => true]);
+            if ($user->hasRole('Administrador')) {
+                if ($request->has('cartao_impresso_ano_atual')) {
+                    // Se marcado, cria se não existir ou garante que está true
+                    if ($cartao) {
+                        $cartao->update(['atc_impresso' => true]);
+                    } else {
+                        \App\Models\AtletaCartao::create([
+                            'atc_atl_id' => $atleta->atl_id,
+                            'atc_ano' => $anoAtual,
+                            'atc_impresso' => true,
+                        ]);
+                    }
                 } else {
-                    \App\Models\AtletaCartao::create([
-                        'atc_atl_id' => $atleta->atl_id,
-                        'atc_ano' => $anoAtual,
-                        'atc_impresso' => true,
-                    ]);
-                }
-            } else {
-                // Se DESMARCADO, se existir registro, marca como false
-                if ($cartao) {
-                    $cartao->update(['atc_impresso' => false]);
+                    // Se DESMARCADO, se existir registro, marca como false
+                    if ($cartao) {
+                        $cartao->update(['atc_impresso' => false]);
+                    }
                 }
             }
 
