@@ -159,6 +159,11 @@ class JogosController extends Controller
 
     public function index_dashboard(Request $request)
     {
+        // Auto-update Status for Dashboard (Sync with index logic)
+        Jogo::where('jgo_dt_jogo', '<', Carbon::now()->format('Y-m-d'))
+            ->where('jgo_status', '!=', 'inativo')
+            ->update(['jgo_status' => 'inativo']);
+
         $user = Auth::user();
         $data = [];
 
@@ -391,6 +396,8 @@ class JogosController extends Controller
             // 3. Link WP ID back to Local Jogo (Bidirectional Link)
             if ($wpPostId) {
                 $jogo->update(['jgo_wp_id' => $wpPostId]);
+                // Update Thumbnail
+                $this->updateThumbnail($wpPostId);
             }
 
             return redirect()->route('jogos.index')->with('success', 'Jogo criado com sucesso e sincronizado!');
@@ -616,6 +623,9 @@ class JogosController extends Controller
             'event_type' => $campeonato->cpo_term_tx_id,
             'event_category' => $categoria->cto_term_tx_id,
         ], $id); // Pass $id to update
+
+        // Update Thumbnail
+        $this->updateThumbnail($id);
 
         return redirect()->route('jogos.index')->with('success', 'Jogo atualizado e sincronizado com sucesso!');
     }

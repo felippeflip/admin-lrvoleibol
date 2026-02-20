@@ -228,6 +228,32 @@ class AtletaController extends Controller
             return redirect()->back()->with('error', 'Ocorreu um erro ao criar o atleta. Por favor, tente novamente.');
         }
 
+        // --- Enviar Notificação aos Administradores ---
+        try {
+            $admins = \App\Models\User::role('Administrador')->where('active', true)->get();
+            // Pre-load relationships if needed, or query again. Atleta has 'time' relationship.
+            // But $atleta from create() might not have relation loaded yet unless we refresh or query.
+            // Easier to just query Time model if we have ID.
+            $timeNome = \App\Models\Time::find($data['atl_tim_id'])->tim_nome ?? 'Time não informado';
+
+            foreach ($admins as $admin) {
+                // Check if admin has email
+                if ($admin->email) {
+                    \Illuminate\Support\Facades\Mail::to($admin->email)
+                        ->queue(new \App\Mail\NovoCadastroNotification(
+                            $atleta,
+                            'Atleta',
+                            auth()->user(),
+                            $timeNome
+                        ));
+                }
+            }
+        } catch (\Exception $ex) {
+            // Não deve bloquear o fluxo principal
+            Log::error("Falha ao enviar notificação de novo atleta: " . $ex->getMessage());
+        }
+        // ------------------------------------------------
+
         return redirect()->route('atletas.index')->with('success', 'Atleta cadastrado com sucesso!');
     }
 

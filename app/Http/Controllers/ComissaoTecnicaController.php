@@ -211,6 +211,27 @@ class ComissaoTecnicaController extends Controller
             ]);
         }
 
+        // --- Enviar Notificação aos Administradores ---
+        try {
+            $admins = \App\Models\User::role('Administrador')->where('active', true)->get();
+            $timeNome = \App\Models\Time::find($data['time_id'])->tim_nome ?? 'Time não informado';
+
+            foreach ($admins as $admin) {
+                if ($admin->email) {
+                    \Illuminate\Support\Facades\Mail::to($admin->email)
+                        ->queue(new \App\Mail\NovoCadastroNotification(
+                            $comissaoTecnica,
+                            'Comissão Técnica',
+                            auth()->user(),
+                            $timeNome
+                        ));
+                }
+            }
+        } catch (\Exception $ex) {
+             Log::error("Falha ao enviar notificação de nova comissão técnica: " . $ex->getMessage());
+        }
+        // ------------------------------------------------
+
         return redirect()->route('comissao-tecnica.index')->with('success', 'Membro da comissão técnica cadastrado com sucesso!');
     }
 
