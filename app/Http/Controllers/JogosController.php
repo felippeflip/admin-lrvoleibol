@@ -630,18 +630,32 @@ class JogosController extends Controller
         return redirect()->route('jogos.index')->with('success', 'Jogo atualizado e sincronizado com sucesso!');
     }
 
-    private function updateThumbnail($postId)
+    private function updateThumbnail($postId, $attachmentId = 4132)
     {
         try {
             Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/update_event_thumbnail', [
                 'post_id' => $postId,
-                'attachment_id' => 4132
+                'attachment_id' => $attachmentId
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar thumbnail em update: ' . $e->getMessage());
         }
     }
 
+
+    private function deleteEventViaApi($postId)
+    {
+        try {
+            // Tenta chamar o endpoint customizado para deleção correta no WP (limpando cache e arquivos)
+            $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/delete_event', [
+                'post_id' => $postId
+            ]);
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error('Erro ao deletar evento via API: ' . $e->getMessage());
+            return false;
+        }
+    }
 
     public function destroy($id)
     {
@@ -664,10 +678,15 @@ class JogosController extends Controller
             $localJogo->delete();
         }
 
-        $post->delete();
+        // Tenta deletar via API do WordPress (Recomendado para limpar caches e thumbnails corretamente)
+        $deletedViaApi = $this->deleteEventViaApi($id);
 
-        WpPostmeta::where('post_id', $id)->delete();
-        Wp_Term_Relationships::where('object_id', $id)->delete();
+        // Se a API falhar (ou não existir o endpoint), fazemos a deleção manual no banco (Fallback)
+        if (!$deletedViaApi) {
+            $post->delete();
+            WpPostmeta::where('post_id', $id)->delete();
+            Wp_Term_Relationships::where('object_id', $id)->delete();
+        }
 
         return redirect()->route('jogos.index')->with('success', 'Jogo deletado com sucesso');
     }
