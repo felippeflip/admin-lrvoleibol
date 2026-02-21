@@ -24,6 +24,12 @@ class GinasioController extends Controller
             $query->where('gin_tim_id', $request->time_id);
         }
 
+        $status = $request->input('status', 'active');
+        if ($status !== 'todos') {
+            $isActive = $status === 'active' ? 1 : 0;
+            $query->where('gin_status', $isActive);
+        }
+
         $ginasios = $query->paginate(10)->appends($request->all());
         $times = Time::orderBy('tim_nome')->get();
 
@@ -82,5 +88,14 @@ class GinasioController extends Controller
     {
         $ginasio->delete();
         return redirect()->route('ginasios.index')->with('success', 'Ginásio excluído com sucesso.');
+    }
+
+    public function toggleStatus(Ginasio $ginasio)
+    {
+        $ginasio->gin_status = !$ginasio->gin_status;
+        $ginasio->save();
+
+        $statusName = $ginasio->gin_status ? 'ativado' : 'desativado';
+        return redirect()->route('ginasios.index')->with('success', "Ginásio {$statusName} com sucesso.");
     }
 }

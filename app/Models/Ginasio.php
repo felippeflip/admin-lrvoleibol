@@ -23,7 +23,8 @@ class Ginasio extends Model
         'gin_complemento',
         'gin_telefone',
         'gin_email',
-        'gin_tim_id'
+        'gin_tim_id',
+        'gin_status'
     ];
 
     public function time()

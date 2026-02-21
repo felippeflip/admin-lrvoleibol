@@ -98,6 +98,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
 
         Route::resource('categorias', CategoriasController::class);
+        Route::get('/ginasios/create', [GinasioController::class, 'create'])->name('ginasios.create');
+        Route::patch('/ginasios/{ginasio}/toggle-status', [GinasioController::class, 'toggleStatus'])->name('ginasios.toggleStatus');
         Route::resource('ginasios', GinasioController::class)->except(['index']);
         Route::resource('eventos', TiposEventosController::class);
 
@@ -124,7 +126,7 @@ Route::middleware('auth')->group(function () {
     // ---------------------------------------------------------------------
     Route::middleware(['role:Juiz'])->group(function () {
         Route::get('/arbitros/{id}', [App\Http\Controllers\ArbitroController::class, 'show'])->name('arbitros.show');
-Route::get('/arbitros', [App\Http\Controllers\ArbitroController::class, 'index'])->name('arbitros.index');
+        Route::get('/arbitros', [App\Http\Controllers\ArbitroController::class, 'index'])->name('arbitros.index');
     });
 
 });

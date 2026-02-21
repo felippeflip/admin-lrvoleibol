@@ -12,7 +12,9 @@
 
                     @hasrole('Administrador')
                     <div class="flex justify-between">
-                        <a href="{{ route('ginasios.create') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO GINÁSIO</a>
+                        <a href="{{ route('ginasios.create') }}"
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO
+                            GINÁSIO</a>
                     </div>
                     @endhasrole
 
@@ -21,26 +23,35 @@
                             {{ session('success') }}
                         </div>
                     @endif
-                    
+
                     <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
-                         <form method="GET" action="{{ route('ginasios.index') }}">
-                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <form method="GET" action="{{ route('ginasios.index') }}">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <!-- Nome -->
                                 <div>
-                                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Ginásio</label>
-                                    <input type="text" name="nome" id="nome" value="{{ request('nome') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400" placeholder="Digite o nome">
+                                    <label for="nome"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do
+                                        Ginásio</label>
+                                    <input type="text" name="nome" id="nome" value="{{ request('nome') }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400"
+                                        placeholder="Digite o nome">
                                 </div>
 
                                 <!-- Cidade -->
                                 <div>
-                                    <label for="cidade" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cidade</label>
-                                    <input type="text" name="cidade" id="cidade" value="{{ request('cidade') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400" placeholder="Digite a cidade">
+                                    <label for="cidade"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cidade</label>
+                                    <input type="text" name="cidade" id="cidade" value="{{ request('cidade') }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400"
+                                        placeholder="Digite a cidade">
                                 </div>
 
                                 <!-- Time -->
                                 <div>
-                                    <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
-                                    <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                    <label for="time_id"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                                    <select name="time_id" id="time_id"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
                                         <option value="">Todos</option>
                                         @foreach($times as $time)
                                             <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
@@ -48,24 +59,42 @@
                                     </select>
                                 </div>
 
+                                <!-- Status -->
+                                <div>
+                                    <label for="status"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                    <select name="status" id="status"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <option value="active" {{ request('status', 'active') == 'active' ? 'selected' : '' }}>Ativo</option>
+                                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>
+                                            Inativo</option>
+                                        <option value="todos" {{ request('status') == 'todos' ? 'selected' : '' }}>Todos
+                                        </option>
+                                    </select>
+                                </div>
+
                                 <!-- Botões -->
                                 <div class="flex items-end space-x-2">
-                                    <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
-                                    <a href="{{ route('ginasios.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
+                                    <button type="submit"
+                                        class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
+                                    <a href="{{ route('ginasios.index') }}"
+                                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
                                 </div>
                             </div>
-                         </form>
+                        </form>
                     </div>
 
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <thead
+                                class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Loc.</th>
                                     <th scope="col" class="px-6 py-3">Nome do Ginásio</th>
                                     <th scope="col" class="px-6 py-3">Cidade/UF</th>
                                     <th scope="col" class="px-6 py-3">Time Responsável</th>
                                     <th scope="col" class="px-6 py-3">Telefone</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Status</th>
                                     @hasrole('Administrador')
                                     <th scope="col" class="px-6 py-3 text-center">Ações</th>
                                     @endhasrole
@@ -73,32 +102,96 @@
                             </thead>
                             <tbody>
                                 @foreach ($ginasios as $ginasio)
-                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                    <tr
+                                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         <td class="px-6 py-4 flex space-x-2">
-                                             <a href="{{ $ginasio->google_maps_link }}" target="_blank" class="w-6 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver no Google Maps">
-                                                <svg class="h-6 w-6 text-green-600" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M12 2a8 8 0 0 1 8 8c0 5 -8 13 -8 13s-8 -8 -8 -13a8 8 0 0 1 8 -8z" />  <circle cx="12" cy="10" r="3" /></svg>
+                                            <a href="{{ $ginasio->google_maps_link }}" target="_blank"
+                                                class="w-6 mr-2 transform hover:text-blue-500 hover:scale-110"
+                                                title="Ver no Google Maps">
+                                                <svg class="h-6 w-6 text-green-600" width="24" height="24"
+                                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" />
+                                                    <path
+                                                        d="M12 2a8 8 0 0 1 8 8c0 5 -8 13 -8 13s-8 -8 -8 -13a8 8 0 0 1 8 -8z" />
+                                                    <circle cx="12" cy="10" r="3" />
+                                                </svg>
                                             </a>
-                                            <a href="{{ $ginasio->waze_link }}" target="_blank" class="w-6 mr-2 transform hover:text-blue-500 hover:scale-110" title="Ver no Waze">
-                                                <svg class="h-6 w-6 text-blue-400"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <circle cx="12" cy="12" r="9" />  <line x1="12" y1="3" x2="12" y2="7" />  <line x1="12" y1="21" x2="12" y2="18" />  <line x1="3" y1="12" x2="7" y2="12" />  <line x1="21" y1="12" x2="18" y2="12" />  <line x1="12" y1="12" x2="12" y2="12.01" /></svg>
+                                            <a href="{{ $ginasio->waze_link }}" target="_blank"
+                                                class="w-6 mr-2 transform hover:text-blue-500 hover:scale-110"
+                                                title="Ver no Waze">
+                                                <svg class="h-6 w-6 text-blue-400" width="24" height="24"
+                                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" />
+                                                    <circle cx="12" cy="12" r="9" />
+                                                    <line x1="12" y1="3" x2="12" y2="7" />
+                                                    <line x1="12" y1="21" x2="12" y2="18" />
+                                                    <line x1="3" y1="12" x2="7" y2="12" />
+                                                    <line x1="21" y1="12" x2="18" y2="12" />
+                                                    <line x1="12" y1="12" x2="12" y2="12.01" />
+                                                </svg>
                                             </a>
                                         </td>
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $ginasio->gin_nome }}</th>
+                                        <th scope="row"
+                                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ $ginasio->gin_nome }}</th>
                                         <td class="px-6 py-4">{{ $ginasio->gin_cidade }} / {{ $ginasio->gin_estado }}</td>
                                         <td class="px-6 py-4">{{ $ginasio->time->tim_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">{{ $ginasio->gin_telefone ?? '-' }}</td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span
+                                                class="{{ $ginasio->gin_status ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600' }} py-1 px-3 rounded-full text-xs">
+                                                {{ $ginasio->gin_status ? 'Ativo' : 'Inativo' }}
+                                            </span>
+                                        </td>
                                         @hasrole('Administrador')
                                         <td class="px-6 py-4 flex space-x-2 justify-center">
-                                            <a href="{{ route('ginasios.edit', $ginasio->gin_id) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" title="Editar Ginásio">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            <a href="{{ route('ginasios.edit', $ginasio->gin_id) }}"
+                                                class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
+                                                title="Editar Ginásio">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                 </svg>
                                             </a>
-                                            <form action="{{ route('ginasios.destroy', $ginasio->gin_id) }}" method="POST" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" onsubmit="return confirm('Tem certeza que deseja excluir este ginásio?');">
+
+                                            <form action="{{ route('ginasios.toggleStatus', $ginasio->gin_id) }}"
+                                                method="POST" class="inline"
+                                                onsubmit="return confirm('Tem certeza que deseja {{ $ginasio->gin_status ? 'desativar' : 'ativar' }} este ginásio?');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit"
+                                                    class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
+                                                    title="{{ $ginasio->gin_status ? 'Desativar Ginásio' : 'Ativar Ginásio' }}">
+                                                    @if($ginasio->gin_status)
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                        </svg>
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    @endif
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('ginasios.destroy', $ginasio->gin_id) }}" method="POST"
+                                                class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
+                                                onsubmit="return confirm('Tem certeza que deseja excluir este ginásio?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" title="Excluir Ginásio">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
                                             </form>

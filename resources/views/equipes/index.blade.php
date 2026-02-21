@@ -174,6 +174,18 @@
                                                 </svg>
                                             </button>
 
+                                            @role('Administrador')
+                                            <!-- Botão Remover do Campeonato -->
+                                            <button type="button"
+                                                onclick="openRemoverCampeonatoModal('{{ $equipe->eqp_nome_detalhado }}', {{ json_encode($equipe->campeonatos) }}, {{ $equipe->eqp_id }})"
+                                                class="w-4 mr-2 transform hover:text-red-500 hover:scale-110"
+                                                title="Remover de Campeonatos">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                            @endrole
+
                                             <a href="{{ route('equipes.edit', $equipe->eqp_id) }}"
                                                 class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
                                                 title="Editar Equipe">
@@ -236,6 +248,35 @@
                         <!-- Lista populated via JS -->
                     </ul>
                     <p id="modalNoCampeonatos" class="hidden text-sm text-gray-500 dark:text-gray-400">Esta equipe não
+                        está inscrita em nenhum campeonato.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Remover Campeonatos -->
+    <div id="removerCampeonatoModal" tabindex="-1" aria-hidden="true"
+        class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div class="relative w-full max-w-md max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <button type="button" onclick="closeRemoverCampeonatoModal()"
+                    class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                    </svg>
+                    <span class="sr-only">Fechar modal</span>
+                </button>
+                <div class="px-6 py-6 lg:px-8">
+                    <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Remover <span
+                            id="modalRemoverEquipeNome" class="font-bold"></span> de Campeonatos</h3>
+                    <ul id="modalRemoverCampeonatosList"
+                        class="space-y-4 text-gray-500 list-disc list-inside dark:text-gray-400">
+                        <!-- Lista populated via JS -->
+                    </ul>
+                    <p id="modalRemoverNoCampeonatos" class="hidden text-sm text-gray-500 dark:text-gray-400">Esta equipe não
                         está inscrita em nenhum campeonato.</p>
                 </div>
             </div>
@@ -312,11 +353,73 @@
             document.getElementById('campeonatosModal').classList.add('hidden');
         }
 
+        function openRemoverCampeonatoModal(nomeEquipe, campeonatos, equipeId) {
+            const modal = document.getElementById('removerCampeonatoModal');
+            const titulo = document.getElementById('modalRemoverEquipeNome');
+            const lista = document.getElementById('modalRemoverCampeonatosList');
+            const msgVazio = document.getElementById('modalRemoverNoCampeonatos');
+
+            titulo.textContent = nomeEquipe;
+            lista.innerHTML = '';
+
+            if (campeonatos && campeonatos.length > 0) {
+                msgVazio.classList.add('hidden');
+                campeonatos.forEach(camp => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-2 rounded mb-2 border border-gray-200 dark:border-gray-600";
+
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = camp.cpo_nome;
+                    li.appendChild(textSpan);
+
+                    const form = document.createElement('form');
+                    const url = `/campeonatos/${camp.cpo_id}/equipes/${equipeId}`;
+                    form.action = url;
+                    form.method = 'POST';
+                    form.onsubmit = function () { return confirm('Tem certeza que deseja remover a equipe deste campeonato?'); };
+
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+
+                    const btn = document.createElement('button');
+                    btn.type = 'submit';
+                    btn.className = 'bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs';
+                    btn.title = 'Remover';
+                    btn.innerText = 'Remover';
+
+                    form.appendChild(btn);
+                    li.appendChild(form);
+                    lista.appendChild(li);
+                });
+            } else {
+                msgVazio.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeRemoverCampeonatoModal() {
+            document.getElementById('removerCampeonatoModal').classList.add('hidden');
+        }
+
         // Fechar ao clicar fora
         window.onclick = function (event) {
             const modal = document.getElementById('campeonatosModal');
+            const modalRemover = document.getElementById('removerCampeonatoModal');
             if (event.target == modal) {
                 closeCampeonatosModal();
+            }
+            if (event.target == modalRemover) {
+                closeRemoverCampeonatoModal();
             }
         }
     </script>
