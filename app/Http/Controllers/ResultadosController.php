@@ -16,10 +16,15 @@ class ResultadosController extends Controller
     {
         // 1. Find Local Jogo by ID (Primary Key)
         $jogo = Jogo::find($id);
-        
+
         // Fallback: If not found by ID, try finding by WP ID (for legacy links support)
         if (!$jogo) {
-             $jogo = Jogo::where('jgo_wp_id', $id)->first();
+            $jogo = Jogo::where('jgo_wp_id', $id)->first();
+
+            // Redirect to canonical local ID
+            if ($jogo) {
+                return redirect()->route('resultados.create', $jogo->jgo_id);
+            }
         }
 
         if (!$jogo) {
@@ -53,7 +58,7 @@ class ResultadosController extends Controller
 
             // Clear old sets to recreate
             $jogo->resultadoSets()->delete();
-            
+
             $setsWonMandante = 0;
             $setsWonVisitante = 0;
             $resultsToSave = [];
@@ -78,28 +83,35 @@ class ResultadosController extends Controller
 
                 // Rule: Check if game is already decided
                 if ($setsWonMandante >= 3 || $setsWonVisitante >= 3) {
-                     return back()->with('error', "Erro no Set $num: O jogo já deveria ter encerrado (3 sets vencidos). Remova os sets excedentes.")->withInput();
+                    return back()->with('error', "Erro no Set $num: O jogo já deveria ter encerrado (3 sets vencidos). Remova os sets excedentes.")->withInput();
                 }
 
-                // Rule: Points Target (25 for 1-4, 15 for 5)
+                // Regra 1: Alvo de pontos (25 para sets 1-4, 15 para o set 5)
                 $target = ($num == 5) ? 15 : 25;
                 $maxScore = max($pMandante, $pVisitante);
                 $diff = abs($pMandante - $pVisitante);
 
-                // Rule: Minimum Score Reached
+                // Regra 2: Pontuação mínima alcançada
                 if ($maxScore < $target) {
                     return back()->with('error', "Set $num: Placar inválido. O vencedor deve atingir pelo menos $target pontos.")->withInput();
                 }
 
-                // Rule: 2 Points Difference
-                if ($diff < 2) {
-                     return back()->with('error', "Set $num: Placar inválido. É necessária uma diferença mínima de 2 pontos para fechar o set.")->withInput();
+                // Regra 3: Diferença exata dependendo do placar
+                if ($maxScore === $target && $diff < 2) {
+                    return back()->with('error', "Set $num: Placar inválido. É necessária uma diferença mínima de 2 pontos para fechar o set.")->withInput();
+                }
+
+                // Regra 4: Se o set empatou em $target - 1 e precisou passar dos $target pontos, a diferença deve ser de EXATAMENTE 2.
+                if ($maxScore > $target && $diff !== 2) {
+                    return back()->with('error', "Set $num: Placar inválido. Quando o placar passa de " . ($target - 1) . " pontos, o set só pode ser encerrado com EXATOS 2 pontos de diferença (ex: " . ($maxScore) . "x" . ($maxScore - 2) . ").")->withInput();
                 }
 
                 // Determine Winner
                 $winner = ($pMandante > $pVisitante) ? 1 : 2;
-                if ($winner == 1) $setsWonMandante++;
-                else $setsWonVisitante++;
+                if ($winner == 1)
+                    $setsWonMandante++;
+                else
+                    $setsWonVisitante++;
 
                 $resultsToSave[] = [
                     'set_jgo_id' => $jogo->jgo_id,
@@ -113,7 +125,7 @@ class ResultadosController extends Controller
             // Rule: Game must have a winner (Best of 5)
             // If the loop finished without declaring a winner (3 sets), and we processed all inputs
             if ($setsWonMandante < 3 && $setsWonVisitante < 3) {
-                 return back()->with('error', "Resultado inválido. A partida não foi concluída. Nenhuma equipe venceu 3 sets. Verifique se informou todos os sets necessários.")->withInput();
+                return back()->with('error', "Resultado inválido. A partida não foi concluída. Nenhuma equipe venceu 3 sets. Verifique se informou todos os sets necessários.")->withInput();
             }
 
             if (empty($resultsToSave)) {
@@ -151,8 +163,8 @@ class ResultadosController extends Controller
     {
         // Check Admin permission? Middleware handles usually, or check here.
         if (!Auth::user()->can('manage team')) { // Assuming 'manage team' or specific admin permission
-             // Or check role?
-             // User said "admin aprovação". I'll assume admin role check if needed.
+            // Or check role?
+            // User said "admin aprovação". I'll assume admin role check if needed.
         }
 
         $jogo = Jogo::findOrFail($jgoId);

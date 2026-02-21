@@ -206,12 +206,16 @@ class EquipeCampeonatoController extends Controller
     public function listByCampeonatoJson($campeonatoId)
     {
         $equipes = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonatoId)
-            ->with(['equipe'])
+            ->with(['equipe.time'])
             ->get()
             ->map(function ($item) {
+                $timeNome = $item->equipe->time->tim_nome ?? '';
+                $equipeNome = $item->equipe->eqp_nome_detalhado ?? 'Time Sem Nome';
+                $nomeFormatado = $timeNome ? $timeNome . ' - ' . $equipeNome : $equipeNome;
+
                 return [
                     'id' => $item->eqp_cpo_id, // ID da tabela pivot
-                    'nome' => $item->equipe->eqp_nome_detalhado ?? 'Time Sem Nome'
+                    'nome' => $nomeFormatado
                 ];
             });
 
