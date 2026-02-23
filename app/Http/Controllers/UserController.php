@@ -22,7 +22,7 @@ class UserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('apelido', 'like', "%{$search}%");
+                    ->orWhere('apelido', 'like', "%{$search}%");
             });
         }
 
@@ -107,8 +107,11 @@ class UserController extends Controller
             }
         }
 
+        // Impedir que um valor de LRV enviado manualmente seja salvo na criação
+        unset($validated['lrv']);
+
         $user = User::create($validated);
-        
+
         // Se for Comissão Técnica, o time_id deve vir no request e ser salvo no usuário
         // O $validated já permite time_id, então o create acima já deve ter pego se veio no request.
         // Apenas para garantir que não haja sobrescrita ou lógica extra necessária.
@@ -135,6 +138,18 @@ class UserController extends Controller
         // Lógica Legada de Arbitro (para manter compatibilidade com banco se colunas existirem)
         if ($request->role === 'Juiz') {
             $user->is_arbitro = true;
+
+            // Atribuir LRV Automático se estiver vazio
+            if (empty($user->lrv)) {
+                $sequence = \Illuminate\Support\Facades\DB::table('arbitro_sequences')->first();
+                if ($sequence) {
+                    $user->lrv = $sequence->next_number;
+                    \Illuminate\Support\Facades\DB::table('arbitro_sequences')->update([
+                        'next_number' => $sequence->next_number + 1,
+                        'updated_at' => now()
+                    ]);
+                }
+            }
             $user->save();
         }
 
@@ -194,6 +209,9 @@ class UserController extends Controller
             }
         }
 
+        // Impedir que um valor de LRV enviado manualmente subscreva o atual ou ignore a geração
+        unset($validated['lrv']);
+
         $user->update($validated);
 
         // Sincronizar Role
@@ -216,11 +234,22 @@ class UserController extends Controller
             // Se mudou de role e deixou de ser responsável, remove vínculo na tabela times
             Time::where('tim_user_id', $user->id)->update(['tim_user_id' => null]);
         }
-        
+
         // Se for Juiz, o time_id já foi salvo via $validated no update() pois está no fillable.
 
         // Lógica Legada Arbitro
         $user->is_arbitro = ($request->role === 'Juiz');
+
+        if ($request->role === 'Juiz' && empty($user->lrv)) {
+            $sequence = \Illuminate\Support\Facades\DB::table('arbitro_sequences')->first();
+            if ($sequence) {
+                $user->lrv = $sequence->next_number;
+                \Illuminate\Support\Facades\DB::table('arbitro_sequences')->update([
+                    'next_number' => $sequence->next_number + 1,
+                    'updated_at' => now()
+                ]);
+            }
+        }
         $user->save();
 
         return redirect()->route('users.index')->with('success', 'Usuário atualizado com sucesso.');

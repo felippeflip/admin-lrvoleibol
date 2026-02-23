@@ -211,20 +211,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (cep != "" && /^[0-9]{8}$/.test(cep)) {
                     limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
 
-                    fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!("erro" in data)) {
-                                preencheFormularioEndereco(data, enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
-                            } else {
-                                limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
-                                alert("CEP não encontrado.");
+                    fetch(`https://brasilapi.com.br/api/cep/v1/${cep}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('not_found');
                             }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const mappedData = {
+                                logradouro: data.street || "",
+                                bairro: data.neighborhood || "",
+                                localidade: data.city || "",
+                                uf: data.state || ""
+                            };
+                            preencheFormularioEndereco(mappedData, enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
                         })
                         .catch(error => {
-                            console.error('Erro ao buscar CEP:', error);
                             limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);
-                            alert("Erro ao buscar CEP. Verifique sua conexão ou tente novamente.");
+                            if (error.message === 'not_found') {
+                                alert("CEP não encontrado.");
+                            } else {
+                                console.error('Erro ao buscar CEP:', error);
+                                alert("Erro ao buscar CEP. O serviço pode estar indisponível.");
+                            }
                         });
                 } else if (cep === "") {
                     limpaFormularioEndereco(enderecoInputEl, bairroInputEl, cidadeInputEl, ufInputEl, numeroInputEl);

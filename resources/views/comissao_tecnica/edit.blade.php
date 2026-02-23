@@ -56,7 +56,7 @@
                             <!-- Registro LRV -->
                             <div>
                                 <label for="registro_lrv" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registro LRV</label>
-                                <input type="text" name="registro_lrv" id="registro_lrv" value="{{ old('registro_lrv', $comissaoTecnica->registro_lrv ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
+                                <input type="text" name="registro_lrv" id="registro_lrv" value="{{ old('registro_lrv', $comissaoTecnica->registro_lrv ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-400 bg-gray-100 cursor-not-allowed" placeholder="Gerado Automaticamente" readonly>
                                 <x-input-error :messages="$errors->get('registro_lrv')" class="mt-2" />
                             </div>
 

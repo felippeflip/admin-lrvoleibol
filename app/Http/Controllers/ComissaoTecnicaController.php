@@ -200,6 +200,19 @@ class ComissaoTecnicaController extends Controller
             $data['comprovante_documento'] = $filename;
         }
 
+        // Impedir que um valor de Registro LRV enviado manualmente seja salvo na criação
+        unset($data['registro_lrv']);
+
+        // Atribuir Registro LRV Automático
+        $sequence = \Illuminate\Support\Facades\DB::table('tecnico_sequences')->first();
+        if ($sequence) {
+            $data['registro_lrv'] = $sequence->next_number;
+            \Illuminate\Support\Facades\DB::table('tecnico_sequences')->update([
+                'next_number' => $sequence->next_number + 1,
+                'updated_at' => now()
+            ]);
+        }
+
         $comissaoTecnica = ComissaoTecnica::create($data);
 
         // Verificar checkbox de cartão impresso (Ano Atual)
@@ -228,7 +241,7 @@ class ComissaoTecnicaController extends Controller
                 }
             }
         } catch (\Exception $ex) {
-             Log::error("Falha ao enviar notificação de nova comissão técnica: " . $ex->getMessage());
+            Log::error("Falha ao enviar notificação de nova comissão técnica: " . $ex->getMessage());
         }
         // ------------------------------------------------
 
@@ -356,6 +369,21 @@ class ComissaoTecnicaController extends Controller
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
             Storage::disk('comissao_docs')->putFileAs('/', $file, $filename);
             $data['comprovante_documento'] = $filename;
+        }
+
+        // Impedir que um valor de Registro LRV enviado manualmente subscreva o atual ou ignore a geração
+        unset($data['registro_lrv']);
+
+        // Se ainda não tiver registro LRV, atribui um novo automatizado
+        if (empty($comissaoTecnica->registro_lrv)) {
+            $sequence = \Illuminate\Support\Facades\DB::table('tecnico_sequences')->first();
+            if ($sequence) {
+                $data['registro_lrv'] = $sequence->next_number;
+                \Illuminate\Support\Facades\DB::table('tecnico_sequences')->update([
+                    'next_number' => $sequence->next_number + 1,
+                    'updated_at' => now()
+                ]);
+            }
         }
 
         $comissaoTecnica->update($data);

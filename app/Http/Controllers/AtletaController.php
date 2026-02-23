@@ -208,6 +208,19 @@ class AtletaController extends Controller
         }
         // --- Fim do Processamento do Upload ---
 
+        // Impedir que um valor de Registro LRV enviado manualmente seja salvo na criação
+        unset($data['atl_resg']);
+
+        // Atribuir Registro LRV Automático
+        $sequence = \Illuminate\Support\Facades\DB::table('atleta_sequences')->first();
+        if ($sequence) {
+            $data['atl_resg'] = $sequence->next_number;
+            \Illuminate\Support\Facades\DB::table('atleta_sequences')->update([
+                'next_number' => $sequence->next_number + 1,
+                'updated_at' => now()
+            ]);
+        }
+
         try {
             $atleta = Atleta::create($data); // Cria um novo atleta com os dados preparados
 
@@ -407,6 +420,21 @@ class AtletaController extends Controller
             unset($data['atl_foto']); // Não atualiza o campo 'atl_foto' no banco de dados se não houver novo upload
         }
         // --- Fim do Processamento do Upload para ATUALIZAR ---
+
+        // Impedir que um valor de Registro LRV enviado manualmente subscreva o atual ou ignore a geração
+        unset($data['atl_resg']);
+
+        // Se ainda não tiver registro LRV, atribui um novo automatizado
+        if (empty($atleta->atl_resg)) {
+            $sequence = \Illuminate\Support\Facades\DB::table('atleta_sequences')->first();
+            if ($sequence) {
+                $data['atl_resg'] = $sequence->next_number;
+                \Illuminate\Support\Facades\DB::table('atleta_sequences')->update([
+                    'next_number' => $sequence->next_number + 1,
+                    'updated_at' => now()
+                ]);
+            }
+        }
 
         try {
             $atleta->update($data);
