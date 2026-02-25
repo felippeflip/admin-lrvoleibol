@@ -19,7 +19,7 @@ class GameImageService
             $img = Image::create(1200, 630)->fill('#1e3a8a');
 
             // Adicional: escreve VS no centro
-            $img->text('VS', 600, 315, function ($font) {
+            $img->text('X', 1000, 615, function ($font) {
                 $font->color('#ffffff');
                 $font->align('center');
                 $font->valign('middle');
@@ -28,14 +28,17 @@ class GameImageService
             // Insere Mandante
             if ($mandanteLogoPath && Storage::disk('times_logos')->exists($mandanteLogoPath)) {
                 $mandanteImg = Image::read(Storage::disk('times_logos')->path($mandanteLogoPath));
-                $mandanteImg->scaleDown(300, 300);
+                // scaleDown() reduz proporcionalmente sem esticar, e pad() preenche com transparente 
+                // para criar uma caixa exata de 600x600 px centrada
+                $mandanteImg->scaleDown(450, 450)->pad(450, 450, 'rgba(0, 0, 0, 0)');
                 $img->place($mandanteImg, 'left', 150, 0); // centralizado na vertical à esquerda
             }
 
             // Insere Visitante
             if ($visitanteLogoPath && Storage::disk('times_logos')->exists($visitanteLogoPath)) {
                 $visitanteImg = Image::read(Storage::disk('times_logos')->path($visitanteLogoPath));
-                $visitanteImg->scaleDown(300, 300);
+                // Mesma padronização para o visitante, garantindo alinhamento independente da orientação (vertical/horizontal)
+                $visitanteImg->scaleDown(450, 450)->pad(450, 450, 'rgba(0, 0, 0, 0)');
                 $img->place($visitanteImg, 'right', 150, 0);
             }
 

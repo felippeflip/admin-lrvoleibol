@@ -523,20 +523,6 @@ class JogosController extends Controller
 
 
 
-    private function deleteEventViaApi($postId)
-    {
-        try {
-            // Tenta chamar o endpoint customizado para deleção correta no WP (limpando cache e arquivos)
-            $response = Http::post('https://lrvoleibol.com.br/wp-json/custom/v1/delete_event', [
-                'post_id' => $postId
-            ]);
-            return $response->successful();
-        } catch (\Exception $e) {
-            Log::error('Erro ao deletar evento via API: ' . $e->getMessage());
-            return false;
-        }
-    }
-
     public function destroy($id)
     {
         if (!Auth::user()->hasRole('Administrador')) {
@@ -549,7 +535,8 @@ class JogosController extends Controller
 
         // Tenta deletar via API do WordPress (Recomendado)
         if ($wpId) {
-            $this->deleteEventViaApi($wpId);
+            $wpService = new WordpressGameService();
+            $wpService->delete($wpId);
         }
 
         // Delete do DB isolado Laravel Local

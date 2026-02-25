@@ -166,6 +166,46 @@ class WordpressGameService
     }
 
     /**
+     * Deleta um jogo no WordPress via API Rest.
+     *
+     * @param int $wpPostId ID do post WP
+     * @return bool
+     */
+    public function delete($wpPostId)
+    {
+        try {
+            // Primeiro, tenta o endpoint customizado para limpar também imagens e cache
+            $customResponse = Http::withBasicAuth($this->wpUsername, $this->wpPassword)
+                ->post("{$this->wpUrl}/wp-json/custom/v1/delete_event", [
+                    'post_id' => $wpPostId
+                ]);
+
+            if ($customResponse->successful()) {
+                Log::info("Jogo {$wpPostId} deletado via endpoint customizado do WP.");
+                return true;
+            }
+
+            // Se falhar o customizado (ou não existir), chama o padrao do REST API
+            Log::warning("Endpoint customizado falhou, tentando rota padrão do WP REST API para {$wpPostId}.");
+            $response = Http::withBasicAuth($this->wpUsername, $this->wpPassword)
+                ->delete("{$this->wpUrl}/wp-json/wp/v2/event_listing/{$wpPostId}?force=true");
+
+            if ($response->successful()) {
+                return true;
+            } else {
+                Log::error('Erro ao deletar jogo via WP REST API', [
+                    'body' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error('Exceção ao deletar jogo no WP API: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Faz upload da imagem ao endpoint /wp/v2/media.
      */
     private function uploadMediaToWordpress($localPath, $filename)
