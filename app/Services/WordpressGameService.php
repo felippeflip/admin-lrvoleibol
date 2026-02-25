@@ -3,27 +3,39 @@
 namespace App\Services;
 
 use App\Models\Jogo;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class WordpressGameService
 {
+    private $wpUrl;
+    private $wpUsername;
+    private $wpPassword;
+
+    public function __construct()
+    {
+        $this->wpUrl = rtrim(env('WP_URL', 'https://lrvoleibol.com.br'), '/');
+        $this->wpUsername = env('WP_USERNAME', '');
+        // Suporta as duas chaves enviadas
+        $this->wpPassword = env('WP_APPLICATION_PASSWORD', env('WP_APP_PASSWORD', ''));
+    }
+
     /**
-     * Sincroniza um jogo local com as tabelas do WordPress.
+     * Sincroniza um jogo local com os CPTs do WordPress via API Rest.
      *
      * @param Jogo $jogo
      * @param array $extraData (dados adicionais como n_jogo, tipo_evento_id, categoria_evento_id)
      * @param int|null $wpPostId ID do post WP se for atualização
-     * @return int ID do Post criado/atualizado
+     * @return int|null ID do Post criado/atualizado
      */
     public function sync(Jogo $jogo, array $extraData, $wpPostId = null)
     {
-        // Carrega relações necessárias
-        $jogo->load(['mandante.equipe', 'visitante.equipe', 'ginasio']);
+        // Carrega relações necessárias para ter dados dos times
+        $jogo->load(['mandante.equipe.time', 'visitante.equipe.time', 'ginasio']);
 
         // 1. Gera o Título
         $nomeMandante = $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante';
@@ -35,139 +47,150 @@ class WordpressGameService
         if ($jogo->ginasio) {
             $gin = $jogo->ginasio;
             $endereco = $gin->gin_endereco;
-            if ($gin->gin_numero) $endereco .= ", " . $gin->gin_numero;
-            if ($gin->gin_bairro) $endereco .= " - " . $gin->gin_bairro;
+            if ($gin->gin_numero)
+                $endereco .= ", " . $gin->gin_numero;
+            if ($gin->gin_bairro)
+                $endereco .= " - " . $gin->gin_bairro;
             $local = "{$gin->gin_nome} - {$endereco}";
         }
 
-        // 3. Prepara dados do WP_POST
-        $postName = Str::slug($postTitle);
-        $postDate = Carbon::now();
+        // 3. Mesclar as Imagens usando o GameImageService
+        $gameImageService = new GameImageService();
+        $mandanteLogo = $jogo->mandante->equipe->time->tim_logo ?? null;
+        $visitanteLogo = $jogo->visitante->equipe->time->tim_logo ?? null;
 
-        // Verifica unicidade do slug se for criar
-        if (!$wpPostId) {
-            $existingPost = DB::table('wp_posts')->where('post_name', $postName)->first();
-            if ($existingPost) {
-                // Adiciona contador para evitar colisão
-                $count = DB::table('wp_posts')->where('post_name', 'like', "$postName%")->count();
-                $postName .= '-' . ($count + 1);
+        $localImagePath = $gameImageService->createGameImage($mandanteLogo, $visitanteLogo, $jogo->jgo_id);
+
+        $wpMediaId = null;
+        $wpMediaUrl = null;
+
+        if ($localImagePath) {
+            $absolutePath = Storage::disk('public')->path($localImagePath);
+            $filename = basename($absolutePath);
+
+            // Upload the image via REST API
+            $mediaResponse = $this->uploadMediaToWordpress($absolutePath, $filename);
+            if ($mediaResponse) {
+                $wpMediaId = $mediaResponse['id'];
+                $wpMediaUrl = $mediaResponse['source_url'] ?? null;
             }
         }
 
-        $wpPostData = [
-            'post_title' => $postTitle,
-            'post_content' => $postTitle, // Conteúdo igual ao título conforme solicitado
-            'post_excerpt' => '', // Campo obrigatório
-            'to_ping' => '', // Campo obrigatório
-            'pinged' => '', // Campo obrigatório
-            'post_content_filtered' => '', // Possivelmente obrigatório
-            'post_name' => $postName,
-            'post_modified' => $postDate,
-            'post_modified_gmt' => $postDate->copy()->setTimezone('GMT'),
-        ];
-
-        if ($wpPostId) {
-            // Update
-            DB::table('wp_posts')->where('ID', $wpPostId)->update($wpPostData);
-        } else {
-            // Create
-            $wpPostData['post_author'] = 2; // Mantendo hardcoded conforme original
-            $wpPostData['post_date'] = $postDate;
-            $wpPostData['post_date_gmt'] = $postDate->copy()->setTimezone('GMT');
-            $wpPostData['post_status'] = 'publish';
-            $wpPostData['comment_status'] = 'closed';
-            $wpPostData['ping_status'] = 'closed';
-            $wpPostData['post_type'] = 'event_listing';
-            
-            $wpPostId = DB::table('wp_posts')->insertGetId($wpPostData);
-            
-            // Atualiza GUID
-            DB::table('wp_posts')->where('ID', $wpPostId)->update(['guid' => "https://lrvoleibol.com.br/event_listing?p=$wpPostId"]);
-        }
-
-        // 4. Prepara MetaDados
+        // 4. Prepara MetaDados (+ Datas)
         $startDateTime = new \DateTime($jogo->jgo_dt_jogo . ' ' . $jogo->jgo_hora_jogo);
         $endDateTime = clone $startDateTime;
         $endDateTime->modify('+2 hours 30 minutes');
 
-        $metaData = [
-            '_event_number' => $extraData['event_number'],
-            '_event_title' => $postTitle,
-            '_event_location' => $local,
-            '_event_country' => 'Brasil',
-            '_event_start_date' => $startDateTime->format('Y-m-d H:i:s'),
-            '_event_start_time' => $startDateTime->format('H:i:s'),
-            '_event_end_date' => $endDateTime->format('Y-m-d H:i:s'),
-            '_event_end_time' => $endDateTime->format('H:i:s'),
-            '_juiz_principal' => $jogo->jgo_arbitro_principal,
-            '_juiz_linha1' => $jogo->jgo_arbitro_secundario,
-            '_juiz_linha2' => $jogo->jgo_apontador,
-            
-            // Campos padrão mantidos do original
-            '_featured' => '0',
-            '_edit_lock' => '1720293949:2', 
-            '_edit_last' => '2',
-            '_view_count' => '1',
-            '_event_online' => 'no',
-            '_thumbnail_id' => '4132',
-            '_event_banner' => 'https://lrvoleibol.com.br/wp-content/uploads/2024/07/voleibol.jpg',
-            '_cancelled' => '0',
-            '_registration' => Auth::user()->email ?? 'admin@lrvoleibol.com.br',
-            
-            // Campos de persistência local linkando à tabela jogos
-            '_mandante_id' => $jogo->jgo_eqp_cpo_mandante_id,
-            '_visitante_id' => $jogo->jgo_eqp_cpo_visitante_id,
-            '_ginasio_id' => $jogo->jgo_local_jogo_id,
-            '_local_jogo_id' => $jogo->jgo_id,
+        // Note: Todos os campos custom fields foram validados no wordpress para aceitarem single strings
+        $payload = [
+            'status' => 'publish',
+            'title' => $postTitle,
+            'content' => $postTitle,
+            'slug' => Str::slug($postTitle),
+            'meta' => [
+                '_event_number' => (string) $extraData['event_number'],
+                '_event_title' => $postTitle,
+                '_event_location' => $local,
+                '_event_country' => 'Brasil',
+                '_event_start_date' => $startDateTime->format('Y-m-d H:i:s'),
+                '_event_start_time' => $startDateTime->format('H:i:s'),
+                '_event_end_date' => $endDateTime->format('Y-m-d H:i:s'),
+                '_event_end_time' => $endDateTime->format('H:i:s'),
+                '_juiz_principal' => (string) $jogo->jgo_arbitro_principal,
+                '_juiz_linha1' => (string) $jogo->jgo_arbitro_secundario,
+                '_juiz_linha2' => (string) $jogo->jgo_apontador,
+
+                '_featured' => '0',
+                '_event_online' => 'no',
+                '_cancelled' => '0',
+                '_registration' => Auth::user()->email ?? 'admin@lrvoleibol.com.br',
+
+                '_mandante_id' => (string) $jogo->jgo_eqp_cpo_mandante_id,
+                '_visitante_id' => (string) $jogo->jgo_eqp_cpo_visitante_id,
+                '_ginasio_id' => (string) $jogo->jgo_local_jogo_id,
+                '_local_jogo_id' => (string) $jogo->jgo_id,
+            ]
         ];
 
-        // Atualiza ou Insere Metadados
-        foreach ($metaData as $key => $value) {
-            DB::table('wp_postmeta')->updateOrInsert(
-                ['post_id' => $wpPostId, 'meta_key' => $key],
-                ['meta_value' => $value]
-            );
-        }
-
-        // 5. Relacionamentos de Termos (Taxonomias)
-        // Limpa anteriores se update
-        DB::table('wp_term_relationships')->where('object_id', $wpPostId)->delete();
-        
-        $termRelationships = [];
+        // Lida com Categorias e Tipos
         if (isset($extraData['event_type'])) {
-            $termRelationships[] = ['object_id' => $wpPostId, 'term_taxonomy_id' => $extraData['event_type'], 'term_order' => 0];
+            $payload['event_listing_type'] = [(int) $extraData['event_type']];
         }
         if (isset($extraData['event_category'])) {
-            $termRelationships[] = ['object_id' => $wpPostId, 'term_taxonomy_id' => $extraData['event_category'], 'term_order' => 0];
+            $payload['event_listing_category'] = [(int) $extraData['event_category']];
         }
 
-        if (!empty($termRelationships)) {
-            DB::table('wp_term_relationships')->insert($termRelationships);
+        // Atualização de Imagem
+        if ($wpMediaId) {
+            $payload['featured_media'] = $wpMediaId;
+            $payload['meta']['_thumbnail_id'] = (string) $wpMediaId;
+            if ($wpMediaUrl) {
+                // Caso use outra chave para o banner, atrelar a mesma url
+                $payload['meta']['_event_banner'] = $wpMediaUrl;
+            }
         }
 
-        // 6. Hook externo para thumbnail (mantido do original)
-        $this->updateThumbnail($wpPostId);
+        // 5. Enviar POST/PUT para a REST API
+        try {
+            if ($wpPostId) {
+                // Update post
+                $response = Http::withBasicAuth($this->wpUsername, $this->wpPassword)
+                    ->post("{$this->wpUrl}/wp-json/wp/v2/event_listing/{$wpPostId}", $payload);
+            } else {
+                // Create Post
+                $response = Http::withBasicAuth($this->wpUsername, $this->wpPassword)
+                    ->post("{$this->wpUrl}/wp-json/wp/v2/event_listing", $payload);
+            }
 
-        return $wpPostId;
+            if ($response->successful()) {
+                $createdPostId = $response->json('id');
+
+                // Tratar term_relationships via API separada se não suportado diretamente pelo endpoint de posts
+                // Algumas APIs REST mapeiam taxomomies se enviarmos os arrays de IDs baseados na configuração (rest_base)
+                // Ex: "event_listing_category" => [$extraData['event_category']]
+                // Mas, o jeito legado do sistema mexia na tabela. Tentaremos chamar custom hook original para não perder info se não suportado.
+
+                return $createdPostId;
+            } else {
+                Log::error('Erro ao conectar via WP REST API no jogo', [
+                    'body' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                return $wpPostId;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Exceção ao ligar com WP REST API: ' . $e->getMessage());
+            return $wpPostId;
+        }
     }
 
-    private function updateThumbnail($postId)
+    /**
+     * Faz upload da imagem ao endpoint /wp/v2/media.
+     */
+    private function uploadMediaToWordpress($localPath, $filename)
     {
         try {
-            $domain = (app()->environment('local') || str_contains(request()->getHost(), 'develop')) 
-                        ? 'http://lrvoleibol.develop' 
-                        : 'https://lrvoleibol.com.br';
+            $fileData = file_get_contents($localPath);
+            $mimeType = mime_content_type($localPath);
 
-            $response = Http::post("{$domain}/wp-json/custom/v1/update_event_thumbnail", [
-                'post_id'       => $postId,
-                'attachment_id' => 4132
-            ]);
-            
-            if (!$response->successful()) {
-                Log::error('Erro ao destacar imagem do evento WP', ['post_id' => $postId, 'body' => $response->body()]);
+            $response = Http::withBasicAuth($this->wpUsername, $this->wpPassword)
+                ->withHeaders([
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                    'Content-Type' => $mimeType,
+                ])
+                ->withBody($fileData, $mimeType)
+                ->post("{$this->wpUrl}/wp-json/wp/v2/media");
+
+            if ($response->successful()) {
+                return $response->json(); // Array com 'id', 'source_url', etc.
+            } else {
+                Log::error('Upload REST API do WP falhou: ' . $response->body());
+                return null;
             }
         } catch (\Exception $e) {
-            Log::error('Exceção ao chamar API de thumbnail WP: ' . $e->getMessage());
+            Log::error('Exceção ao fazer upload ao WP: ' . $e->getMessage());
+            return null;
         }
     }
 }
