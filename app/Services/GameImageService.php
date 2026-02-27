@@ -16,7 +16,7 @@ class GameImageService
     {
         try {
             // Cria um canvas vazio
-            $img = Image::create(1200, 630)->fill('#1e3a8a');
+            $img = Image::create(1200, 630)->fill('#f5f6faff');
 
             // Insere Mandante
             if ($mandanteLogoPath && Storage::disk('times_logos')->exists($mandanteLogoPath)) {
