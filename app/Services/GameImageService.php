@@ -43,7 +43,7 @@ class GameImageService
                 if (file_exists($fontPath)) {
                     $font->file($fontPath);
                 }
-                $font->color('#ffffff');
+                $font->color('#0a0a0aff');
                 // Alinha o texto precisamente no centro das coordenadas passadas
                 $font->align('center');
                 $font->valign('middle');
