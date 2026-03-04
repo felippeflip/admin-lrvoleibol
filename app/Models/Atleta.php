@@ -35,6 +35,7 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
         'atl_categoria',
         'atl_ano_insc',
         'atl_foto', // Nome do arquivo da foto
+        'atl_documento', // Nome do arquivo de documento
         'atl_ativo',
         'atl_tim_id',
     ];
@@ -118,6 +119,17 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
         return asset('images/placeholder-atleta.png'); // Crie esta imagem ou ajuste o caminho
     }
 
+    /**
+     * Accessor para obter a URL pública do documento do atleta.
+     */
+    public function getAtlDocumentoUrlAttribute()
+    {
+        if ($this->atl_documento) {
+            return Storage::disk('doc_atletas')->url($this->atl_documento);
+        }
+        return null;
+    }
+
     // Relacionamento com Categoria
     public function categoria()
     {
@@ -142,6 +154,12 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
     public function cartoes()
     {
         return $this->hasMany(AtletaCartao::class, 'atc_atl_id', 'atl_id');
+    }
+
+    // Histórico de transferências
+    public function historicoTransferencias()
+    {
+        return $this->hasMany(HistoricoTransferencia::class, 'htr_atl_id', 'atl_id');
     }
 
     // Helper para verificar se cartão de ano X está impresso

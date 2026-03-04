@@ -70,6 +70,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'doc_atletas' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/doc_atletas'), 
+            'url' => env('APP_URL').'/storage/doc_atletas', 
+            'visibility' => 'public',
+        ],
+
         'comissao_fotos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/comissao_fotos'),

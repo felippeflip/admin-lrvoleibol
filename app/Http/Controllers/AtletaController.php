@@ -153,7 +153,7 @@ class AtletaController extends Controller
 
         $request->validate([
             'atl_nome' => 'required|string|max:100',
-            'atl_cpf' => 'nullable|string|max:11|unique:atletas,atl_cpf', // Adicionando unique
+            'atl_cpf' => 'nullable|string|max:11', // Check unique e duplicidade customizado
             'atl_rg' => 'nullable|string|max:10', // RG sem máscara
             'atl_celular' => 'nullable|string|max:11', // Celular sem máscara
             'atl_telefone' => 'nullable|string|max:10', // Telefone sem máscara
@@ -170,12 +170,36 @@ class AtletaController extends Controller
             'atl_categoria' => 'nullable|exists:categorias,cto_id',
             'atl_ano_insc' => 'nullable|integer|digits:4',
             'atl_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            'atl_documento' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120', // PDF or JPEG
             'atl_tim_id' => 'nullable|exists:times,tim_id',
         ]);
 
-        // Prepara os dados, removendo 'atl_foto' para processar separadamente
-        $data = $request->except(['atl_foto']);
+        // Prepara os dados, removendo 'atl_foto' e 'atl_documento' para processar separadamente
+        $data = $request->except(['atl_foto', 'atl_documento']);
         $data['atl_ativo'] = 1; // Garante que o atleta seja criado como ativo
+
+        // Verifica CPF se existir
+        if (!empty($data['atl_cpf'])) {
+            $cpfLimpo = preg_replace('/[^0-9]/', '', $data['atl_cpf']);
+            $atletaExistente = Atleta::where('atl_cpf', $cpfLimpo)->first();
+
+            if ($atletaExistente) {
+                // Se já estiver no mesmo time
+                if ($atletaExistente->atl_tim_id == $data['atl_tim_id']) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['atl_cpf' => 'Este atleta já está cadastrado na sua equipe.']);
+                }
+
+                // Se estiver em time diferente, redireciona para confirmação de transferência
+                // Vamos passar os dados digitados na session para poder recuperar (opcional) ou simplesmente re-solicitar,
+                // mas a regra foca na transferência do perfil Existente.
+                return redirect()->route('atletas.transferir.confirmar', [
+                    'atleta' => $atletaExistente->atl_id,
+                    'novo_time_id' => $data['atl_tim_id']
+                ])->with('warning', 'Este CPF já está cadastrado em outra equipe. Deseja realizar a transferência?');
+            }
+        }
 
         // Ajusta campos que vêm formatados ou precisam de pré-processamento
         $data['atl_cpf'] = preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
@@ -207,6 +231,30 @@ class AtletaController extends Controller
             $data['atl_foto'] = null; // Se não houver arquivo, define como null
         }
         // --- Fim do Processamento do Upload ---
+
+        // --- Processamento do Upload do Documento ---
+        if ($request->hasFile('atl_documento')) {
+            $fileDoc = $request->file('atl_documento');
+            $filenameDoc = Str::uuid() . '.' . $fileDoc->getClientOriginalExtension();
+
+            try {
+                // Salva o arquivo no disco 'doc_atletas'
+                $path = Storage::disk('doc_atletas')->putFileAs('/', $fileDoc, $filenameDoc);
+                Log::info("Documento do atleta '{$filenameDoc}' salvo com sucesso no caminho: {$path} (Criação)");
+                $data['atl_documento'] = $filenameDoc;
+            } catch (\Exception $e) {
+                Log::error("Erro ao salvar o documento do atleta durante a criação: " . $e->getMessage(), [
+                    'filename' => $filenameDoc,
+                    'file_original_name' => $fileDoc->getClientOriginalName(),
+                    'disk' => 'doc_atletas',
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return redirect()->back()->with('error', 'Ocorreu um erro ao enviar o documento do atleta. Por favor, tente novamente.');
+            }
+        } else {
+            $data['atl_documento'] = null;
+        }
+        // --- Fim do Processamento do Upload do Documento ---
 
         // Impedir que um valor de Registro LRV enviado manualmente seja salvo na criação
         unset($data['atl_resg']);
@@ -375,10 +423,11 @@ class AtletaController extends Controller
             'atl_categoria' => 'nullable|exists:categorias,cto_id',
             'atl_ano_insc' => 'nullable|integer|digits:4',
             'atl_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'atl_documento' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
             'atl_tim_id' => 'nullable|exists:times,tim_id',
         ]);
 
-        $data = $request->except(['atl_foto']);
+        $data = $request->except(['atl_foto', 'atl_documento']);
 
         // Ajusta campos que vêm formatados ou precisam de pré-processamento
         $data['atl_cpf'] = preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
@@ -420,6 +469,36 @@ class AtletaController extends Controller
             unset($data['atl_foto']); // Não atualiza o campo 'atl_foto' no banco de dados se não houver novo upload
         }
         // --- Fim do Processamento do Upload para ATUALIZAR ---
+
+        // --- Processamento do Upload do Documento para ATUALIZAR ---
+        if ($request->hasFile('atl_documento')) {
+            $fileDoc = $request->file('atl_documento');
+            $filenameDoc = Str::uuid() . '.' . $fileDoc->getClientOriginalExtension();
+
+            try {
+                // Se existe documento antigo, tenta deletá-lo
+                if ($atleta->atl_documento && Storage::disk('doc_atletas')->exists($atleta->atl_documento)) {
+                    Storage::disk('doc_atletas')->delete($atleta->atl_documento);
+                    Log::info("Documento antigo '{$atleta->atl_documento}' deletado com sucesso (Atualização do Atleta).");
+                }
+
+                $path = Storage::disk('doc_atletas')->putFileAs('/', $fileDoc, $filenameDoc);
+                Log::info("Novo documento do atleta '{$filenameDoc}' salvo com sucesso no caminho: {$path} (Atualização)");
+                $data['atl_documento'] = $filenameDoc;
+            } catch (\Exception $e) {
+                Log::error("Erro ao salvar/deletar o documento do atleta durante a atualização: " . $e->getMessage(), [
+                    'filename' => $filenameDoc ?? 'N/A',
+                    'file_original_name' => $fileDoc->getClientOriginalName() ?? 'N/A',
+                    'disk' => 'doc_atletas',
+                    'old_documento' => $atleta->atl_documento,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return redirect()->back()->with('error', 'Ocorreu um erro ao atualizar o documento do atleta. Por favor, tente novamente.');
+            }
+        } else {
+            unset($data['atl_documento']);
+        }
+        // --- Fim do Processamento do Upload do Documento para ATUALIZAR ---
 
         // Impedir que um valor de Registro LRV enviado manualmente subscreva o atual ou ignore a geração
         unset($data['atl_resg']);
@@ -488,6 +567,10 @@ class AtletaController extends Controller
                 Storage::disk('atletas_fotos')->delete($atleta->atl_foto);
                 Log::info("Foto '{$atleta->atl_foto}' deletada do armazenamento durante a exclusão do atleta.");
             }
+            if ($atleta->atl_documento && Storage::disk('doc_atletas')->exists($atleta->atl_documento)) {
+                Storage::disk('doc_atletas')->delete($atleta->atl_documento);
+                Log::info("Documento '{$atleta->atl_documento}' deletado do armazenamento durante a exclusão do atleta.");
+            }
 
             $atleta->delete();
             Log::info("Atleta com ID {$atleta->atl_id} excluído com sucesso.");
@@ -530,5 +613,57 @@ class AtletaController extends Controller
 
         $statusMessage = $atleta->atl_ativo ? 'ativado' : 'inativado';
         return redirect()->route('atletas.index')->with('success', "Atleta $statusMessage com sucesso!");
+    }
+
+    /**
+     * Tela de confirmação de transferência.
+     */
+    public function confirmarTransferencia(Request $request, Atleta $atleta)
+    {
+        $novoTimeId = $request->query('novo_time_id');
+        $novoTime = Time::find($novoTimeId);
+        
+        if (!$novoTime) {
+            return redirect()->route('atletas.index')->with('error', 'Time de destino inválido.');
+        }
+
+        return view('atletas.confirmar_transferencia', compact('atleta', 'novoTime'));
+    }
+
+    /**
+     * Efetiva a transferência de um atleta para um novo time.
+     */
+    public function transferir(Request $request, Atleta $atleta)
+    {
+        $request->validate([
+            'novo_time_id' => 'required|exists:times,tim_id'
+        ]);
+
+        $novoTimeId = $request->novo_time_id;
+        $timeAntigoId = $atleta->atl_tim_id;
+
+        // Verifica se Realmente é outro time
+        if ($timeAntigoId == $novoTimeId) {
+            return redirect()->route('atletas.index')->with('error', 'O atleta já está neste time.');
+        }
+
+        try {
+            // Registra histórico
+            \App\Models\HistoricoTransferencia::create([
+                'htr_atl_id' => $atleta->atl_id,
+                'htr_tim_origem_id' => $timeAntigoId,
+                'htr_tim_destino_id' => $novoTimeId,
+                'htr_user_id' => auth()->id(),
+            ]);
+
+            // Atualiza o time do atleta
+            $atleta->atl_tim_id = $novoTimeId;
+            $atleta->save();
+
+            return redirect()->route('atletas.index')->with('success', 'Atleta transferido com sucesso para a sua equipe!');
+        } catch (\Exception $e) {
+            Log::error("Erro ao transferir atleta ID {$atleta->atl_id}: " . $e->getMessage());
+            return redirect()->route('atletas.index')->with('error', 'Falha ao realizar transferência.');
+        }
     }
 }

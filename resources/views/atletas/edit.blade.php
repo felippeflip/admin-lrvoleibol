@@ -90,6 +90,16 @@
                                         </div>
                                     </div>
                                     <div class="mb-4">
+                                        <label for="atl_documento" class="block text-gray-700 dark:text-gray-300 mb-2">Documento de Comprovação (RG, CNH, etc) (PDF ou JPEG):</label>
+                                        <input type="file" name="atl_documento" id="atl_documento" accept="application/pdf, image/jpeg, image/jpg, image/png"
+                                               class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500 text-gray-700 dark:text-gray-300">
+                                        @if($atleta->atl_documento)
+                                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                                Documento atual: <a href="{{ $atleta->atl_documento_url }}" target="_blank" class="text-blue-600 hover:underline">Visualizar Documento</a>. Envie um novo arquivo para substituir.
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="mb-4">
                                         <label for="atl_email"
                                             class="block text-gray-700 dark:text-gray-300 mb-2">E-mail:</label>
                                         <input type="email" name="atl_email" id="atl_email"

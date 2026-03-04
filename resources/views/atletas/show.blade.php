@@ -91,6 +91,14 @@
                                         </p>
                                         <p class="mt-1">{{ $atleta->atl_ano_insc ?? '-' }}</p>
                                     </div>
+                                    <div class="md:col-span-2">
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Documento de Comprovação</p>
+                                        @if($atleta->atl_documento)
+                                            <a href="{{ $atleta->atl_documento_url }}" target="_blank" class="mt-1 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">Visualizar Documento</a>
+                                        @else
+                                            <p class="mt-1 text-sm text-gray-400">Não anexado</p>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 
@@ -207,6 +215,38 @@
                                     </div>
                                 @else
                                     <p class="text-gray-500 text-sm">Nenhum cartão impresso registrado.</p>
+                                @endif
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 text-blue-600 dark:text-blue-400 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    Histórico de Transferências
+                                </h4>
+                                @if($atleta->historicoTransferencias->count() > 0)
+                                    <div class="relative max-h-60 overflow-y-auto pr-2">
+                                        <div class="absolute w-px h-full bg-gray-200 dark:bg-gray-700 left-2.5 top-0 mt-4 rounded-full"></div>
+                                        <ul class="space-y-4 relative">
+                                            @foreach($atleta->historicoTransferencias()->orderBy('created_at', 'desc')->get() as $historico)
+                                                <li class="relative pl-8">
+                                                    <span class="absolute flex items-center justify-center w-5 h-5 bg-indigo-100 rounded-full -left-0 top-1 ring-4 ring-white dark:ring-gray-800 dark:bg-indigo-900">
+                                                        <svg class="w-2.5 h-2.5 text-indigo-800 dark:text-indigo-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+                                                        </svg>
+                                                    </span>
+                                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                                        Transferido para: <span class="text-indigo-600 dark:text-indigo-400">{{ $historico->timeDestino->tim_nome ?? 'N/A' }}</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                        De: {{ $historico->timeOrigem->tim_nome ?? 'Sem time / Desconhecido' }} &bull; Em: {{ \Carbon\Carbon::parse($historico->created_at)->format('d/m/Y \à\s H:i') }}
+                                                    </p>
+                                                    @if($historico->user)
+                                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Por: {{ $historico->user->name }}</p>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @else
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Nenhum histórico de transferências registrado.</p>
                                 @endif
                             </div>
                         </div>

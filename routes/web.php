@@ -64,6 +64,8 @@ Route::middleware('auth')->group(function () {
         Route::get('atletas/{atleta}/print', [AtletaController::class, 'print'])->name('atletas.print');
         Route::patch('atletas/{atleta}/mark-printed', [AtletaController::class, 'markPrinted'])->name('atletas.markPrinted');
         Route::patch('atletas/{atleta}/inactivate', [AtletaController::class, 'inactivate'])->name('atletas.inactivate');
+        Route::get('atletas/{atleta}/transferir', [AtletaController::class, 'confirmarTransferencia'])->name('atletas.transferir.confirmar');
+        Route::post('atletas/{atleta}/transferir', [AtletaController::class, 'transferir'])->name('atletas.transferir');
         Route::resource('atletas', AtletaController::class);
 
         Route::get('equipes/time/{time}', [EquipesController::class, 'indexForTime'])->name('equipes.index.for.time');
