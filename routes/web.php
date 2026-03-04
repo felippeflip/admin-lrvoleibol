@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('atletas/{atleta}/mark-printed', [AtletaController::class, 'markPrinted'])->name('atletas.markPrinted');
         Route::patch('atletas/{atleta}/inactivate', [AtletaController::class, 'inactivate'])->name('atletas.inactivate');
         Route::get('atletas/{atleta}/transferir', [AtletaController::class, 'confirmarTransferencia'])->name('atletas.transferir.confirmar');
+        Route::get('atletas/{atleta}/transferencia-direta', [AtletaController::class, 'transferenciaDireta'])->name('atletas.transferencia-direta');
         Route::post('atletas/{atleta}/transferir', [AtletaController::class, 'transferir'])->name('atletas.transferir');
         Route::resource('atletas', AtletaController::class);
 

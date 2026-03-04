@@ -616,6 +616,18 @@ class AtletaController extends Controller
     }
 
     /**
+     * Tela de transferência direta pelo Administrador.
+     */
+    public function transferenciaDireta(Atleta $atleta)
+    {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'Acesso negado');
+        }
+        $times = Time::where('tim_status', true)->orderBy('tim_nome')->get();
+        return view('atletas.transferencia_direta', compact('atleta', 'times'));
+    }
+
+    /**
      * Tela de confirmação de transferência.
      */
     public function confirmarTransferencia(Request $request, Atleta $atleta)
