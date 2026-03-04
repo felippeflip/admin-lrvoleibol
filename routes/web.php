@@ -73,6 +73,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('equipes', EquipesController::class);
         Route::patch('comissao-tecnica/{id}/mark-printed', [ComissaoTecnicaController::class, 'markPrinted'])->name('comissao-tecnica.markPrinted');
         Route::patch('comissao-tecnica/{id}/toggle-status', [ComissaoTecnicaController::class, 'toggleStatus'])->name('comissao-tecnica.toggleStatus');
+        Route::get('comissao-tecnica/{id}/transferir', [ComissaoTecnicaController::class, 'confirmarTransferencia'])->name('comissao-tecnica.transferir.confirmar');
+        Route::get('comissao-tecnica/{id}/transferencia-direta', [ComissaoTecnicaController::class, 'transferenciaDireta'])->name('comissao-tecnica.transferencia-direta');
+        Route::post('comissao-tecnica/{id}/transferir', [ComissaoTecnicaController::class, 'transferir'])->name('comissao-tecnica.transferir');
         Route::resource('comissao-tecnica', ComissaoTecnicaController::class);
 
         Route::get('campeonatos/{campeonato}/equipes', [EquipeCampeonatoController::class, 'index'])->name('equipes.campeonato.index');

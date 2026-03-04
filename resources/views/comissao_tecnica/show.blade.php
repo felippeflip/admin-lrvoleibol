@@ -200,6 +200,58 @@
                                     <p class="text-gray-500 text-sm">Nenhum cartão impresso registrado.</p>
                                 @endif
                             </div>
+
+                            <div class="mb-8 mt-6">
+                                <h4
+                                    class="text-lg font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 text-blue-600 dark:text-blue-400 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    Histórico de Transferências
+                                </h4>
+
+                                @if($comissaoTecnica->historicoTransferencias->count() > 0)
+                                    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                                <tr>
+                                                    <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
+                                                    <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time Origem</th>
+                                                    <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time Destino</th>
+                                                    <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Executado por</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
+                                                @foreach($comissaoTecnica->historicoTransferencias()->orderBy('created_at', 'desc')->get() as $historico)
+                                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                        <td class="px-4 py-3 whitespace-nowrap text-gray-900 dark:text-gray-300">
+                                                            {{ $historico->created_at->format('d/m/Y H:i') }}
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            @if($historico->timeOrigem)
+                                                                <span class="text-gray-700 dark:text-gray-400">{{ $historico->timeOrigem->tim_nome }}</span>
+                                                            @else
+                                                                <span class="text-gray-400 italic">Desconhecido</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            <span class="text-green-600 font-medium">{{ $historico->timeDestino->tim_nome ?? 'Desconhecido' }}</span>
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-400">
+                                                            {{ $historico->user->name ?? 'Sistema' }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">Este membro não possui registros de transferências ou sempre esteve na mesma equipe.</p>
+                                @endif
+                            </div>
                         </div>
                     </div>
 

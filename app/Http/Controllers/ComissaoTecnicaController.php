@@ -163,7 +163,7 @@ class ComissaoTecnicaController extends Controller
         $request->validate([
             'nome' => 'required|string|max:255',
             'registro_lrv' => 'nullable|string|max:20',
-            'cpf' => 'required|string|max:11|unique:comissao_tecnicas,cpf',
+            'cpf' => 'required|string|max:11', // Sem unique, check customizado abaixo
             'rg' => 'nullable|string|max:20',
             'funcao' => 'required|string|in:Técnico,Assistente Técnico,Médico,Fisioterapeuta,Massagista',
             'documento_registro' => 'nullable|string|max:50', // CREF, CRM, etc.
@@ -183,6 +183,27 @@ class ComissaoTecnicaController extends Controller
 
         $data = $request->except(['foto', 'comprovante_documento']);
         $data['status'] = true; // Default active
+
+        // Verifica CPF duplicado
+        if (!empty($data['cpf'])) {
+            $cpfLimpo = preg_replace('/[^0-9]/', '', $data['cpf']);
+            $comissaoExistente = ComissaoTecnica::where('cpf', $cpfLimpo)->first();
+
+            if ($comissaoExistente) {
+                // Se já estiver no mesmo time
+                if ($comissaoExistente->time_id == $data['time_id']) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['cpf' => 'Este membro já está cadastrado na sua equipe.']);
+                }
+
+                // Se estiver em time diferente, redireciona para confirmação de transferência
+                return redirect()->route('comissao-tecnica.transferir.confirmar', [
+                    'id' => $comissaoExistente->id,
+                    'novo_time_id' => $data['time_id']
+                ])->with('warning', 'Este CPF já está cadastrado em outra equipe. Deseja realizar a transferência?');
+            }
+        }
 
         // Upload Foto
         if ($request->hasFile('foto')) {
@@ -471,5 +492,72 @@ class ComissaoTecnicaController extends Controller
         $comissaoTecnica->delete();
 
         return redirect()->route('comissao-tecnica.index')->with('success', 'Membro removido com sucesso!');
+    }
+
+    /**
+     * Tela de transferência direta pelo Administrador.
+     */
+    public function transferenciaDireta($id)
+    {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'Acesso negado');
+        }
+        $comissaoTecnica = ComissaoTecnica::findOrFail($id);
+        $times = Time::where('tim_status', true)->orderBy('tim_nome')->get();
+        return view('comissao_tecnica.transferencia_direta', compact('comissaoTecnica', 'times'));
+    }
+
+    /**
+     * Tela de confirmação de transferência.
+     */
+    public function confirmarTransferencia(Request $request, $id)
+    {
+        $comissaoTecnica = ComissaoTecnica::findOrFail($id);
+        $novoTimeId = $request->query('novo_time_id');
+        $novoTime = Time::find($novoTimeId);
+        
+        if (!$novoTime) {
+            return redirect()->route('comissao-tecnica.index')->with('error', 'Time de destino inválido.');
+        }
+
+        return view('comissao_tecnica.confirmar_transferencia', compact('comissaoTecnica', 'novoTime'));
+    }
+
+    /**
+     * Efetiva a transferência de um membro da comissão para um novo time.
+     */
+    public function transferir(Request $request, $id)
+    {
+        $comissaoTecnica = ComissaoTecnica::findOrFail($id);
+        $request->validate([
+            'novo_time_id' => 'required|exists:times,tim_id'
+        ]);
+
+        $novoTimeId = $request->novo_time_id;
+        $timeAntigoId = $comissaoTecnica->time_id;
+
+        // Verifica se Realmente é outro time
+        if ($timeAntigoId == $novoTimeId) {
+            return redirect()->route('comissao-tecnica.index')->with('error', 'O membro já está neste time.');
+        }
+
+        try {
+            // Registra histórico
+            \App\Models\HistoricoTransferenciaComissao::create([
+                'htrc_comissao_id' => $comissaoTecnica->id,
+                'htrc_tim_origem_id' => $timeAntigoId,
+                'htrc_tim_destino_id' => $novoTimeId,
+                'htrc_user_id' => auth()->id(),
+            ]);
+
+            // Atualiza o time do membro
+            $comissaoTecnica->time_id = $novoTimeId;
+            $comissaoTecnica->save();
+
+            return redirect()->route('comissao-tecnica.index')->with('success', 'Membro transferido com sucesso para a equipe!');
+        } catch (\Exception $e) {
+            Log::error("Erro ao transferir membro ID {$comissaoTecnica->id}: " . $e->getMessage());
+            return redirect()->route('comissao-tecnica.index')->with('error', 'Falha ao realizar transferência.');
+        }
     }
 }

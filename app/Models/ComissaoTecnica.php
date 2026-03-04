@@ -66,4 +66,10 @@ class ComissaoTecnica extends Model
         $cartao = $this->cartoes()->where('ano', $ano)->first();
         return $cartao ? (bool) $cartao->impresso : false;
     }
+
+    // Histórico de transferências
+    public function historicoTransferencias()
+    {
+        return $this->hasMany(HistoricoTransferenciaComissao::class, 'htrc_comissao_id', 'id');
+    }
 }
