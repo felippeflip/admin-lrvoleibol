@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
 
         Route::resource('categorias', CategoriasController::class);
+        Route::resource('torneio-inicio', App\Http\Controllers\TorneioInicioController::class)->except(['show']);
         Route::get('/ginasios/create', [GinasioController::class, 'create'])->name('ginasios.create');
         Route::patch('/ginasios/{ginasio}/toggle-status', [GinasioController::class, 'toggleStatus'])->name('ginasios.toggleStatus');
         Route::resource('ginasios', GinasioController::class)->except(['index']);
