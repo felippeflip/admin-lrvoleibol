@@ -17,6 +17,17 @@ class AtletaController extends Controller
      */
     public function index(Request $request)
     {
+        if ($request->has('clear')) {
+            session()->forget('atleta_filters');
+            return redirect()->route('atletas.index');
+        }
+
+        if (count($request->except(['page', 'clear'])) > 0) {
+            session(['atleta_filters' => $request->except(['page', 'clear'])]);
+        } elseif (session()->has('atleta_filters')) {
+            $request->merge(session('atleta_filters'));
+        }
+
         $user = auth()->user();
         $query = Atleta::with(['categoria', 'time']);
 

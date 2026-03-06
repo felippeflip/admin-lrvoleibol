@@ -89,7 +89,7 @@
                                     <div class="col-span-1 md:col-span-4 flex justify-end space-x-2">
                                         <button type="submit"
                                             class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Filtrar</button>
-                                        <a href="{{ route('comissao-tecnica.index') }}"
+                                        <a href="{{ route('comissao-tecnica.index', ['clear' => 1]) }}"
                                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-center">Limpar</a>
                                     </div>
                                 </div>

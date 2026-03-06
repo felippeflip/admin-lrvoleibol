@@ -121,7 +121,7 @@
                                     <div class="flex items-end space-x-2">
                                         <button type="submit"
                                             class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full">Filtrar</button>
-                                        <a href="{{ route('atletas.index') }}"
+                                        <a href="{{ route('atletas.index', ['clear' => 1]) }}"
                                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded w-full text-center">Limpar</a>
                                     </div>
                                 </div>
@@ -144,6 +144,7 @@
                                         <th class="py-3 px-6 text-left">Nome</th>
                                         <th class="py-3 px-6 text-left">Time</th>
                                         <th class="py-3 px-6 text-left">Idade</th>
+                                        <th class="py-3 px-6 text-left">Data de Nascimento</th>
                                         <th class="py-3 px-6 text-left">Categoria</th>
                                         <th class="py-3 px-6 text-left">Celular</th>
                                         <th class="py-3 px-6 text-center">Ações</th>
@@ -177,6 +178,9 @@
                                             <td class="py-3 px-6 text-left">{{ $atleta->time->tim_nome ?? 'N/A' }}</td>
                                             <td class="py-3 px-6 text-left">
                                                 {{ $atleta->atl_dt_nasc ? \Carbon\Carbon::parse($atleta->atl_dt_nasc)->age : 'N/A' }}
+                                            </td>
+                                            <td class="py-3 px-6 text-left">
+                                                {{ $atleta->atl_dt_nasc ? \Carbon\Carbon::parse($atleta->atl_dt_nasc)->format('d/m/Y') : 'N/A' }}
                                             </td>
                                             <td class="py-3 px-6 text-left">
                                                 {{ $atleta->categoria ? $atleta->categoria->cto_nome : 'N/A' }}

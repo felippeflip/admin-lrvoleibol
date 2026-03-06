@@ -16,6 +16,17 @@ class ComissaoTecnicaController extends Controller
      */
     public function index(Request $request)
     {
+        if ($request->has('clear')) {
+            session()->forget('comissao_filters');
+            return redirect()->route('comissao-tecnica.index');
+        }
+
+        if (count($request->except(['page', 'clear'])) > 0) {
+            session(['comissao_filters' => $request->except(['page', 'clear'])]);
+        } elseif (session()->has('comissao_filters')) {
+            $request->merge(session('comissao_filters'));
+        }
+
         $user = auth()->user();
         $query = ComissaoTecnica::with('time');
 
