@@ -83,6 +83,9 @@ Route::middleware('auth')->group(function () {
         Route::post('campeonatos/{campeonato}/equipes', [EquipeCampeonatoController::class, 'store'])->name('equipes.campeonato.store');
         Route::delete('campeonatos/{campeonato}/equipes/{equipe}', [EquipeCampeonatoController::class, 'destroy'])->name('equipes.campeonato.destroy');
 
+        Route::get('agendamentos-pendentes', [App\Http\Controllers\AgendamentoController::class, 'indexComissao'])->name('agendamentos.comissao.index');
+        Route::post('agendamentos/{jogo}/sugerir', [App\Http\Controllers\AgendamentoController::class, 'sugerirAgendamento'])->name('agendamentos.comissao.sugerir');
+
         Route::get('elencos', [App\Http\Controllers\ElencoController::class, 'list'])->name('elenco.list');
         Route::get('/api/campeonatos/{id}/equipes', [EquipeCampeonatoController::class, 'listByCampeonatoJson'])->name('api.equipes.campeonato');
 
@@ -121,6 +124,14 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
         Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
+
+        // Agendamento Routes (Admin)
+        Route::get('/campeonatos/{campeonato}/agendamentos', [App\Http\Controllers\AgendamentoController::class, 'indexAdmin'])->name('agendamentos.admin.index');
+        Route::post('/campeonatos/{campeonato}/categorias/{categoria}/gerar-agendamento', [App\Http\Controllers\AgendamentoController::class, 'gerarAgendamento'])->name('agendamentos.gerar');
+        Route::post('/agendamentos/{jogo}/aprovar', [App\Http\Controllers\AgendamentoController::class, 'aprovarAgendamento'])->name('agendamentos.aprovar');
+        Route::post('/agendamentos/{jogo}/desbloquear', [App\Http\Controllers\AgendamentoController::class, 'desbloquearAgendamento'])->name('agendamentos.desbloquear');
+        Route::post('/agendamentos/deletar-massa', [App\Http\Controllers\AgendamentoController::class, 'deletarMassa'])->name('agendamentos.deletarMassa');
+        Route::delete('/agendamentos/{jogo}/deletar', [App\Http\Controllers\AgendamentoController::class, 'deletarAgendamento'])->name('agendamentos.deletar');
 
         // CRUD Documentos (Admin)
         Route::resource('documentos', App\Http\Controllers\DocumentoController::class)->except(['index', 'show']);

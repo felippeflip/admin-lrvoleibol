@@ -18,6 +18,8 @@ class Campeonato extends Model
         'cpo_ano',
         'cpo_dt_inicio',
         'cpo_dt_fim',
+        'cpo_dt_fim_classificacao',
+        'cpo_dt_fim_finais',
         'cpo_ativo',
     ];
 

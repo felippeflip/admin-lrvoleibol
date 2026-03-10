@@ -77,6 +77,7 @@
                                         class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
                                         <th class="py-3 px-6 text-left">Apelido</th>
                                         <th class="py-3 px-6 text-left">Nome Completo</th>
+                                        <th class="py-3 px-6 text-left">Time</th>
                                         <th class="py-3 px-6 text-left">Registro LRV</th>
                                         <th class="py-3 px-6 text-left">Categoria</th>
                                         <th class="py-3 px-6 text-left">Telefone</th>
@@ -90,6 +91,7 @@
                                             class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                                             <td class="py-3 px-6 text-left">{{ $user->apelido }}</td>
                                             <td class="py-3 px-6 text-left">{{ $user->name }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $user->time ? $user->time->tim_nome : ($user->timeResponsavel ? $user->timeResponsavel->tim_nome : '-') }}</td>
                                             <td class="py-3 px-6 text-left">{{ $user->lrv }}</td>
                                             <td class="py-3 px-6 text-left">{{ $user->tipo_arbitro }}</td>
                                             <td class="py-3 px-6 text-left">{{ $user->telefone }}</td>

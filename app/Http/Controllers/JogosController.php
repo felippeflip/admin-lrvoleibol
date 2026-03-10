@@ -173,7 +173,7 @@ class JogosController extends Controller
             foreach ($campeonatos as $camp) {
                 // Get games related to this championship
                 // We check 'mandante' relationship to find the championship
-                $jogosDoCampeonato = Jogo::whereHas('mandante', function ($q) use ($camp) {
+                $jogosDoCampeonato = Jogo::aprovadosOuNormais()->whereHas('mandante', function ($q) use ($camp) {
                     $q->where('cpo_fk_id', $camp->cpo_id);
                 })->get();
 
@@ -203,7 +203,7 @@ class JogosController extends Controller
             $startDate = now()->subDays(7)->startOfDay();
             $endDate = now()->addDays(30)->endOfDay();
 
-            $adminJogos = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            $adminJogos = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                 ->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
                 ->orderBy('jgo_dt_jogo')
                 ->orderBy('jgo_hora_jogo')
@@ -215,7 +215,7 @@ class JogosController extends Controller
         // --- 2. JUIZ ---
         if ($user->hasRole('Juiz') || $user->is_arbitro) {
             // Base Query for User's Games
-            $juizQuery = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            $juizQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                 ->where(function ($q) use ($user) {
                     $q->where('jgo_arbitro_principal', $user->id)
                         ->orWhere('jgo_arbitro_secundario', $user->id)
@@ -274,7 +274,7 @@ class JogosController extends Controller
                     ->join('equipe_campeonato', 'equipes.eqp_id', '=', 'equipe_campeonato.eqp_fk_id')
                     ->pluck('equipe_campeonato.eqp_cpo_id');
 
-                $jogosQuery = Jogo::with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+                $jogosQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                     ->where(function ($query) use ($equipeIds) {
                         $query->whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
                             ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds);

@@ -76,6 +76,11 @@ class User extends Authenticatable
         return $this->belongsTo(Time::class, 'time_id', 'tim_id');
     }
 
+    public function timeResponsavel()
+    {
+        return $this->hasOne(Time::class, 'tim_user_id', 'id');
+    }
+
     public function getFotoUrlAttribute()
     {
         if ($this->foto) {

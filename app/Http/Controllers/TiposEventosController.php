@@ -52,6 +52,8 @@ class TiposEventosController extends Controller
             'cpo_ano' =>        'required|integer|min:2000',
             'cpo_dt_inicio' =>  'required|date',
             'cpo_dt_fim' =>     'required|date|after_or_equal:cpo_dt_inicio',
+            'cpo_dt_fim_classificacao' => 'nullable|date',
+            'cpo_dt_fim_finais' => 'nullable|date',
         ]);
 
 
@@ -79,6 +81,8 @@ class TiposEventosController extends Controller
             'cpo_ano'          => $request->input('cpo_ano'),
             'cpo_dt_inicio'    => $request->input('cpo_dt_inicio'),
             'cpo_dt_fim'       => $request->input('cpo_dt_fim'),
+            'cpo_dt_fim_classificacao' => $request->input('cpo_dt_fim_classificacao'),
+            'cpo_dt_fim_finais'=> $request->input('cpo_dt_fim_finais'),
             'cpo_ativo'        => true,
         ]);
 
@@ -114,6 +118,8 @@ class TiposEventosController extends Controller
             'cpo_ano' => 'required|integer|min:2000|max:' . date('Y'),
             'cpo_dt_inicio' => 'required|date',
             'cpo_dt_fim' => 'required|date|after_or_equal:cpo_dt_inicio',
+            'cpo_dt_fim_classificacao' => 'nullable|date',
+            'cpo_dt_fim_finais' => 'nullable|date',
         ]);
 
        $campeonato = Campeonato::findOrFail($id);
@@ -126,6 +132,8 @@ class TiposEventosController extends Controller
             'cpo_ano' => $request->input('cpo_ano'),
             'cpo_dt_inicio' => $request->input('cpo_dt_inicio'),
             'cpo_dt_fim' => $request->input('cpo_dt_fim'),
+            'cpo_dt_fim_classificacao' => $request->input('cpo_dt_fim_classificacao'),
+            'cpo_dt_fim_finais'=> $request->input('cpo_dt_fim_finais'),
             'cpo_ativo' => $request->boolean('cpo_ativo'),
         ]);
 

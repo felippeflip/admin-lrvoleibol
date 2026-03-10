@@ -48,6 +48,20 @@
                                 <label for="cpo_dt_fim" class="block text-gray-700">DATA FIM:</label>
                                 <input type="date" name="cpo_dt_fim" id="cpo_dt_fim" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_dt_fim') }}">
                             </div>
+
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-bold mb-2">Prazos para Agendamento de Jogos:</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-700 p-4 rounded">
+                                    <div>
+                                        <label for="cpo_dt_fim_classificacao" class="block text-sm text-gray-700 dark:text-gray-300">Data Limite Finais (Classificação):</label>
+                                        <input type="date" name="cpo_dt_fim_classificacao" id="cpo_dt_fim_classificacao" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_dt_fim_classificacao') }}">
+                                    </div>
+                                    <div>
+                                        <label for="cpo_dt_fim_finais" class="block text-sm text-gray-700 dark:text-gray-300">Data Limite (Semi Final e Final):</label>
+                                        <input type="date" name="cpo_dt_fim_finais" id="cpo_dt_fim_finais" class="w-full border border-gray-300 p-2 rounded" value="{{ old('cpo_dt_fim_finais') }}">
+                                    </div>
+                                </div>
+                            </div>
                            
                             <div class="flex justify-between">
                                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Salvar</button>

@@ -15,7 +15,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::with(['time', 'timeResponsavel']);
 
         // Filtro de Busca (Nome ou Apelido)
         if ($request->filled('search')) {

@@ -5,9 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Builder;
+
 class Jogo extends Model
 {
     use HasFactory;
+
+    public function scopeAprovadosOuNormais(Builder $query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('jgo_status_agendamento')
+              ->orWhereNotIn('jgo_status_agendamento', ['pendente_preenchimento', 'pendente_aprovacao']);
+        });
+    }
 
     protected $table = 'jogos';
     protected $primaryKey = 'jgo_id';
@@ -31,6 +41,9 @@ class Jogo extends Model
         'jgo_notificacao_arbitro_s',
         'jgo_notificacao_apontador',
         'jgo_notificacao_resultado',
+        'jgo_status_agendamento',
+        'jgo_sugerido_por_equipe_id',
+        'jgo_fase',
     ];
 
     public function resultadoSets()
