@@ -18,6 +18,8 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
     // Campos que podem ser preenchidos em massa
     protected $fillable = [
         'atl_nome',
+        'atl_estrangeiro',
+        'atl_passaporte',
         'atl_cpf',
         'atl_rg',
         'atl_celular',

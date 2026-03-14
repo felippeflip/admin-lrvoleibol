@@ -156,15 +156,21 @@ class AtletaController extends Controller
 
         }
 
+        $isEstrangeiro = $request->has('atl_estrangeiro');
+
         // Limpa CPF e RG antes de validar para garantir unicidade com o formato do banco (apenas números)
         $request->merge([
-            'atl_cpf' => preg_replace('/[^0-9]/', '', $request->atl_cpf ?? ''),
+            'atl_estrangeiro' => $isEstrangeiro,
+            'atl_passaporte' => $isEstrangeiro ? $request->atl_passaporte : null,
+            'atl_cpf' => $isEstrangeiro ? null : preg_replace('/[^0-9]/', '', $request->atl_cpf ?? ''),
             'atl_rg' => preg_replace('/[^0-9]/', '', $request->atl_rg ?? ''),
         ]);
 
         $request->validate([
             'atl_nome' => 'required|string|max:100',
-            'atl_cpf' => 'nullable|string|max:11', // Check unique e duplicidade customizado
+            'atl_estrangeiro' => 'boolean',
+            'atl_passaporte' => 'nullable|string|max:50',
+            'atl_cpf' => 'nullable|string|max:20', // Check unique e duplicidade customizado
             'atl_rg' => 'nullable|string|max:10', // RG sem máscara
             'atl_celular' => 'nullable|string|max:11', // Celular sem máscara
             'atl_telefone' => 'nullable|string|max:10', // Telefone sem máscara
@@ -189,31 +195,35 @@ class AtletaController extends Controller
         $data = $request->except(['atl_foto', 'atl_documento']);
         $data['atl_ativo'] = 1; // Garante que o atleta seja criado como ativo
 
-        // Verifica CPF se existir
-        if (!empty($data['atl_cpf'])) {
+        // Verifica duplicidade (CPF ou Passaporte)
+        $atletaExistente = null;
+        $campoDuplicado = 'atl_cpf';
+
+        if (!$data['atl_estrangeiro'] && !empty($data['atl_cpf'])) {
             $cpfLimpo = preg_replace('/[^0-9]/', '', $data['atl_cpf']);
             $atletaExistente = Atleta::where('atl_cpf', $cpfLimpo)->first();
+        } elseif ($data['atl_estrangeiro'] && !empty($data['atl_passaporte'])) {
+            $atletaExistente = Atleta::where('atl_passaporte', $data['atl_passaporte'])->first();
+            $campoDuplicado = 'atl_passaporte';
+        }
 
-            if ($atletaExistente) {
-                // Se já estiver no mesmo time
-                if ($atletaExistente->atl_tim_id == $data['atl_tim_id']) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->withErrors(['atl_cpf' => 'Este atleta já está cadastrado na sua equipe.']);
-                }
-
-                // Se estiver em time diferente, redireciona para confirmação de transferência
-                // Vamos passar os dados digitados na session para poder recuperar (opcional) ou simplesmente re-solicitar,
-                // mas a regra foca na transferência do perfil Existente.
-                return redirect()->route('atletas.transferir.confirmar', [
-                    'atleta' => $atletaExistente->atl_id,
-                    'novo_time_id' => $data['atl_tim_id']
-                ])->with('warning', 'Este CPF já está cadastrado em outra equipe. Deseja realizar a transferência?');
+        if ($atletaExistente) {
+            // Se já estiver no mesmo time
+            if ($atletaExistente->atl_tim_id == $data['atl_tim_id']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([$campoDuplicado => 'Este atleta já está cadastrado na sua equipe.']);
             }
+
+            // Se estiver em time diferente, redireciona para confirmação de transferência
+            return redirect()->route('atletas.transferir.confirmar', [
+                'atleta' => $atletaExistente->atl_id,
+                'novo_time_id' => $data['atl_tim_id']
+            ])->with('warning', 'Este atleta já está cadastrado em outra equipe. Deseja realizar a transferência?');
         }
 
         // Ajusta campos que vêm formatados ou precisam de pré-processamento
-        $data['atl_cpf'] = preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
+        $data['atl_cpf'] = $data['atl_estrangeiro'] ? null : preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
         $data['atl_rg'] = preg_replace('/[^0-9]/', '', $data['atl_rg'] ?? '');
         $data['atl_celular'] = preg_replace('/[^0-9]/', '', $data['atl_celular'] ?? '');
         $data['atl_telefone'] = preg_replace('/[^0-9]/', '', $data['atl_telefone'] ?? '');
@@ -415,9 +425,20 @@ class AtletaController extends Controller
             }
             $request->merge(['atl_tim_id' => $timeId]);
         }
+        $isEstrangeiro = $request->has('atl_estrangeiro');
+
+        $request->merge([
+            'atl_estrangeiro' => $isEstrangeiro,
+            'atl_passaporte' => $isEstrangeiro ? $request->atl_passaporte : null,
+            'atl_cpf' => $isEstrangeiro ? null : preg_replace('/[^0-9]/', '', $request->atl_cpf ?? ''),
+            'atl_rg' => preg_replace('/[^0-9]/', '', $request->atl_rg ?? ''),
+        ]);
+
         $request->validate([
             'atl_nome' => 'required|string|max:100',
-            'atl_cpf' => 'nullable|string|max:11',
+            'atl_estrangeiro' => 'boolean',
+            'atl_passaporte' => 'nullable|string|max:50',
+            'atl_cpf' => 'nullable|string|max:20',
             'atl_rg' => 'nullable|string|max:10',
             'atl_celular' => 'nullable|string|max:11',
             'atl_telefone' => 'nullable|string|max:10',
@@ -441,7 +462,7 @@ class AtletaController extends Controller
         $data = $request->except(['atl_foto', 'atl_documento']);
 
         // Ajusta campos que vêm formatados ou precisam de pré-processamento
-        $data['atl_cpf'] = preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
+        $data['atl_cpf'] = $data['atl_estrangeiro'] ? null : preg_replace('/[^0-9]/', '', $data['atl_cpf'] ?? '');
         $data['atl_rg'] = preg_replace('/[^0-9]/', '', $data['atl_rg'] ?? '');
         $data['atl_celular'] = preg_replace('/[^0-9]/', '', $data['atl_celular'] ?? '');
         $data['atl_telefone'] = preg_replace('/[^0-9]/', '', $data['atl_telefone'] ?? '');

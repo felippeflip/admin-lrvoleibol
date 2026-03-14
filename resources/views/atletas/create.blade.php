@@ -71,12 +71,25 @@
                                             placeholder="Gerado Automaticamente" readonly>
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label for="atl_cpf"
-                                                class="block text-gray-700 dark:text-gray-300 mb-2">CPF:</label>
-                                            <input type="text" name="atl_cpf" id="atl_cpf"
-                                                class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-                                                value="{{ old('atl_cpf') }}" maxlength="14">
+                                        <div class="md:col-span-2 flex items-center mt-2 mb-2">
+                                            <input id="atl_estrangeiro" name="atl_estrangeiro" type="checkbox" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" {{ old('atl_estrangeiro') ? 'checked' : '' }}>
+                                            <label for="atl_estrangeiro" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Atleta Estrangeiro?</label>
+                                        </div>
+                                        <div id="container_documento">
+                                            <div id="div_cpf">
+                                                <label for="atl_cpf"
+                                                    class="block text-gray-700 dark:text-gray-300 mb-2">CPF:</label>
+                                                <input type="text" name="atl_cpf" id="atl_cpf"
+                                                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
+                                                    value="{{ old('atl_cpf') }}" maxlength="14">
+                                            </div>
+                                            <div id="div_passaporte" style="display: none;">
+                                                <label for="atl_passaporte"
+                                                    class="block text-gray-700 dark:text-gray-300 mb-2">Documento (Ex: Passaporte):</label>
+                                                <input type="text" name="atl_passaporte" id="atl_passaporte"
+                                                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded focus:ring-blue-500 focus:border-blue-500"
+                                                    value="{{ old('atl_passaporte') }}" maxlength="50">
+                                            </div>
                                         </div>
                                         <div>
                                             <label for="atl_rg"
@@ -266,6 +279,27 @@
                 });
             }
 
+            const estrangeiroCheckbox = document.getElementById('atl_estrangeiro');
+            const divCpf = document.getElementById('div_cpf');
+            const divPassaporte = document.getElementById('div_passaporte');
+
+            if (estrangeiroCheckbox) {
+                estrangeiroCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        divCpf.style.display = 'none';
+                        divPassaporte.style.display = 'block';
+                    } else {
+                        divCpf.style.display = 'block';
+                        divPassaporte.style.display = 'none';
+                    }
+                });
+                // Trigger on load
+                if(estrangeiroCheckbox.checked) {
+                    divCpf.style.display = 'none';
+                    divPassaporte.style.display = 'block';
+                }
+            }
+
             // Validação de CPF FrontEnd
             const cpfInput = document.getElementById('atl_cpf');
             function validarCPF(cpf) {
@@ -290,6 +324,7 @@
 
             if (cpfInput) {
                 cpfInput.addEventListener('blur', function() {
+                    if (estrangeiroCheckbox && estrangeiroCheckbox.checked) return;
                     const cpfVal = this.value.replace(/[^\d]+/g, '');
                     if(cpfVal.length > 0 && !validarCPF(cpfVal)) {
                         alert('CPF Inválido! Por favor, verifique o número digitado.');
