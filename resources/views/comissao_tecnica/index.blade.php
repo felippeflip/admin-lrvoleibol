@@ -109,6 +109,7 @@
                                         class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
                                         <th class="py-3 px-6 text-left">Foto</th>
                                         <th class="py-3 px-6 text-left">Nome</th>
+                                        <th class="py-3 px-6 text-left">D. Nascimento</th>
                                         <th class="py-3 px-6 text-left">Função</th>
                                         <th class="py-3 px-6 text-left">Documento</th>
                                         <th class="py-3 px-6 text-left">Time</th>
@@ -141,6 +142,9 @@
                                                 </div>
                                                 <br>
                                                 <span class="text-xs text-gray-500">{{ $membro->cpf }}</span>
+                                            </td>
+                                            <td class="py-3 px-6 text-left">
+                                                {{ $membro->data_nascimento ? \Carbon\Carbon::parse($membro->data_nascimento)->format('d/m/Y') : 'N/A' }}
                                             </td>
                                             <td class="py-3 px-6 text-left">
                                                 {{ $membro->funcao }}

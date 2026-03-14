@@ -35,13 +35,8 @@
                                 @endforeach
                             </select>
                             
-                            <div id="grupos_container" class="hidden flex items-center gap-2">
-                                <label for="qtd_grupos" class="font-semibold text-red-600">Qtd. de Grupos (+16 eqp):</label>
-                                <input type="number" id="qtd_grupos" name="qtd_grupos" min="2" max="10" value="2" class="border p-2 rounded w-20">
-                            </div>
-
                             <button type="submit" class="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 font-bold rounded">
-                                GERAR JOGOS (Rodízio)
+                                GERAR JOGOS
                             </button>
                         </div>
                     </form>
@@ -211,15 +206,7 @@
     }
 
     function verificarCategoria(selectElement) {
-        var option = selectElement.options[selectElement.selectedIndex];
-        var qtd = parseInt(option.getAttribute('data-qtd') || 0);
-        var gruposContainer = document.getElementById('grupos_container');
-        
-        if (qtd >= 16) {
-            gruposContainer.classList.remove('hidden');
-        } else {
-            gruposContainer.classList.add('hidden');
-        }
+        // Obsolete function but keeping it empty so no console errors if it's referenced
     }
 
     function handleGerarSubmit() {
@@ -235,8 +222,7 @@
         form.action = form.action.replace('__CAT__', cat_id);
         
         if (qtd >= 16) {
-            var qtdGrupos = document.getElementById('qtd_grupos').value;
-            return confirm('Gerar os jogos divididos em ' + qtdGrupos + ' grupos para as ' + qtd + ' equipes selecionadas?');
+            return confirm('Existem 16 ou mais equipes na categoria selecionada. Você será redirecionado para a tela de definição de Grupos. Deseja prosseguir?');
         } else {
             return confirm('Gerar os jogos todos contra todos para a categoria selecionada?');
         }

@@ -32,6 +32,7 @@ class ComissaoTecnica extends Model
         'cidade',
         'cidade',
         'estado',
+        'data_nascimento',
         'status'
     ];
 

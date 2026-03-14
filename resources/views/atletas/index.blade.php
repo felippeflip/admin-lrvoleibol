@@ -142,6 +142,7 @@
                                         <th class="py-3 px-6 text-left">Foto</th>
                                         <th class="py-3 px-6 text-left">CPF</th>
                                         <th class="py-3 px-6 text-left">Nome</th>
+                                        <th class="py-3 px-6 text-left">Reg. LRV</th>
                                         <th class="py-3 px-6 text-left">Time</th>
                                         <th class="py-3 px-6 text-left">Idade</th>
                                         <th class="py-3 px-6 text-left">Data de Nascimento</th>
@@ -174,6 +175,9 @@
                                                         </svg>
                                                     </span>
                                                 @endif
+                                            </td>
+                                            <td class="py-3 px-6 text-left font-bold text-gray-900 dark:text-gray-100">
+                                                {{ $atleta->atl_resg ?: 'N/A' }}
                                             </td>
                                             <td class="py-3 px-6 text-left">{{ $atleta->time->tim_nome ?? 'N/A' }}</td>
                                             <td class="py-3 px-6 text-left">

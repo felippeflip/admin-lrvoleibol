@@ -13,6 +13,32 @@ use Illuminate\Support\Facades\DB;
 class AgendamentoController extends Controller
 {
     /**
+     * Admin: Render the form to manually define groups
+     */
+    public function definirGrupos($campeonato_id, $categoria_id)
+    {
+        $equipes = EquipeCampeonato::where('cpo_fk_id', $campeonato_id)
+            ->whereHas('equipe', function($q) use ($categoria_id) {
+                $q->where('eqp_categoria_id', $categoria_id);
+            })->with('equipe.time')->get();
+
+        $cmp = Campeonato::findOrFail($campeonato_id);
+        $cat = Categoria::findOrFail($categoria_id);
+        
+        // Verifica se existem jogos para evitar acesso indevido se já gerados
+        $pivotIds = $equipes->pluck('eqp_cpo_id')->toArray();
+        $existingGames = Jogo::whereIn('jgo_eqp_cpo_mandante_id', $pivotIds)
+                             ->orWhereIn('jgo_eqp_cpo_visitante_id', $pivotIds)
+                             ->exists();
+
+        if ($existingGames) {
+            return redirect()->route('agendamentos.admin.index', $campeonato_id)->withErrors(['error' => 'Já existem jogos gerados (ou em andamento) para esta categoria.']);
+        }
+
+        return view('agendamentos.admin.definir_grupos', compact('equipes', 'cmp', 'cat'));
+    }
+
+    /**
      * Admin: Generate Schedule for a category in a championship
      */
     public function gerarAgendamento(Request $request, $campeonato_id, $categoria_id)
@@ -54,19 +80,34 @@ class AgendamentoController extends Controller
                 $jogosAGerar = $this->generateRoundRobin($pivotIds, 'Turno Único');
             } else {
                 // N >= 16: Groups
-                $qtd_grupos = (int) $request->input('qtd_grupos', 2);
-                if ($qtd_grupos < 2) $qtd_grupos = 2; // Security min 2
+                if (!$request->has('grupos')) {
+                    // Redirect to the GET route where groups are defined
+                    return redirect()->route('agendamentos.definirGrupos', [
+                        'campeonato' => $campeonato_id,
+                        'categoria' => $categoria_id
+                    ]);
+                }
+
+                // If we get here, admin submitted the groups definitions
+                $gruposInput = $request->input('grupos'); // arrado [eqp_cpo_id => 'Grupo A', ...]
                 
-                // Shuffle para sortear as equipes nos grupos - opcional, mas usual
-                shuffle($pivotIds);
-                
-                // Dividir array nos grupos
-                $grupos = array_chunk($pivotIds, ceil($N / $qtd_grupos));
-                
-                foreach ($grupos as $index => $grupo) {
-                    $letra = chr(65 + $index); // 65 é 'A' em ASCII
-                    $jogosGrupo = $this->generateRoundRobin($grupo, "Grupo {$letra}");
-                    $jogosAGerar = array_merge($jogosAGerar, $jogosGrupo);
+                // Agrupar as equipes pelos valores 
+                $gruposFormatados = [];
+                foreach ($gruposInput as $pivotId => $nomeGrupo) {
+                    if (!empty($nomeGrupo)) {
+                        $gruposFormatados[$nomeGrupo][] = $pivotId;
+                    }
+                }
+
+                if (count($gruposFormatados) < 2) {
+                    return redirect()->back()->withErrors(['error' => 'É necessário formar pelo menos 2 grupos válidos.']);
+                }
+
+                foreach ($gruposFormatados as $nomeGrupo => $grupoPivotIds) {
+                    // Turno A e Turno B (Inversão) para cada grupo
+                    $jogosGrupoTurnoA = $this->generateRoundRobin($grupoPivotIds, "{$nomeGrupo} - Turno A");
+                    $jogosGrupoTurnoB = $this->generateRoundRobinReverse($grupoPivotIds, "{$nomeGrupo} - Turno B");
+                    $jogosAGerar = array_merge($jogosAGerar, $jogosGrupoTurnoA, $jogosGrupoTurnoB);
                 }
             }
 
@@ -81,11 +122,13 @@ class AgendamentoController extends Controller
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Agendamento prévio gerado com sucesso para ' . $N . ' equipes.');
+            return redirect()->route('agendamentos.admin.index', $campeonato_id)
+                             ->with('success', 'Agendamento prévio gerado com sucesso para ' . $N . ' equipes.');
 
         } catch (\Exception $e) {
             Log::error('Erro ao gerar agendamento: ' . $e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Ocorreu um erro ao gerar o agendamento.']);
+            return redirect()->route('agendamentos.admin.index', $campeonato_id)
+                             ->withErrors(['error' => 'Ocorreu um erro ao gerar o agendamento.']);
         }
     }
 
@@ -301,15 +344,11 @@ class AgendamentoController extends Controller
                 });
             });
 
-        // Filtro: Competição/Categoria
-        if ($request->filled('competicao')) {
-            $term = $request->competicao;
-            $query->where(function($q) use ($term) {
-                $q->whereHas('mandante.campeonato', function($qCmp) use ($term) {
-                    $qCmp->where('cpo_nome', 'like', "%{$term}%");
-                })->orWhereHas('mandante.equipe.categoria', function($qCat) use ($term) {
-                    $qCat->where('cto_nome', 'like', "%{$term}%");
-                });
+        // Filtro: Categoria
+        if ($request->filled('categoria_id')) {
+            $catId = $request->categoria_id;
+            $query->whereHas('mandante.equipe', function($q) use ($catId) {
+                $q->where('eqp_categoria_id', $catId);
             });
         }
 
@@ -328,7 +367,9 @@ class AgendamentoController extends Controller
         // Also fetch Ginasios for suggesting local
         $ginasios = \App\Models\Ginasio::where('gin_status', true)->get();
 
-        return view('agendamentos.comissao.index', compact('jogos', 'ginasios', 'time_id'));
+        $categorias = \App\Models\Categoria::orderBy('cto_nome')->get();
+
+        return view('agendamentos.comissao.index', compact('jogos', 'ginasios', 'time_id', 'categorias'));
     }
 
     // Comissão Técnica envia a data/hora para o adversário e Admin

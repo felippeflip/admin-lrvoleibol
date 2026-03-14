@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
 
         // Agendamento Routes (Admin)
         Route::get('/campeonatos/{campeonato}/agendamentos', [App\Http\Controllers\AgendamentoController::class, 'indexAdmin'])->name('agendamentos.admin.index');
+        Route::get('/campeonatos/{campeonato}/categorias/{categoria}/definir-grupos', [App\Http\Controllers\AgendamentoController::class, 'definirGrupos'])->name('agendamentos.definirGrupos');
         Route::post('/campeonatos/{campeonato}/categorias/{categoria}/gerar-agendamento', [App\Http\Controllers\AgendamentoController::class, 'gerarAgendamento'])->name('agendamentos.gerar');
         Route::post('/agendamentos/{jogo}/aprovar', [App\Http\Controllers\AgendamentoController::class, 'aprovarAgendamento'])->name('agendamentos.aprovar');
         Route::post('/agendamentos/{jogo}/desbloquear', [App\Http\Controllers\AgendamentoController::class, 'desbloquearAgendamento'])->name('agendamentos.desbloquear');

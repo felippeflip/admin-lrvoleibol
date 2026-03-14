@@ -74,6 +74,13 @@
                                 <x-input-error :messages="$errors->get('rg')" class="mt-2" />
                             </div>
 
+                            <!-- Data de Nascimento -->
+                            <div>
+                                <label for="data_nascimento" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Data de Nascimento</label>
+                                <input type="date" name="data_nascimento" id="data_nascimento" value="{{ old('data_nascimento', $comissaoTecnica->data_nascimento) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300">
+                                <x-input-error :messages="$errors->get('data_nascimento')" class="mt-2" />
+                            </div>
+
                             <!-- Função -->
                             <div>
                                 <label for="funcao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Função *</label>

@@ -177,6 +177,7 @@ class ComissaoTecnicaController extends Controller
             'cpf' => 'required|string|max:11', // Sem unique, check customizado abaixo
             'rg' => 'nullable|string|max:20',
             'funcao' => 'required|string|in:Técnico,Assistente Técnico,Médico,Fisioterapeuta,Massagista',
+            'data_nascimento' => 'nullable|date',
             'documento_registro' => 'nullable|string|max:50', // CREF, CRM, etc.
             'foto' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Foto 3x4
             'comprovante_documento' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120', // Diploma/Carteira
@@ -361,6 +362,7 @@ class ComissaoTecnicaController extends Controller
             'cpf' => 'required|string|max:11|unique:comissao_tecnicas,cpf,' . $id,
             'rg' => 'nullable|string|max:20',
             'funcao' => 'required|string|in:Técnico,Assistente Técnico,Médico,Fisioterapeuta,Massagista',
+            'data_nascimento' => 'nullable|date',
             'documento_registro' => 'nullable|string|max:50',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'comprovante_documento' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
