@@ -327,15 +327,26 @@ class AgendamentoController extends Controller
     // Lista os jogos pendentes de agendamento que envolvem o time da comissão logada
     public function indexComissao(Request $request)
     {
-        $time_id = auth()->user()->time_id; // Assume que Comissão Técnica tem time vinculado
+        $user = auth()->user();
+        $isAdmin = $user->hasRole('Administrador');
+        $time_id = $user->time_id; // Assume que Comissão Técnica tem time vinculado
 
         if (!$time_id) {
+            $timeResponsavel = $user->timeResponsavel;
+            if ($timeResponsavel) {
+                $time_id = $timeResponsavel->tim_id;
+            }
+        }
+
+        if (!$time_id && !$isAdmin) {
             return redirect()->route('dashboard')->withErrors(['error' => 'Usuário não vinculado a um time.']);
         }
 
         $query = Jogo::with(['mandante.equipe.time', 'visitante.equipe.time', 'mandante.equipe.categoria', 'mandante.campeonato'])
-            ->whereIn('jgo_status_agendamento', ['pendente_preenchimento', 'pendente_aprovacao'])
-            ->where(function ($query) use ($time_id) {
+            ->whereIn('jgo_status_agendamento', ['pendente_preenchimento', 'pendente_aprovacao']);
+
+        if (!$isAdmin) {
+            $query->where(function ($query) use ($time_id) {
                 $query->whereHas('mandante.equipe', function ($q) use ($time_id) {
                     $q->where('eqp_time_id', $time_id);
                 })
@@ -343,6 +354,7 @@ class AgendamentoController extends Controller
                     $q->where('eqp_time_id', $time_id);
                 });
             });
+        }
 
         // Filtro: Categoria
         if ($request->filled('categoria_id')) {
@@ -383,8 +395,18 @@ class AgendamentoController extends Controller
 
         $jogo = Jogo::findOrFail($jogo_id);
         
-        $time_id = auth()->user()->time_id;
-        if (!$time_id) abort(403);
+        $user = auth()->user();
+        $isAdmin = $user->hasRole('Administrador');
+        $time_id = $user->time_id;
+
+        if (!$time_id) {
+            $timeResponsavel = $user->timeResponsavel;
+            if ($timeResponsavel) {
+                $time_id = $timeResponsavel->tim_id;
+            }
+        }
+
+        if (!$time_id && !$isAdmin) abort(403);
 
         $jogo->update([
             'jgo_dt_jogo' => $request->jgo_dt_jogo,

@@ -87,7 +87,7 @@
                                     @php
                                         // Verificar se já foi sugerido por outra equipe
                                         $isLocked = ($jogo->jgo_status_agendamento == 'pendente_aprovacao');
-                                        $sugeridoPorMim = ($jogo->jgo_sugerido_por_equipe_id == $time_id);
+                                        $sugeridoPorMim = ($time_id && $jogo->jgo_sugerido_por_equipe_id == $time_id);
                                         $cmp = $jogo->mandante->campeonato;
                                         $dt_fim_classificacao = $cmp ? ($cmp->cpo_dt_fim_classificacao ? \Carbon\Carbon::parse($cmp->cpo_dt_fim_classificacao)->format('d/m/Y') : 'Não Definido') : 'N/A';
                                         $dt_fim_finais = $cmp ? ($cmp->cpo_dt_fim_finais ? \Carbon\Carbon::parse($cmp->cpo_dt_fim_finais)->format('d/m/Y') : 'Não Definido') : 'N/A';
