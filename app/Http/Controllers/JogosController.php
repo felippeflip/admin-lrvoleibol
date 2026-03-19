@@ -42,6 +42,7 @@ class JogosController extends Controller
             'mandante.campeonato',
             'mandante.equipe',
             'visitante.equipe',
+            'mandante.equipe.categoria',
             'ginasio',
             'arbitroPrincipal',
             'arbitroSecundario',
@@ -274,7 +275,8 @@ class JogosController extends Controller
                     ->join('equipe_campeonato', 'equipes.eqp_id', '=', 'equipe_campeonato.eqp_fk_id')
                     ->pluck('equipe_campeonato.eqp_cpo_id');
 
-                $jogosQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+                $jogosQuery = Jogo::aprovadosOuNormais()
+                    ->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao'])
                     ->where(function ($query) use ($equipeIds) {
                         $query->whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
                             ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds);
@@ -298,19 +300,26 @@ class JogosController extends Controller
                 // "status filtrado ativo como default"
                 $statusFilter = $request->input('status', 'ativo');
 
-                if ($statusFilter) {
-                    // Assuming 'ativo' means future games or explicitly 'ativo' status? 
-                    // Use 'jgo_status' column if that's what stores it.
-                    // In index(), we saw: Jogo::where('jgo_dt_jogo', '<', now())->update(['jgo_status' => 'inativo']);
-                    // So 'ativo' likely corresponds to 'jgo_status' = 'ativo'.
-                    if ($statusFilter !== 'todos') {
-                        $jogosQuery->where('jgo_status', $statusFilter);
-                    }
+                if ($statusFilter && $statusFilter !== 'todos') {
+                    $jogosQuery->where('jgo_status', $statusFilter);
+                }
+
+                // Filter: Categoria
+                if ($request->filled('categoria_id')) {
+                    $catId = $request->categoria_id;
+                    $jogosQuery->where(function($q) use ($catId) {
+                        $q->whereHas('mandante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $catId))
+                          ->orWhereHas('visitante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $catId));
+                    });
+                }
+
+                // Filter: Turno (jgo_fase)
+                if ($request->filled('turno')) {
+                    $jogosQuery->where('jgo_fase', $request->turno);
                 }
 
                 if ($request->filled('search')) {
                     $term = $request->search;
-                    // Search by ID/Number
                     $jogosQuery->where(function ($q) use ($term) {
                         $q->where('jgo_id', 'like', "%{$term}%")
                             ->orWhereHas('mandante.campeonato', function ($sq) use ($term) {
@@ -319,7 +328,14 @@ class JogosController extends Controller
                     });
                 }
 
-                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'asc')->get(); // Changed to get() for card view
+                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'asc')->get();
+
+                // Categorias e Turnos disponíveis para os filtros
+                $data['timeCategorias'] = \App\Models\Categoria::orderBy('cto_nome')->get(['cto_id', 'cto_nome']);
+                $data['timeTurnos'] = Jogo::whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
+                    ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds)
+                    ->whereNotNull('jgo_fase')->where('jgo_fase', '!=', '')
+                    ->select('jgo_fase')->distinct()->pluck('jgo_fase');
 
                 $data['timeJogos'] = $timeJogos;
                 $data['statusFilter'] = $statusFilter;
@@ -428,8 +444,8 @@ class JogosController extends Controller
                 $selectedCampeonatoId = $camp->cpo_id;
         }
 
-        $selectedCategoriaId = null;
-        if ($wpPost && $wpPost->eventCategories->isNotEmpty()) {
+        $selectedCategoriaId = $localJogo->mandante->equipe->eqp_categoria_id ?? null;
+        if (!$selectedCategoriaId && $wpPost && $wpPost->eventCategories->isNotEmpty()) {
             $termId = $wpPost->eventCategories->first()->term_taxonomy_id;
             $cat = Categoria::where('cto_term_tx_id', $termId)->first();
             if ($cat)
@@ -709,5 +725,37 @@ class JogosController extends Controller
         }
 
         return redirect()->route('jogos.import')->with('success', 'Jogos importados com sucesso.');
+    }
+
+    public function solicitarAlteracao(Request $request, $id)
+    {
+        $request->validate([
+            'motivo' => 'required|string|max:1000',
+        ]);
+
+        $jogo = Jogo::where('jgo_wp_id', $id)->orWhere('jgo_id', $id)->firstOrFail();
+        
+        \App\Models\JogoSolicitacao::create([
+            'jogo_id' => $jogo->jgo_id,
+            'user_id' => auth()->id(),
+            'motivo' => $request->motivo,
+            'status' => 'pendente',
+        ]);
+
+        return redirect()->back()->with('success', 'Solicitação de alteração enviada com sucesso.');
+    }
+
+    public function resolverSolicitacao(Request $request, $solicitacao_id)
+    {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'Acesso não autorizado.');
+        }
+        
+        $solicitacao = \App\Models\JogoSolicitacao::findOrFail($solicitacao_id);
+        $solicitacao->update([
+            'status' => $request->input('status', 'resolvido')
+        ]);
+
+        return redirect()->back()->with('success', 'Status da solicitação atualizado.');
     }
 }

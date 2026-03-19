@@ -115,12 +115,12 @@
                             <thead
                                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">NOME EQUIPE</th>
+                                    <th scope="col" class="px-6 py-3">EQUIPE</th>
+                                    <th scope="col" class="px-6 py-3">CATEGORIA</th>
                                     <th scope="col" class="px-6 py-3">TIME</th>
                                     <th scope="col" class="px-6 py-3">CAMPEONATOS</th>
-                                    <th scope="col" class="px-6 py-3">CATEGORIA</th>
                                     <th scope="col" class="px-6 py-3">TREINADOR</th>
-                                    <th scope="col" class="px-6 py-3 text-center">AÇÃO</th>
+                                    <th scope="col" class="px-6 py-3 text-center">AÇÕES</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -131,6 +131,7 @@
                                             class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             {{ $equipe->eqp_nome_detalhado }}
                                         </th>
+                                        <td class="px-6 py-4">{{ $equipe->categoria->cto_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">{{ $equipe->time->tim_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">
                                             <div class="flex flex-col gap-1">
@@ -156,7 +157,6 @@
                                                 @endforelse
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4">{{ $equipe->categoria->cto_nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">{{ $equipe->eqp_nome_treinador ?? 'N/A' }}</td>
                                         <td class="px-6 py-4 flex space-x-2 justify-center">
                                             <!-- Botão Ver Campeonatos -->

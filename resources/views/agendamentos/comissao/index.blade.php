@@ -103,9 +103,35 @@
                                     </td>
                                     <td class="px-3 py-2">{{ $jogo->jgo_fase }}</td>
                                     <td class="px-3 py-2">
-                                        {{ $jogo->mandante->equipe->eqp_nome_detalhado }} 
-                                        <b>X</b>
-                                        {{ $jogo->visitante->equipe->eqp_nome_detalhado }}
+                                        <div class="flex flex-col items-center gap-1 text-xs">
+                                            <div class="text-center">
+                                                <span class="inline-block bg-blue-100 text-blue-800 font-bold text-[10px] px-1.5 py-0.5 rounded mb-0.5">MANDANTE</span><br>
+                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                                    {{ $jogo->mandante->equipe->eqp_nome_detalhado }}
+                                                </span>
+                                            </div>
+                                            <span class="font-extrabold text-gray-400 text-base">×</span>
+                                            <div class="text-center">
+                                                <span class="inline-block bg-gray-200 text-gray-600 font-bold text-[10px] px-1.5 py-0.5 rounded mb-0.5">VISITANTE</span><br>
+                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                                    {{ $jogo->visitante->equipe->eqp_nome_detalhado }}
+                                                </span>
+                                            </div>
+                                            @if(!$isLocked)
+                                                <form action="{{ route('agendamentos.trocar-mandante', $jogo->jgo_id) }}" method="POST"
+                                                      onsubmit="return confirm('Alternar Mandante e Visitante? Esta ação vai inverter o mando de campo do jogo.');">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        title="Alternar Mandante / Visitante"
+                                                        class="mt-1 flex items-center gap-1 text-[11px] font-bold text-indigo-700 border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded transition">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 4v8m0 0l4-4m-4 4l-4-4"/>
+                                                        </svg>
+                                                        Alternar Mando
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-3 py-2">
                                         @if($isLocked)

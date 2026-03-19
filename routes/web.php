@@ -38,6 +38,9 @@ Route::middleware('auth')->group(function () {
     // Create/Edit/Delete should be protected? Controller 'store'/'update' checks permissions?
     // JogosController checks: index (filtered), create/store/edit/update (Juiz shouldn't access?, well, Juiz writes results).
     // Let's assume JogosController handles fine-grained access or we leave it open for now as requested "Juiz visualiza jogos".
+    // Modification Requests
+    Route::post('jogos/{id}/solicitar-alteracao', [JogosController::class, 'solicitarAlteracao'])->name('jogos.solicitar-alteracao');
+    Route::patch('jogos/solicitacao/{solicitacao_id}/resolver', [JogosController::class, 'resolverSolicitacao'])->name('jogos.resolver-solicitacao');
     Route::resource('jogos', JogosController::class);
 
 
@@ -85,6 +88,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('agendamentos-pendentes', [App\Http\Controllers\AgendamentoController::class, 'indexComissao'])->name('agendamentos.comissao.index');
         Route::post('agendamentos/{jogo}/sugerir', [App\Http\Controllers\AgendamentoController::class, 'sugerirAgendamento'])->name('agendamentos.comissao.sugerir');
+        Route::post('agendamentos/{jogo}/trocar-mandante', [App\Http\Controllers\AgendamentoController::class, 'trocarMandante'])->name('agendamentos.trocar-mandante');
 
         Route::get('elencos', [App\Http\Controllers\ElencoController::class, 'list'])->name('elenco.list');
         Route::get('/api/campeonatos/{id}/equipes', [EquipeCampeonatoController::class, 'listByCampeonatoJson'])->name('api.equipes.campeonato');
@@ -132,6 +136,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/agendamentos/{jogo}/aprovar', [App\Http\Controllers\AgendamentoController::class, 'aprovarAgendamento'])->name('agendamentos.aprovar');
         Route::post('/agendamentos/{jogo}/desbloquear', [App\Http\Controllers\AgendamentoController::class, 'desbloquearAgendamento'])->name('agendamentos.desbloquear');
         Route::post('/agendamentos/deletar-massa', [App\Http\Controllers\AgendamentoController::class, 'deletarMassa'])->name('agendamentos.deletarMassa');
+        Route::post('/agendamentos/aprovar-massa', [App\Http\Controllers\AgendamentoController::class, 'aprovarMassa'])->name('agendamentos.aprovarMassa');
         Route::delete('/agendamentos/{jogo}/deletar', [App\Http\Controllers\AgendamentoController::class, 'deletarAgendamento'])->name('agendamentos.deletar');
 
         // CRUD Documentos (Admin)

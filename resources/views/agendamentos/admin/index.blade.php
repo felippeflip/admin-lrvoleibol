@@ -96,15 +96,26 @@
                                 <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Filtrar</button>
                             </div>
                         </form>
-                    </div>                    <div class="flex justify-end mb-4">
-                        <button type="button" onclick="submitDeleteMassa()" class="bg-red-600 hover:bg-red-800 text-white px-4 py-2 font-bold rounded text-sm">
-                            DELETAR SELECIONADOS
+                    </div>                    
+                    <div class="flex justify-start items-center space-x-2 mb-4">
+                        <select id="bulk-action-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <option value="">Selecione a Ação em Lote...</option>
+                            <option value="aprovar">Aprovar Selecionados</option>
+                            <option value="deletar">Deletar Selecionados</option>
+                        </select>
+                        <button type="button" onclick="executeBulkAction()" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded text-sm">
+                            Executar
                         </button>
                     </div>
 
                     <form action="{{ route('agendamentos.deletarMassa') }}" method="POST" id="form-deletar-massa" class="hidden">
                         @csrf
-                        <input type="hidden" name="jogos_ids" id="jogos_ids_input" value="">
+                        <input type="hidden" name="jogos_ids" id="jogos_ids_input_del" value="">
+                    </form>
+
+                    <form action="{{ route('agendamentos.aprovarMassa') }}" method="POST" id="form-aprovar-massa" class="hidden">
+                        @csrf
+                        <input type="hidden" name="jogos_ids" id="jogos_ids_input_apv" value="">
                     </form>
 
                     <div class="overflow-x-auto">
@@ -158,6 +169,12 @@
                                             </form>
                                         @endif
 
+                                        @if($jogo->jgo_status_agendamento == 'aprovado')
+                                            @hasrole('Administrador')
+                                            <a href="{{ route('jogos.edit', $jogo->jgo_wp_id ?: $jogo->jgo_id) }}" class="bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 text-xs rounded w-full mb-1 text-center inline-block">EDITAR</a>
+                                            @endhasrole
+                                        @endif
+
                                         <form action="{{ route('agendamentos.deletar', $jogo->jgo_id) }}" method="POST" onsubmit="return confirm('ATENÇÃO: Deseja realmente excluir este agendamento/jogo definitivamente?')">
                                             @csrf
                                             @method('DELETE')
@@ -186,6 +203,39 @@
         }
     }
 
+    function executeBulkAction() {
+        let action = document.getElementById('bulk-action-select').value;
+        if (!action) {
+            alert('Por favor, selecione uma ação na lista de opções antes de clicar em Executar.');
+            return;
+        }
+
+        if (action === 'aprovar') {
+            submitAprovarMassa();
+        } else if (action === 'deletar') {
+            submitDeleteMassa();
+        }
+    }
+
+    function submitAprovarMassa() {
+        let selectedIds = [];
+        let checkboxes = document.querySelectorAll('.jogo-checkbox:checked');
+        
+        checkboxes.forEach((cb) => {
+            selectedIds.push(cb.value);
+        });
+
+        if (selectedIds.length === 0) {
+            alert('Nenhum agendamento selecionado.');
+            return;
+        }
+
+        if (confirm('Aprovar TODOS os ' + selectedIds.length + ' agendamentos selecionados? Apenas jogos com status "Aguardando Aprovação" serão sincronizados com o site.')) {
+            document.getElementById('jogos_ids_input_apv').value = selectedIds.join(',');
+            document.getElementById('form-aprovar-massa').submit();
+        }
+    }
+
     function submitDeleteMassa() {
         let selectedIds = [];
         let checkboxes = document.querySelectorAll('.jogo-checkbox:checked');
@@ -200,7 +250,7 @@
         }
 
         if (confirm('ATENÇÃO: Deseja realmente excluir TODOS os ' + selectedIds.length + ' agendamentos selecionados?')) {
-            document.getElementById('jogos_ids_input').value = selectedIds.join(',');
+            document.getElementById('jogos_ids_input_del').value = selectedIds.join(',');
             document.getElementById('form-deletar-massa').submit();
         }
     }

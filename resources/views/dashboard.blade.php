@@ -177,14 +177,29 @@
                                                  @endif
                                             </div>
                                             
+                                            @php
+                                                $solicitacaoPendente = current(array_filter($jogo->solicitacoesAlteracao->all(), fn($s) => $s->status == 'pendente'));
+                                            @endphp
                                             <!-- Footer Status -->
-                                            <div class="flex justify-between items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
-                                                <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
-                                                    {{ $resLabel }}
-                                                </span>
-                                                <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
-                                                    {{ ucfirst($jogo->jgo_status) }}
-                                                </span>
+                                            <div class="flex flex-col gap-2 mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
+                                                        {{ $resLabel }}
+                                                    </span>
+                                                    <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
+                                                        {{ ucfirst($jogo->jgo_status) }}
+                                                    </span>
+                                                </div>
+                                                @if($solicitacaoPendente)
+                                                     <div class="flex items-center justify-between mt-2 px-2 py-1 bg-yellow-100 border border-yellow-300 text-yellow-800 text-xs font-bold rounded">
+                                                         <div class="truncate mr-2" title="{{ $solicitacaoPendente->motivo }}">
+                                                             ⚠ Alt: {{ Str::limit($solicitacaoPendente->motivo, 15) }}
+                                                         </div>
+                                                         <a href="{{ route('jogos.edit', $jogo->jgo_id) }}" class="underline text-yellow-900 hover:text-yellow-700 shrink-0">
+                                                             Editar Jogo
+                                                         </a>
+                                                     </div>
+                                                @endif
                                             </div>
 
                                         </div>
@@ -425,14 +440,14 @@
 
                                     <!-- Filters -->
                                     <div class="mb-4">
-                                        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row gap-4">
-                                            <div class="w-full sm:w-1/3">
+                                        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row flex-wrap gap-3">
+                                            <div class="w-full sm:w-auto flex-1">
                                                 <label for="search" class="sr-only">Buscar</label>
                                                 <input type="text" name="search" id="search" value="{{ request('search') }}"
                                                     placeholder="Buscar por ID ou Campeonato..."
                                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             </div>
-                                            <div class="w-full sm:w-1/3">
+                                            <div class="w-full sm:w-auto">
                                                 <label for="status" class="sr-only">Status</label>
                                                 <select name="status" id="status"
                                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -441,7 +456,33 @@
                                                     <option value="todos" {{ request('status') == 'todos' ? 'selected' : '' }}>Todos</option>
                                                 </select>
                                             </div>
-                                            <div class="flex gap-2">
+                                            @if(isset($timeCategorias) && $timeCategorias->count())
+                                            <div class="w-full sm:w-auto">
+                                                <label for="categoria_id" class="sr-only">Categoria</label>
+                                                <select name="categoria_id" id="categoria_id"
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                    <option value="">Todas as Categorias</option>
+                                                    @foreach($timeCategorias as $cat)
+                                                        <option value="{{ $cat->cto_id }}" {{ request('categoria_id') == $cat->cto_id ? 'selected' : '' }}>
+                                                            {{ $cat->cto_nome }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            @endif
+                                            @if(isset($timeTurnos) && $timeTurnos->count())
+                                            <div class="w-full sm:w-auto">
+                                                <label for="turno" class="sr-only">Turno</label>
+                                                <select name="turno" id="turno"
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                    <option value="">Todos os Turnos</option>
+                                                    @foreach($timeTurnos as $tn)
+                                                        <option value="{{ $tn }}" {{ request('turno') == $tn ? 'selected' : '' }}>{{ $tn }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            @endif
+                                            <div class="flex gap-2 items-start">
                                                 <button type="submit"
                                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                     Filtrar
@@ -489,6 +530,8 @@
                                                     $mandanteNome = $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : 'Mandante N/A';
                                                     $visitanteNome = $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : 'Visitante N/A';
                                                     $localNome = $jogo->ginasio ? $jogo->ginasio->gin_nome : 'Local não definido';
+                                                    $categoriaNome = $jogo->mandante && $jogo->mandante->equipe && $jogo->mandante->equipe->categoria ? $jogo->mandante->equipe->categoria->cto_nome : null;
+                                                    $turnoNome = $jogo->jgo_fase ?? null;
                                                 @endphp
                                             
                                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 {{ $borderColor }} p-4 flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
@@ -498,6 +541,19 @@
                                                          <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
                                                             {{ $campeonatoNome }}
                                                         </span>
+                                                        <!-- Badges: Categoria e Turno -->
+                                                        <div class="flex flex-wrap gap-1 mb-1">
+                                                            @if($categoriaNome)
+                                                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                                                    {{ $categoriaNome }}
+                                                                </span>
+                                                            @endif
+                                                            @if($turnoNome)
+                                                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                                                    {{ $turnoNome }}
+                                                                </span>
+                                                            @endif
+                                                        </div>
                                                         <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
                                                             <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                                             {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
@@ -538,14 +594,30 @@
                                                     <!-- Separator -->
                                                     <hr class="border-gray-100 dark:border-gray-700 mb-3">
                                                     
+                                                    @php
+                                                        $solicitacaoPendente = current(array_filter($jogo->solicitacoesAlteracao->all(), fn($s) => $s->status == 'pendente'));
+                                                    @endphp
                                                     <!-- Footer Status -->
-                                                    <div class="flex justify-between items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
-                                                        <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
-                                                            {{ $resLabel }}
-                                                        </span>
-                                                        <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
-                                                            {{ ucfirst($jogo->jgo_status) }}
-                                                        </span>
+                                                    <div class="flex flex-col gap-2 mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                        <div class="flex justify-between items-center">
+                                                            <span class="text-xs font-medium {{ $resBadgeClass }} px-2 py-0.5 rounded border border-transparent">
+                                                                {{ $resLabel }}
+                                                            </span>
+                                                            <span class="text-xs font-bold {{ $statusColor }} uppercase tracking-wide">
+                                                                {{ ucfirst($jogo->jgo_status) }}
+                                                            </span>
+                                                        </div>
+                                                        @if($jogo->jgo_status == 'ativo' && $jogo->jgo_dt_jogo >= now()->format('Y-m-d'))
+                                                            @if($solicitacaoPendente)
+                                                                <div class="text-center mt-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
+                                                                    Alteração Pendente
+                                                                </div>
+                                                            @else
+                                                                <button type="button" onclick="abrirModalSolicitacao({{ $jogo->jgo_id }})" class="mt-2 w-full text-center border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 font-bold py-1.5 px-3 rounded text-xs transition duration-150">
+                                                                    Solicitar Alteração
+                                                                </button>
+                                                            @endif
+                                                        @endif
                                                     </div>
 
                                                 </div>
@@ -575,6 +647,42 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL DE SOLICITAÇÃO DE ALTERAÇÃO -->
+    <div id="modalSolicitacao" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Solicitar Alteração de Jogo</h3>
+                <button onclick="fecharModalSolicitacao()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="formSolicitacao" method="POST" action="">
+                @csrf
+                <div class="mb-4">
+                    <label for="motivo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Motivo da Alteração (Data, Local, etc) <span class="text-red-500">*</span></label>
+                    <textarea name="motivo" id="motivo" rows="4" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Precisamos adiar o jogo em 1 hora e o ginásio fechou."></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" onclick="fecharModalSolicitacao()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Enviar Solicitação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalSolicitacao(jogoId) {
+            let form = document.getElementById('formSolicitacao');
+            form.action = `/jogos/${jogoId}/solicitar-alteracao`;
+            document.getElementById('modalSolicitacao').classList.remove('hidden');
+        }
+
+        function fecharModalSolicitacao() {
+            document.getElementById('modalSolicitacao').classList.add('hidden');
+            document.getElementById('formSolicitacao').reset();
+        }
+    </script>
 </x-app-layout>
 
 <!-- DataTables CSS and JS -->

@@ -103,4 +103,9 @@ class Jogo extends Model
     {
         return $this->belongsTo(User::class, 'jgo_apontador', 'id');
     }
+
+    public function solicitacoesAlteracao()
+    {
+        return $this->hasMany(JogoSolicitacao::class, 'jogo_id', 'jgo_id');
+    }
 }

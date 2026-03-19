@@ -28,10 +28,10 @@
                         class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
-                            <!-- Título -->
+                            <!-- Partida -->
                             <div>
                                 <label for="titulo"
-                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Título</label>
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Partida</label>
                                 <input type="text" id="titulo" name="titulo" value="{{ request('titulo') }}"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                                     placeholder="Ex: Time A x Time B">
@@ -117,8 +117,9 @@
                                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Nº Jogo</th>
-                                    <th scope="col" class="px-6 py-3">Título</th>
-                                    <th scope="col" class="px-6 py-3">Tipo</th>
+                                    <th scope="col" class="px-6 py-3">Partida</th>
+                                    <th scope="col" class="px-6 py-3">Categoria</th>
+                                    <th scope="col" class="px-6 py-3">Campeonato</th>
                                     <th scope="col" class="px-6 py-3">Local</th>
                                     <th scope="col" class="px-6 py-3">Data</th>
                                     <th scope="col" class="px-6 py-3">Hora</th>
@@ -138,6 +139,9 @@
                                             {{ $jogo->meta['_event_number']->meta_value ?? 'N/A' }}</th>
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                             {{ $jogo->meta['_event_title']->meta_value ?? $jogo->post_title }}</th>
+                                        <td class="px-6 py-4">
+                                            {{ $jogo->mandante->equipe->categoria->cto_nome ?? 'N/A' }}
+                                        </td>
                                         <td class="px-6 py-4">
                                             @php
                                                 $eventType = 'N/A';
@@ -165,16 +169,22 @@
                                             @endphp
                                             {{ $startTime }}
                                         </td>
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 flex flex-col gap-1 items-start justify-center h-full">
                                             @if($jogo->jgo_status == 'ativo')
-                                                <span
-                                                    class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Ativo</span>
+                                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Ativo</span>
                                             @elseif($jogo->jgo_status == 'inativo')
-                                                <span
-                                                    class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Inativo</span>
+                                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Inativo</span>
                                             @else
-                                                <span
-                                                    class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">{{ ucfirst($jogo->jgo_status ?? 'Desconhecido') }}</span>
+                                                <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">{{ ucfirst($jogo->jgo_status ?? 'Desconhecido') }}</span>
+                                            @endif
+
+                                            @php
+                                                $solAlteracao = $jogo->solicitacoesAlteracao ? current(array_filter($jogo->solicitacoesAlteracao->all(), fn($s) => $s->status == 'pendente')) : null;
+                                            @endphp
+                                            @if($solAlteracao)
+                                                <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-300 dark:bg-yellow-900 dark:text-yellow-300 cursor-help" title="Motivo: {{ $solAlteracao->motivo }}">
+                                                    ⚠ Alteração Solicitada
+                                                </span>
                                             @endif
                                         </td>
                                         @hasrole('Administrador')
@@ -296,6 +306,23 @@
                                                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                                         </svg>
                                                     </a>
+                                                @endif
+
+                                                <!-- Approve Agendamento Previo -->
+                                                @if($jogo->jgo_status_agendamento == 'pendente_aprovacao' && auth()->user()->hasRole('Administrador'))
+                                                    <form action="{{ route('agendamentos.aprovar', $jogo->jgo_id) }}"
+                                                        method="POST"
+                                                        class="mr-2 transform hover:text-green-500 hover:scale-110"
+                                                        onsubmit="return confirm('Aprovar o agendamento prévio e marcar o jogo oficialmente?');">
+                                                        @csrf
+                                                        <button type="submit" title="Aprovar Agendamento">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none"
+                                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
                                                 @endif
 
                                                 <!-- Approve (Admin Only - Logic in View for now, Controller validates) -->

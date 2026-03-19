@@ -279,6 +279,55 @@ class AgendamentoController extends Controller
         return redirect()->back()->with('success', $countDeletados . ' agendamento(s) deletado(s) com sucesso.');
     }
 
+    public function aprovarMassa(Request $request)
+    {
+        if (!auth()->user()->hasRole('Administrador')) {
+            return redirect()->back()->withErrors(['error' => 'Acesso negado.']);
+        }
+        
+        $idsStr = $request->input('jogos_ids');
+        if (empty($idsStr)) {
+            return redirect()->back()->withErrors(['error' => 'Nenhum agendamento selecionado.']);
+        }
+        
+        $idsArray = explode(',', $idsStr);
+        $jogos = Jogo::with(['mandante.campeonato', 'mandante.equipe.categoria'])
+                     ->whereIn('jgo_id', $idsArray)
+                     ->where('jgo_status_agendamento', 'pendente_aprovacao')
+                     ->get();
+                     
+        if ($jogos->isEmpty()) {
+            return redirect()->back()->withErrors(['error' => 'Nenhum agendamento válido selecionado (apenas jogos "Aguardando Aprovação" podem ser aprovados).']);
+        }
+        
+        $wpService = new \App\Services\WordpressGameService();
+        $countAprovados = 0;
+        
+        foreach ($jogos as $jogo) {
+            $jogo->update(['jgo_status_agendamento' => 'aprovado']);
+            
+            try {
+                $eventType = $jogo->mandante->campeonato->cpo_term_tx_id ?? null;
+                $eventCategory = $jogo->mandante->equipe->categoria->cto_term_tx_id ?? null;
+                
+                $wpPostId = $wpService->sync($jogo, [
+                    'event_number' => $jogo->jgo_id,
+                    'event_type' => $eventType,
+                    'event_category' => $eventCategory,
+                ]);
+
+                if ($wpPostId) {
+                    $jogo->update(['jgo_wp_id' => $wpPostId]);
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Erro ao sincronizar jogo aprovado em massa com WP (ID ' . $jogo->jgo_id . '): ' . $e->getMessage());
+            }
+            $countAprovados++;
+        }
+        
+        return redirect()->back()->with('success', $countAprovados . ' agendamento(s) aprovado(s) com sucesso. Jogos foram sincronizados!');
+    }
+
     // Aprova a data inserida pela comissão
     public function aprovarAgendamento(Request $request, $jogo_id)
     {
@@ -417,5 +466,53 @@ class AgendamentoController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Agendamento sugerido. Aguardando aprovação.');
+    }
+
+    // Alterna Mandante e Visitante de um jogo pendente
+    public function trocarMandante(Request $request, $jogo_id)
+    {
+        $user = auth()->user();
+        $isAdmin = $user->hasRole('Administrador');
+        $time_id = $user->time_id;
+
+        if (!$time_id) {
+            $timeResponsavel = $user->timeResponsavel;
+            if ($timeResponsavel) {
+                $time_id = $timeResponsavel->tim_id;
+            }
+        }
+
+        if (!$time_id && !$isAdmin) abort(403);
+
+        $jogo = Jogo::findOrFail($jogo_id);
+
+        // Only allow swap if status is still 'pendente_preenchimento' (not yet locked/suggested)
+        if ($jogo->jgo_status_agendamento !== 'pendente_preenchimento' && !$isAdmin) {
+            return redirect()->back()->withErrors(['error' => 'Não é possível alternar o mando de campo após a sugestão de agendamento ser enviada.']);
+        }
+
+        // Validate that the logged-in user's team is actually part of this game
+        if (!$isAdmin) {
+            $equipeIds = \DB::table('equipes')
+                ->where('eqp_time_id', $time_id)
+                ->join('equipe_campeonato', 'equipes.eqp_id', '=', 'equipe_campeonato.eqp_fk_id')
+                ->pluck('equipe_campeonato.eqp_cpo_id');
+
+            $participante = in_array($jogo->jgo_eqp_cpo_mandante_id, $equipeIds->toArray())
+                         || in_array($jogo->jgo_eqp_cpo_visitante_id, $equipeIds->toArray());
+
+            if (!$participante) abort(403);
+        }
+
+        // Swap
+        $oldMandante = $jogo->jgo_eqp_cpo_mandante_id;
+        $oldVisitante = $jogo->jgo_eqp_cpo_visitante_id;
+
+        $jogo->update([
+            'jgo_eqp_cpo_mandante_id' => $oldVisitante,
+            'jgo_eqp_cpo_visitante_id' => $oldMandante,
+        ]);
+
+        return redirect()->back()->with('success', 'Mando de campo alternado com sucesso!');
     }
 }
