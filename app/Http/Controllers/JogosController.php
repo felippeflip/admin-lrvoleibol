@@ -389,9 +389,18 @@ class JogosController extends Controller
             'juiz_principal' => 'nullable|exists:users,id',
             'juiz_linha1' => 'nullable|exists:users,id',
             'juiz_linha2' => 'nullable|exists:users,id',
+            'grupo' => 'nullable|string|max:100',
+            'turno' => 'nullable|string|max:100',
         ]);
 
         try {
+            $fase = $request->grupo;
+            if ($request->grupo && $request->turno) {
+                $fase .= ' - ' . $request->turno;
+            } elseif (!$request->grupo) {
+                $fase = $request->turno;
+            }
+
             // 1. Create Local Jogo
             $jogoService = new JogoService();
             $jogo = $jogoService->create([
@@ -403,6 +412,7 @@ class JogosController extends Controller
                 'juiz_principal_id' => $request->juiz_principal,
                 'juiz_secundario_id' => $request->juiz_linha1,
                 'apontador_id' => $request->juiz_linha2,
+                'fase' => $fase,
             ]);
 
             $campeonato = Campeonato::find($request->campeonato_id);
@@ -517,10 +527,19 @@ class JogosController extends Controller
             'juiz_principal' => 'nullable|exists:users,id',
             'juiz_linha1' => 'nullable|exists:users,id',
             'juiz_linha2' => 'nullable|exists:users,id',
+            'grupo' => 'nullable|string|max:100',
+            'turno' => 'nullable|string|max:100',
         ]);
 
         // 1. Find or Create Local Jogo
         $localJogo = Jogo::where('jgo_wp_id', $id)->orWhere('jgo_id', $id)->firstOrFail();
+
+        $fase = $request->grupo;
+        if ($request->grupo && $request->turno) {
+            $fase .= ' - ' . $request->turno;
+        } elseif (!$request->grupo) {
+            $fase = $request->turno;
+        }
 
         // Data to update/create
         $data = [
@@ -533,6 +552,7 @@ class JogosController extends Controller
             'jgo_arbitro_secundario'   => $request->juiz_linha1,
             'jgo_apontador'            => $request->juiz_linha2,
             'jgo_numero_jogo'          => $request->event_number ?: null,
+            'jgo_fase'                 => $fase,
         ];
 
         $localJogo->update($data);

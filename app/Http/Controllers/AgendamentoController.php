@@ -192,19 +192,12 @@ class AgendamentoController extends Controller
             $query->where('jgo_status_agendamento', $request->status);
         }
 
-        // Filtro: Mandante
-        if ($request->filled('mandante')) {
-            $term = $request->mandante;
-            $query->whereHas('mandante.equipe', function($q) use ($term) {
-                $q->where('eqp_nome_detalhado', 'like', "%{$term}%");
-            });
-        }
-
-        // Filtro: Visitante
-        if ($request->filled('visitante')) {
-            $term = $request->visitante;
-            $query->whereHas('visitante.equipe', function($q) use ($term) {
-                $q->where('eqp_nome_detalhado', 'like', "%{$term}%");
+        // Filtro: Equipe (Mandante ou Visitante)
+        if ($request->filled('equipe_id')) {
+            $eId = $request->equipe_id;
+            $query->where(function($q) use ($eId) {
+                $q->where('jgo_eqp_cpo_mandante_id', $eId)
+                  ->orWhere('jgo_eqp_cpo_visitante_id', $eId);
             });
         }
 
@@ -245,7 +238,14 @@ class AgendamentoController extends Controller
           ->where('jgo_fase', '!=', '')
           ->select('jgo_fase')->distinct()->pluck('jgo_fase');
 
-        return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats'));
+        $equipesInscritas = EquipeCampeonato::where('cpo_fk_id', $campeonato)
+            ->with(['equipe.time', 'equipe.categoria'])
+            ->get()
+            ->sortBy(function($item) {
+                return ($item->equipe->time->tim_nome ?? '') . ' ' . ($item->equipe->categoria->cto_nome ?? '');
+            });
+
+        return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats', 'equipesInscritas'));
     }
 
     public function deletarAgendamento($jogo_id)

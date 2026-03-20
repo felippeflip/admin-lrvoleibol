@@ -30,7 +30,7 @@
                                     <input type="number" name="event_number" id="event_number" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded" value="{{ old('event_number') }}" required>
                                 </div>
 
-                                <!-- Campeonato -->
+                                 <!-- Campeonato -->
                                 <div class="mb-4">
                                     <label for="campeonato_id" class="block text-gray-700 dark:text-gray-300 font-bold mb-2">Campeonato *:</label>
                                     <select name="campeonato_id" id="campeonato_id" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded" required>
@@ -41,6 +41,20 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Grupo -->
+                                <div class="mb-4">
+                                    <label for="grupo" class="block text-gray-700 dark:text-gray-300 font-bold mb-2">Grupo:</label>
+                                    <input type="text" name="grupo" id="grupo" placeholder="Ex: Grupo A" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded" value="{{ old('grupo') }}">
+                                </div>
+
+                                <!-- Turno -->
+                                <div class="mb-4">
+                                    <label for="turno" class="block text-gray-700 dark:text-gray-300 font-bold mb-2">Turno:</label>
+                                    <input type="text" name="turno" id="turno" placeholder="Ex: Turno A" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded" value="{{ old('turno') }}">
                                 </div>
                             </div>
 

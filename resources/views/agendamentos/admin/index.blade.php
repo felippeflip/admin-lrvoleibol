@@ -143,15 +143,17 @@
                                         <option value="aprovado" {{ request('status') == 'aprovado' ? 'selected' : '' }}>Aprovado</option>
                                     </select>
                                 </div>
-                                <!-- Mandante -->
-                                <div>
-                                    <label for="mandante" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mandante</label>
-                                    <input type="text" name="mandante" id="mandante" value="{{ request('mandante') }}" placeholder="Mandante..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
-                                </div>
-                                <!-- Visitante -->
-                                <div>
-                                    <label for="visitante" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Visitante</label>
-                                    <input type="text" name="visitante" id="visitante" value="{{ request('visitante') }}" placeholder="Visitante..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                <!-- Equipe -->
+                                <div class="md:col-span-2">
+                                    <label for="equipe_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Equipe (Mandante ou Visitante)</label>
+                                    <select name="equipe_id" id="equipe_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <option value="">Todas as Equipes</option>
+                                        @foreach($equipesInscritas as $ei)
+                                            <option value="{{ $ei->eqp_cpo_id }}" {{ request('equipe_id') == $ei->eqp_cpo_id ? 'selected' : '' }}>
+                                                {{ ($ei->equipe->time->tim_nome ?? 'N/A') . ' - ' . ($ei->equipe->categoria->cto_nome ?? 'N/A') }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end space-x-2">
