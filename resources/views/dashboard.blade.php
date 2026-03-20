@@ -659,7 +659,7 @@
                                         </div>
                                     @endif
                                 @else
-                                    <p class="text-gray-500 dark:text-gray-400">Você tem o perfil de Responsável de Time, mas
+                                    <p class="text-gray-500 dark:text-gray-400">Você tem o perfil de Responsável de Time ou Comissão Técnica, mas
                                         nenhum time está vinculado ao seu usuário.</p>
                                 @endif
                             </div>

@@ -273,9 +273,9 @@ class JogosController extends Controller
             }
         }
 
-        // --- 3. RESPONSAVEL PELO TIME ---
-        if (($user->hasRole('ResponsavelTime') || $user->is_resp_time) && !$user->hasRole('Administrador')) {
-            $time = Time::where('tim_user_id', $user->id)->first();
+        // --- 3. RESPONSAVEL PELO TIME / COMISSAO TECNICA ---
+        if (($user->hasRole('ResponsavelTime') || $user->hasRole('ComissaoTecnica') || $user->is_resp_time) && !$user->hasRole('Administrador')) {
+            $time = Time::where('tim_user_id', $user->id)->first() ?: $user->time;
 
             if ($time) {
                 // Find all EquipeCampeonato entries for this Time
@@ -350,7 +350,7 @@ class JogosController extends Controller
                 $data['statusFilter'] = $statusFilter;
 
             } else {
-                $data['timeStats'] = null; // Has role but no team assigned
+                $data['timeStats'] = []; // Has role but no team assigned
             }
         }
 
