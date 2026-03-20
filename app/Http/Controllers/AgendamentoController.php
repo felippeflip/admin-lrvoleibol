@@ -208,7 +208,24 @@ class AgendamentoController extends Controller
             });
         }
 
-        $jogos = $query->paginate(50)->appends($request->all());
+        // Calculate Stats (before pagination) - Clonando a query para pegar os totais baseados no filtro atual ( EXCETO filtro de status)
+        $statsQuery = clone $query;
+        $allStats = $statsQuery->select('jgo_status_agendamento', DB::raw('count(*) as total'))
+            ->groupBy('jgo_status_agendamento')
+            ->pluck('total', 'jgo_status_agendamento');
+
+        $stats = [
+            'preenchimento' => $allStats->get('pendente_preenchimento', 0),
+            'aprovacao' => $allStats->get('pendente_aprovacao', 0),
+            'aprovado' => $allStats->get('aprovado', 0),
+            'total' => $allStats->sum()
+        ];
+
+        $jogos = $query->orderByRaw('jgo_dt_jogo IS NULL ASC')
+            ->orderBy('jgo_dt_jogo', 'asc')
+            ->orderBy('jgo_hora_jogo', 'asc')
+            ->paginate(50)
+            ->appends($request->all());
 
         $categorias = \App\Models\Categoria::whereHas('equipes.campeonatos', function($q) use ($campeonato) {
             $q->where('cpo_fk_id', $campeonato);
@@ -228,7 +245,7 @@ class AgendamentoController extends Controller
           ->where('jgo_fase', '!=', '')
           ->select('jgo_fase')->distinct()->pluck('jgo_fase');
 
-        return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases'));
+        return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats'));
     }
 
     public function deletarAgendamento($jogo_id)
@@ -431,7 +448,11 @@ class AgendamentoController extends Controller
             $query->where('jgo_status_agendamento', $request->status);
         }
 
-        $jogos = $query->paginate(15)->appends($request->all());
+        $jogos = $query->orderByRaw('jgo_dt_jogo IS NULL ASC')
+            ->orderBy('jgo_dt_jogo', 'asc')
+            ->orderBy('jgo_hora_jogo', 'asc')
+            ->paginate(15)
+            ->appends($request->all());
 
         // Also fetch Ginasios for suggesting local
         $ginasios = \App\Models\Ginasio::where('gin_status', true)->get();

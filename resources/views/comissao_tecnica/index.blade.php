@@ -109,12 +109,14 @@
                                         class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
                                         <th class="py-3 px-6 text-left">Foto</th>
                                         <th class="py-3 px-6 text-left">Nome</th>
-                                        <th class="py-3 px-6 text-left">D. Nascimento</th>
+                                        <th class="py-3 px-6 text-left">Dt Nascimento</th>
+                                        <th class="py-3 px-6 text-left">CPF</th>
+                                        <th class="py-3 px-6 text-left">CREF</th>
+                                        <th class="py-3 px-6 text-left">Nº LRV</th>
+                                        <th class="py-3 px-6 text-left">TIME</th>
                                         <th class="py-3 px-6 text-left">Função</th>
-                                        <th class="py-3 px-6 text-left">Documento</th>
-                                        <th class="py-3 px-6 text-left">Time</th>
-                                        <th class="py-3 px-6 text-left">Status</th>
-                                        <th class="py-3 px-6 text-center">Ações</th>
+                                        <th class="py-3 px-6 text-left">STATUS</th>
+                                        <th class="py-3 px-6 text-center">AÇÕES</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-700 dark:text-gray-300 text-sm font-light">
@@ -140,19 +142,23 @@
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <br>
-                                                <span class="text-xs text-gray-500">{{ $membro->cpf }}</span>
                                             </td>
                                             <td class="py-3 px-6 text-left">
                                                 {{ $membro->data_nascimento ? \Carbon\Carbon::parse($membro->data_nascimento)->format('d/m/Y') : 'N/A' }}
                                             </td>
                                             <td class="py-3 px-6 text-left">
-                                                {{ $membro->funcao }}
+                                                {{ $membro->cpf }}
                                             </td>
                                             <td class="py-3 px-6 text-left">
-                                                {{ $membro->documento_registro }}
+                                                {{ $membro->documento_registro ?: 'N/A' }}
+                                            </td>
+                                            <td class="py-3 px-6 text-left font-bold">
+                                                {{ $membro->registro_lrv ?: 'N/A' }}
                                             </td>
                                             <td class="py-3 px-6 text-left">{{ $membro->time->tim_nome ?? 'N/A' }}</td>
+                                            <td class="py-3 px-6 text-left">
+                                                {{ $membro->funcao }}
+                                            </td>
                                             <td class="py-3 px-6 text-left">
                                                 <span
                                                     class="{{ $membro->status ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600' }} py-1 px-3 rounded-full text-xs">
@@ -271,7 +277,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="py-3 px-6 text-center">Nenhum registro encontrado.</td>
+                                            <td colspan="10" class="py-3 px-6 text-center">Nenhum registro encontrado.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

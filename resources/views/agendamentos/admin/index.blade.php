@@ -43,6 +43,69 @@
 
                     <h3 class="text-lg font-bold mb-4 mt-8">Jogos Gerados e Pendentes</h3>
 
+                    <!-- Cards de Resumo -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <!-- Total -->
+                        <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow border-l-4 border-blue-500">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-500 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total de Jogos</p>
+                                    <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $stats['total'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pendente Preenchimento -->
+                        <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow border-l-4 border-gray-400">
+                            <div class="flex items-center text-gray-600 dark:text-gray-400">
+                                <div class="p-3 rounded-full bg-gray-100 dark:bg-gray-600 text-gray-500 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Pendente Preenchimento</p>
+                                    <p class="text-2xl font-bold">{{ $stats['preenchimento'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aguardando Aprovação -->
+                        <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow border-l-4 border-yellow-500">
+                            <div class="flex items-center text-yellow-600">
+                                <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Aguardando Aprovação</p>
+                                    <p class="text-2xl font-bold">{{ $stats['aprovacao'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aprovado -->
+                        <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow border-l-4 border-green-500">
+                            <div class="flex items-center text-green-600">
+                                <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Aprovado</p>
+                                    <p class="text-2xl font-bold">{{ $stats['aprovado'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
                         <form method="GET" action="{{ route('agendamentos.admin.index', $cmp->cpo_id) }}">
                             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">

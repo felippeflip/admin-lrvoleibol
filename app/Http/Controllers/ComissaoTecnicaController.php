@@ -74,7 +74,7 @@ class ComissaoTecnicaController extends Controller
 
         $times = [];
         if (auth()->user()->hasRole('Administrador')) {
-            $times = Time::orderBy('tim_nome')->get();
+            $times = Time::where('tim_status', true)->orderBy('tim_nome')->get();
         }
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];
 
@@ -132,7 +132,7 @@ class ComissaoTecnicaController extends Controller
 
         $times = [];
         if (auth()->user()->hasRole('Administrador')) {
-            $times = Time::orderBy('tim_nome')->get();
+            $times = Time::where('tim_status', true)->orderBy('tim_nome')->get();
         }
 
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];
@@ -316,7 +316,7 @@ class ComissaoTecnicaController extends Controller
 
         $times = [];
         if ($user->hasRole('Administrador')) {
-            $times = Time::orderBy('tim_nome')->get();
+            $times = Time::where('tim_status', true)->orderBy('tim_nome')->get();
         }
 
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];

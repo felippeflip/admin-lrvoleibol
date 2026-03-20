@@ -147,7 +147,7 @@
                                         <th class="py-3 px-6 text-left">Idade</th>
                                         <th class="py-3 px-6 text-left">Data de Nascimento</th>
                                         <th class="py-3 px-6 text-left">Categoria</th>
-                                        <th class="py-3 px-6 text-left">Celular</th>
+
                                         <th class="py-3 px-6 text-center">Ações</th>
                                     </tr>
                                 </thead>
@@ -189,7 +189,7 @@
                                             <td class="py-3 px-6 text-left">
                                                 {{ $atleta->categoria ? $atleta->categoria->cto_nome : 'N/A' }}
                                             </td>
-                                            <td class="py-3 px-6 text-left">{{ $atleta->atl_celular_formatted }}</td>
+
                                             <td class="py-3 px-6 text-center">
                                                 <div class="flex item-center justify-center">
                                                     <a href="{{ route('atletas.show', $atleta->atl_id) }}"
