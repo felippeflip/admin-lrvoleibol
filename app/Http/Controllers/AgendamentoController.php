@@ -294,10 +294,13 @@ class AgendamentoController extends Controller
         $jogos = Jogo::with(['mandante.campeonato', 'mandante.equipe.categoria'])
                      ->whereIn('jgo_id', $idsArray)
                      ->where('jgo_status_agendamento', 'pendente_aprovacao')
+                     ->whereNotNull('jgo_dt_jogo')
+                     ->whereNotNull('jgo_hora_jogo')
+                     ->whereNotNull('jgo_local_jogo_id')
                      ->get();
                      
         if ($jogos->isEmpty()) {
-            return redirect()->back()->withErrors(['error' => 'Nenhum agendamento válido selecionado (apenas jogos "Aguardando Aprovação" podem ser aprovados).']);
+            return redirect()->back()->withErrors(['error' => 'Nenhum agendamento válido selecionado (apenas jogos com data/hora definidos e status "Aguardando Aprovação" podem ser aprovados).']);
         }
         
         $wpService = new \App\Services\WordpressGameService();
@@ -332,6 +335,11 @@ class AgendamentoController extends Controller
     public function aprovarAgendamento(Request $request, $jogo_id)
     {
         $jogo = Jogo::with(['mandante.campeonato', 'mandante.equipe.categoria'])->findOrFail($jogo_id);
+
+        if (!$jogo->jgo_dt_jogo || !$jogo->jgo_hora_jogo || !$jogo->jgo_local_jogo_id) {
+            return redirect()->back()->withErrors(['error' => 'Não é possível aprovar um jogo que ainda não tem data, hora e local definidos.']);
+        }
+
         $jogo->update(['jgo_status_agendamento' => 'aprovado']);
 
         try {

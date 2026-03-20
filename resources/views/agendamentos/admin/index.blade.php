@@ -123,6 +123,7 @@
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th class="px-3 py-2"><input type="checkbox" id="select-all" onclick="toggleSelectAll(this)"></th>
+                                    <th class="px-3 py-2">Nº Jogo</th>
                                     <th class="px-3 py-2">Categoria</th>
                                     <th class="px-3 py-2">Fase</th>
                                     <th class="px-3 py-2">Mandante</th>
@@ -136,6 +137,9 @@
                                 @foreach($jogos as $jogo)
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
                                     <td class="px-3 py-2"><input type="checkbox" value="{{ $jogo->jgo_id }}" class="jogo-checkbox"></td>
+                                    <td class="px-3 py-2 font-bold text-purple-700 dark:text-purple-400">
+                                        {{ $jogo->jgo_numero_jogo ? '#'.$jogo->jgo_numero_jogo : '-' }}
+                                    </td>
                                     <td class="px-3 py-2">{{ $jogo->mandante->equipe->categoria->cto_nome }}</td>
                                     <td class="px-3 py-2">{{ $jogo->jgo_fase }}</td>
                                     <td class="px-3 py-2 font-bold">{{ $jogo->mandante->equipe->eqp_nome_detalhado }}</td>

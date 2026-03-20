@@ -19,6 +19,10 @@
                                 JOGO</a>
                             <a href="{{ route('jogos.showImportForm') }}"
                                 class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">IMPORTAR</a>
+                            <button type="button" onclick="abrirModalNumeracao()"
+                                class="text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-purple-600 dark:hover:bg-purple-700 focus:outline-none dark:focus:ring-purple-800">
+                                🔢 NUMERAR JOGOS
+                            </button>
                         </div>
                     </div>
                     @endhasrole
@@ -26,7 +30,7 @@
                     {{-- Filter Form --}}
                     <form method="GET" action="{{ route('jogos.index') }}"
                         class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
 
                             <!-- Partida -->
                             <div>
@@ -49,6 +53,22 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            <!-- Categoria -->
+                            <div>
+                                <label for="categoria_id"
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
+                                <select id="categoria_id" name="categoria_id"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+                                    <option value="">Todas</option>
+                                    @foreach($categorias as $cat)
+                                        <option value="{{ $cat->cto_id }}" {{ request('categoria_id') == $cat->cto_id ? 'selected' : '' }}>{{ $cat->cto_nome }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                             <!-- Local (Ginásio) -->
                             <div>
@@ -87,12 +107,11 @@
                                 <select id="status" name="status"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
                                     <option value="">Todos</option>
-                                    <option value="ativo" {{ request('status') == 'ativo' ? 'selected' : '' }}>Ativo
-                                    </option>
-                                    <option value="inativo" {{ request('status') == 'inativo' ? 'selected' : '' }}>Inativo
-                                    </option>
+                                    <option value="ativo" {{ request('status') == 'ativo' ? 'selected' : '' }}>Ativo</option>
+                                    <option value="inativo" {{ request('status') == 'inativo' ? 'selected' : '' }}>Inativo</option>
                                 </select>
                             </div>
+
                         </div>
                         <div class="mt-4 flex justify-end">
                             <a href="{{ route('jogos.index') }}"
@@ -135,10 +154,19 @@
                                 @forelse ($jogos as $jogo)
                                     <tr
                                         class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <th scope="row" class="px-6 py-4">
-                                            {{ $jogo->meta['_event_number']->meta_value ?? 'N/A' }}</th>
+                                        <th scope="row" class="px-6 py-4 font-bold text-purple-700 dark:text-purple-400">
+                                            @if($jogo->jgo_numero_jogo)
+                                                #{{ $jogo->jgo_numero_jogo }}
+                                            @else
+                                                -
+                                            @endif
+                                        </th>
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                            {{ $jogo->meta['_event_title']->meta_value ?? $jogo->post_title }}</th>
+                                            <span>{{ $jogo->meta['_event_title']->meta_value ?? $jogo->post_title }}</span>
+                                            @if($jogo->jgo_fase)
+                                                <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">({{ $jogo->jgo_fase }})</span>
+                                            @endif
+                                        </th>
                                         <td class="px-6 py-4">
                                             {{ $jogo->mandante->equipe->categoria->cto_nome ?? 'N/A' }}
                                         </td>
@@ -377,7 +405,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="11" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                             Nenhum jogo encontrado com os filtros selecionados.
                                         </td>
                                     </tr>
@@ -395,4 +423,133 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Numerar Jogos --}}
+    @hasrole('Administrador')
+    <div id="modal-numeracao" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">🔢 Numerar Jogos</h3>
+
+            <div class="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-lg p-3 mb-4 text-sm dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700 space-y-1">
+                <p><strong>⚠ Atenção:</strong> Apenas jogos <strong>com data e hora definidos</strong> serão numerados.</p>
+                <p>📋 <strong>Regras automáticas:</strong></p>
+                <ul class="list-disc list-inside pl-2 space-y-0.5">
+                    <li><strong>≤ 15 equipes:</strong> todos os jogos numerados por data/hora crescente.</li>
+                    <li><strong>≥ 16 equipes (com grupos):</strong> jogos numerados dentro de cada grupo (Grupo A → B → C…) por data/hora crescente, com numeração contínua.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campeonato *</label>
+                <select id="modal-campeonato" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded-lg text-sm">
+                    <option value="">Selecione o Campeonato...</option>
+                    @foreach($campeonatos as $camp)
+                        <option value="{{ $camp->cpo_id }}">{{ $camp->cpo_nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoria *</label>
+                <select id="modal-categoria" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded-lg text-sm">
+                    <option value="">Selecione a Categoria...</option>
+                    @foreach($categorias as $cat)
+                        <option value="{{ $cat->cto_id }}">{{ $cat->cto_nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div id="modal-resultado" class="hidden mb-4"></div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="fecharModalNumeracao()"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-numeracao" onclick="confirmarNumeracao()"
+                    class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-sm font-bold">
+                    ✔ Confirmar e Numerar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalNumeracao() {
+            // Pré-preencher com os filtros ativos na tela
+            const campeonatoAtual = '{{ request("campeonato_id") }}';
+            const categoriaAtual  = '{{ request("categoria_id") }}';
+            if (campeonatoAtual) document.getElementById('modal-campeonato').value = campeonatoAtual;
+            if (categoriaAtual)  document.getElementById('modal-categoria').value  = categoriaAtual;
+
+            document.getElementById('modal-resultado').classList.add('hidden');
+            document.getElementById('modal-resultado').innerHTML = '';
+            document.getElementById('modal-numeracao').classList.remove('hidden');
+            document.getElementById('modal-numeracao').classList.add('flex');
+        }
+
+        function fecharModalNumeracao() {
+            document.getElementById('modal-numeracao').classList.add('hidden');
+            document.getElementById('modal-numeracao').classList.remove('flex');
+        }
+
+        function confirmarNumeracao() {
+            const campeonatoId = document.getElementById('modal-campeonato').value;
+            const categoriaId  = document.getElementById('modal-categoria').value;
+            const resultado    = document.getElementById('modal-resultado');
+
+            if (!campeonatoId || !categoriaId) {
+                mostrarResultado('error', 'Por favor, selecione o Campeonato e a Categoria.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirmar-numeracao');
+            btn.disabled = true;
+            btn.textContent = 'Numerando...';
+
+            fetch('{{ route("jogos.numerar") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ campeonato_id: campeonatoId, categoria_id: categoriaId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.textContent = '✔ Confirmar e Numerar';
+                if (data.success) {
+                    mostrarResultado('success', data.message);
+                    setTimeout(() => { window.location.reload(); }, 1500);
+                } else {
+                    mostrarResultado('error', data.error || 'Ocorreu um erro.');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.textContent = '✔ Confirmar e Numerar';
+                mostrarResultado('error', 'Erro de comunicação com o servidor.');
+            });
+        }
+
+        function mostrarResultado(tipo, msg) {
+            const el = document.getElementById('modal-resultado');
+            el.classList.remove('hidden');
+            if (tipo === 'success') {
+                el.className = 'mb-4 bg-green-100 border border-green-400 text-green-800 rounded-lg p-3 text-sm';
+            } else {
+                el.className = 'mb-4 bg-red-100 border border-red-400 text-red-800 rounded-lg p-3 text-sm';
+            }
+            el.textContent = msg;
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modal-numeracao').addEventListener('click', function(e) {
+            if (e.target === this) fecharModalNumeracao();
+        });
+    </script>
+    @endhasrole
+
 </x-app-layout>

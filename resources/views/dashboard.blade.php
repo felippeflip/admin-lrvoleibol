@@ -112,6 +112,8 @@
                                                 $mandanteNome = $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : 'Mandante N/A';
                                                 $visitanteNome = $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : 'Visitante N/A';
                                                 $localNome = $jogo->ginasio ? $jogo->ginasio->gin_nome : 'Local não definido';
+                                                $categoriaNome = $jogo->mandante && $jogo->mandante->equipe && $jogo->mandante->equipe->categoria ? $jogo->mandante->equipe->categoria->cto_nome : null;
+                                                $turnoNome = $jogo->jgo_fase ?? null;
                                             @endphp
 
                                             <!-- Header: Date & Camp -->
@@ -119,6 +121,19 @@
                                                  <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
                                                     {{ $campeonatoNome }}
                                                 </span>
+                                                <!-- Badges: Categoria e Turno -->
+                                                <div class="flex flex-wrap gap-1 mb-1">
+                                                    @if($categoriaNome)
+                                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                                            {{ $categoriaNome }}
+                                                         </span>
+                                                    @endif
+                                                    @if($turnoNome)
+                                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                                            {{ $turnoNome }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
                                                     <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                                     {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
@@ -304,6 +319,8 @@
                                                 $mandanteNome = $jogo->mandante && $jogo->mandante->equipe ? $jogo->mandante->equipe->eqp_nome_detalhado : 'Mandante N/A';
                                                 $visitanteNome = $jogo->visitante && $jogo->visitante->equipe ? $jogo->visitante->equipe->eqp_nome_detalhado : 'Visitante N/A';
                                                 $localNome = $jogo->ginasio ? $jogo->ginasio->gin_nome : 'Local não definido';
+                                                $categoriaNome = $jogo->mandante && $jogo->mandante->equipe && $jogo->mandante->equipe->categoria ? $jogo->mandante->equipe->categoria->cto_nome : null;
+                                                $turnoNome = $jogo->jgo_fase ?? null;
                                             @endphp
                                         
                                             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 {{ $borderColor }} p-4 flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
@@ -313,6 +330,19 @@
                                                      <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
                                                         {{ $campeonatoNome }}
                                                     </span>
+                                                    <!-- Badges: Categoria e Turno -->
+                                                    <div class="flex flex-wrap gap-1 mb-1">
+                                                        @if($categoriaNome)
+                                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                                                {{ $categoriaNome }}
+                                                             </span>
+                                                        @endif
+                                                        @if($turnoNome)
+                                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                                                {{ $turnoNome }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
                                                     <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
                                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                                         {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 

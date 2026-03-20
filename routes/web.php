@@ -128,6 +128,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');
         Route::post('/jogos/import', [JogosController::class, 'import'])->name('jogos.import');
+        Route::post('/jogos/numerar', [JogosController::class, 'numerarJogos'])->name('jogos.numerar');
 
         // Agendamento Routes (Admin)
         Route::get('/campeonatos/{campeonato}/agendamentos', [App\Http\Controllers\AgendamentoController::class, 'indexAdmin'])->name('agendamentos.admin.index');

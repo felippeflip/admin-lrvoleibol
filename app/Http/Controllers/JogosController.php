@@ -38,7 +38,7 @@ class JogosController extends Controller
             ->update(['jgo_status' => 'inativo']);
 
         // 2. Build Query
-        $query = Jogo::with([
+        $query = Jogo::aprovadosOuNormais()->with([
             'mandante.campeonato',
             'mandante.equipe',
             'visitante.equipe',
@@ -82,6 +82,14 @@ class JogosController extends Controller
             });
         }
 
+        if ($request->filled('categoria_id')) {
+            $catId = $request->categoria_id;
+            $query->where(function ($q) use ($catId) {
+                $q->whereHas('mandante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $catId))
+                  ->orWhereHas('visitante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $catId));
+            });
+        }
+
         if ($request->filled('ginasio_id')) {
             $query->where('jgo_local_jogo_id', $request->ginasio_id);
         }
@@ -95,8 +103,8 @@ class JogosController extends Controller
         }
 
         // Pagination with sort by date local
-        $jogos = $query->orderBy('jgo_dt_jogo', 'desc')
-            ->orderBy('jgo_hora_jogo', 'desc')
+        $jogos = $query->orderBy('jgo_dt_jogo', 'asc')
+            ->orderBy('jgo_hora_jogo', 'asc')
             ->paginate(15)
             ->appends($request->all());
 
@@ -135,7 +143,7 @@ class JogosController extends Controller
             $jogo->setAttribute('term_relationships', $tempRelations);
 
             $jogo->meta = [
-                '_event_number' => (object) ['meta_value' => 'ID-' . $jogo->jgo_id], // Não guardamos event_number no DB Jogo, usando ID.
+                '_event_number' => (object) ['meta_value' => $jogo->jgo_numero_jogo ?? ''],
                 '_event_title' => (object) ['meta_value' => $postTitle],
                 '_event_location' => (object) ['meta_value' => $local],
                 '_event_start_date' => (object) ['meta_value' => $jogo->jgo_dt_jogo],
@@ -152,8 +160,9 @@ class JogosController extends Controller
 
         $campeonatos = Campeonato::orderBy('cpo_nome')->get();
         $ginasios = Ginasio::orderBy('gin_nome')->get();
+        $categorias = Categoria::orderBy('cto_nome')->get();
 
-        return view('jogos.index', compact('jogos', 'campeonatos', 'ginasios'));
+        return view('jogos.index', compact('jogos', 'campeonatos', 'ginasios', 'categorias'));
     }
 
     public function index_dashboard(Request $request)
@@ -204,7 +213,7 @@ class JogosController extends Controller
             $startDate = now()->subDays(7)->startOfDay();
             $endDate = now()->addDays(30)->endOfDay();
 
-            $adminJogos = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            $adminJogos = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                 ->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
                 ->orderBy('jgo_dt_jogo')
                 ->orderBy('jgo_hora_jogo')
@@ -216,7 +225,7 @@ class JogosController extends Controller
         // --- 2. JUIZ ---
         if ($user->hasRole('Juiz') || $user->is_arbitro) {
             // Base Query for User's Games
-            $juizQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            $juizQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
                 ->where(function ($q) use ($user) {
                     $q->where('jgo_arbitro_principal', $user->id)
                         ->orWhere('jgo_arbitro_secundario', $user->id)
@@ -407,10 +416,12 @@ class JogosController extends Controller
                 'event_category' => $categoria->cto_term_tx_id,
             ]);
 
-            // 3. Link WP ID back to Local Jogo (Bidirectional Link)
+            // 3. Link WP ID back to Local Jogo (Bidirectional Link) e salva numero do jogo
+            $jogoUpdate = ['jgo_numero_jogo' => $request->event_number ?: null];
             if ($wpPostId) {
-                $jogo->update(['jgo_wp_id' => $wpPostId]);
+                $jogoUpdate['jgo_wp_id'] = $wpPostId;
             }
+            $jogo->update($jogoUpdate);
 
             return redirect()->route('jogos.index')->with('success', 'Jogo criado com sucesso e sincronizado!');
 
@@ -434,7 +445,9 @@ class JogosController extends Controller
         // caso existam de quando os DBs não eram isolados.
         $wpPost = WpPosts::with(['eventTypes.term', 'eventCategories.term', 'meta'])->find($localJogo->jgo_wp_id ?: $id);
 
-        $eventNumber = $wpPost ? $wpPost->getMetaValue('_event_number') : $localJogo->jgo_id;
+        $eventNumber = $localJogo->jgo_numero_jogo
+            ?? ($wpPost ? $wpPost->getMetaValue('_event_number') : null)
+            ?? $localJogo->jgo_id;
 
         $selectedCampeonatoId = $localJogo->mandante->cpo_fk_id ?? null;
         if (!$selectedCampeonatoId && $wpPost && $wpPost->eventTypes->isNotEmpty()) {
@@ -511,14 +524,15 @@ class JogosController extends Controller
 
         // Data to update/create
         $data = [
-            'jgo_eqp_cpo_mandante_id' => $request->mandante_id,
+            'jgo_eqp_cpo_mandante_id'  => $request->mandante_id,
             'jgo_eqp_cpo_visitante_id' => $request->visitante_id,
-            'jgo_dt_jogo' => $request->data_jogo,
-            'jgo_hora_jogo' => $request->hora_jogo,
-            'jgo_local_jogo_id' => $request->ginasio_id,
-            'jgo_arbitro_principal' => $request->juiz_principal,
-            'jgo_arbitro_secundario' => $request->juiz_linha1,
-            'jgo_apontador' => $request->juiz_linha2,
+            'jgo_dt_jogo'              => $request->data_jogo,
+            'jgo_hora_jogo'            => $request->hora_jogo,
+            'jgo_local_jogo_id'        => $request->ginasio_id,
+            'jgo_arbitro_principal'    => $request->juiz_principal,
+            'jgo_arbitro_secundario'   => $request->juiz_linha1,
+            'jgo_apontador'            => $request->juiz_linha2,
+            'jgo_numero_jogo'          => $request->event_number ?: null,
         ];
 
         $localJogo->update($data);
@@ -530,7 +544,7 @@ class JogosController extends Controller
         $wpService = new WordpressGameService();
         $wpService->sync($localJogo, [
             'event_number' => $request->event_number,
-            'event_type' => $campeonato->cpo_term_tx_id,
+            'event_type'   => $campeonato->cpo_term_tx_id,
             'event_category' => $categoria->cto_term_tx_id,
         ], $id); // Pass $id to update
 
@@ -757,5 +771,134 @@ class JogosController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Status da solicitação atualizado.');
+    }
+
+    /**
+     * Numera os jogos filtrados por categoria e campeonato, ignorando paginação.
+     *
+     * Regras:
+     *  - ≤ 15 equipes → numeração contínua por data/hora ASC (todos os jogos juntos).
+     *  - ≥ 16 equipes → detecta grupos via jgo_fase ("Grupo A - Turno A", etc.),
+     *    ordena grupos alfabeticamente e numera dentro de cada grupo por data/hora ASC
+     *    com numeração CONTÍNUA entre grupos (sem reiniciar em 1 por grupo).
+     */
+    public function numerarJogos(Request $request)
+    {
+        if (!Auth::user()->hasRole('Administrador')) {
+            return response()->json(['error' => 'Acesso não autorizado.'], 403);
+        }
+
+        $campeonatoId = $request->input('campeonato_id');
+        $categoriaId  = $request->input('categoria_id');
+
+        if (!$campeonatoId || !$categoriaId) {
+            return response()->json(['error' => 'Selecione um Campeonato e uma Categoria para numerar os jogos.'], 422);
+        }
+
+        // Busca TODOS os jogos dos filtros (sem paginação), ordenados por dt+hora ASC
+        $query = Jogo::with(['mandante.equipe'])
+            ->whereHas('mandante', function ($q) use ($campeonatoId) {
+                $q->where('cpo_fk_id', $campeonatoId);
+            })
+            ->where(function ($q) use ($categoriaId) {
+                $q->whereHas('mandante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $categoriaId))
+                  ->orWhereHas('visitante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $categoriaId));
+            })
+            ->whereNotNull('jgo_dt_jogo')
+            ->whereNotNull('jgo_hora_jogo')
+            ->orderBy('jgo_dt_jogo', 'asc')
+            ->orderBy('jgo_hora_jogo', 'asc');
+
+        $jogos = $query->get();
+
+        if ($jogos->isEmpty()) {
+            return response()->json([
+                'error' => 'Nenhum jogo com data e hora definidos foi encontrado para os filtros selecionados.'
+            ], 404);
+        }
+
+        $wpService      = new WordpressGameService();
+        $numero         = 1;
+        $totalNumerados = 0;
+
+        // Detecta modo grupos: jgo_fase segue padrão "Grupo X - Turno Y"
+        $usaGrupos = $jogos->contains(
+            fn($jogo) => $jogo->jgo_fase && preg_match('/^(.+?)\s*-\s*Turno\s/i', $jogo->jgo_fase)
+        );
+
+        if ($usaGrupos) {
+            // ── Modo Grupos (≥ 16 equipes) ───────────────────────────────────
+            // Extrai nomes únicos de grupos (tudo antes de " - Turno ...")
+            $grupos = $jogos
+                ->map(function ($jogo) {
+                    if ($jogo->jgo_fase && preg_match('/^(.+?)\s*-\s*Turno\s/i', $jogo->jgo_fase, $m)) {
+                        return trim($m[1]);
+                    }
+                    return $jogo->jgo_fase ?? 'Sem Grupo';
+                })
+                ->unique()
+                ->sort()   // Ordena: Grupo A, Grupo B, Grupo C…
+                ->values();
+
+            foreach ($grupos as $grupo) {
+                // Filtra jogos do grupo e reordena por data/hora (garantia extra)
+                $jogosDoGrupo = $jogos
+                    ->filter(function ($jogo) use ($grupo) {
+                        if ($jogo->jgo_fase && preg_match('/^(.+?)\s*-\s*Turno\s/i', $jogo->jgo_fase, $m)) {
+                            return trim($m[1]) === $grupo;
+                        }
+                        return ($jogo->jgo_fase ?? 'Sem Grupo') === $grupo;
+                    })
+                    ->sortBy(fn($j) => $j->jgo_dt_jogo . ' ' . $j->jgo_hora_jogo)
+                    ->values();
+
+                foreach ($jogosDoGrupo as $jogo) {
+                    $jogo->update(['jgo_numero_jogo' => $numero]);
+                    $this->syncJogoNumeroWP($jogo, $numero, $wpService);
+                    $numero++;
+                    $totalNumerados++;
+                }
+            }
+
+            $detalhe = ' (por grupo: ' . $grupos->implode(', ') . ')';
+
+        } else {
+            // ── Modo Simples (≤ 15 equipes) ──────────────────────────────────
+            foreach ($jogos as $jogo) {
+                $jogo->update(['jgo_numero_jogo' => $numero]);
+                $this->syncJogoNumeroWP($jogo, $numero, $wpService);
+                $numero++;
+                $totalNumerados++;
+            }
+
+            $detalhe = '';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$totalNumerados} jogo(s) numerados com sucesso{$detalhe}!",
+        ]);
+    }
+
+    /**
+     * Sincroniza o número do jogo com o WordPress (se o jogo já existir lá).
+     */
+    private function syncJogoNumeroWP(Jogo $jogo, int $numero, WordpressGameService $wpService): void
+    {
+        if (!$jogo->jgo_wp_id) return;
+
+        try {
+            $jogo->load(['mandante.campeonato', 'mandante.equipe.categoria']);
+            $eventType     = $jogo->mandante->campeonato->cpo_term_tx_id        ?? null;
+            $eventCategory = $jogo->mandante->equipe->categoria->cto_term_tx_id ?? null;
+
+            $wpService->sync($jogo, [
+                'event_number'   => $numero,
+                'event_type'     => $eventType,
+                'event_category' => $eventCategory,
+            ], $jogo->jgo_wp_id);
+        } catch (\Exception $e) {
+            Log::error("Erro ao sincronizar numeração com WP (jogo {$jogo->jgo_id}): " . $e->getMessage());
+        }
     }
 }

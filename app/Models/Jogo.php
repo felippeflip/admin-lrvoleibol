@@ -44,6 +44,7 @@ class Jogo extends Model
         'jgo_status_agendamento',
         'jgo_sugerido_por_equipe_id',
         'jgo_fase',
+        'jgo_numero_jogo',
     ];
 
     public function resultadoSets()

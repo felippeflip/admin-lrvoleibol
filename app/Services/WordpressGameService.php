@@ -77,8 +77,12 @@ class WordpressGameService
         }
 
         // 4. Prepara MetaDados (+ Datas)
-        $startDateTime = new \DateTime($jogo->jgo_dt_jogo . ' ' . $jogo->jgo_hora_jogo);
-        $endDateTime = clone $startDateTime;
+        // jgo_dt_jogo e jgo_hora_jogo podem chegar com formatos variados (datetime, date, string).
+        // Extraímos apenas a parte necessária de cada um para evitar erro de especificação dupla de hora.
+        $datePart      = Carbon::parse($jogo->jgo_dt_jogo)->format('Y-m-d');
+        $timePart      = Carbon::parse($jogo->jgo_hora_jogo)->format('H:i:s');
+        $startDateTime = new \DateTime($datePart . ' ' . $timePart);
+        $endDateTime   = clone $startDateTime;
         $endDateTime->modify('+2 hours 30 minutes');
 
         // Note: Todos os campos custom fields foram validados no wordpress para aceitarem single strings
