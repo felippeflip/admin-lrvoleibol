@@ -41,6 +41,8 @@ class UserController extends Controller
                 $query->role('Administrador');
             } elseif ($role === 'ResponsavelTime') {
                 $query->role('ResponsavelTime');
+            } elseif ($role === 'ComissaoTecnica') {
+                $query->role('ComissaoTecnica');
             } elseif ($role === 'Juiz') {
                 $query->where('is_arbitro', true);
             }

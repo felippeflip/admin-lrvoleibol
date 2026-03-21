@@ -769,6 +769,7 @@ class JogosController extends Controller
 
         $jogo = Jogo::where('jgo_wp_id', $id)->orWhere('jgo_id', $id)->firstOrFail();
         
+        // Registrar a solicitação no histórico
         \App\Models\JogoSolicitacao::create([
             'jogo_id' => $jogo->jgo_id,
             'user_id' => auth()->id(),
@@ -776,8 +777,26 @@ class JogosController extends Controller
             'status' => 'pendente',
         ]);
 
-        return redirect()->back()->with('success', 'Solicitação de alteração enviada com sucesso.');
+        // Retornar o jogo para o estado de agendamento prévio (Ponto Central do Pedido)
+        $jogo->update([
+            'jgo_status_agendamento' => 'pendente_preenchimento'
+        ]);
+
+        // Se já existia sincronização com o WordPress (estava aprovado), removemos para nova aprovação após as edições
+        if ($jogo->jgo_wp_id) {
+            try {
+                $wpService = new \App\Services\WordpressGameService();
+                $wpService->delete($jogo->jgo_wp_id);
+                $jogo->update(['jgo_wp_id' => null]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Erro ao remover jogo do site ao solicitar alteração: " . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('agendamentos.comissao.index')->with('success', 'Solicitação registrada. O jogo agora está aqui para que você realize a alteração da data, hora ou local.');
     }
+
+
 
     public function resolverSolicitacao(Request $request, $solicitacao_id)
     {

@@ -50,6 +50,7 @@
                                             <option value="Juiz" {{ request('role') == 'Juiz' ? 'selected' : '' }}>Juiz
                                             </option>
                                             <option value="ResponsavelTime" {{ request('role') == 'ResponsavelTime' ? 'selected' : '' }}>Responsável pelo TIME</option>
+                                            <option value="ComissaoTecnica" {{ request('role') == 'ComissaoTecnica' ? 'selected' : '' }}>Comissão Técnica</option>
                                         </select>
                                     </div>
 

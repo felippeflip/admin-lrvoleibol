@@ -326,6 +326,9 @@ class AgendamentoController extends Controller
         foreach ($jogos as $jogo) {
             $jogo->update(['jgo_status_agendamento' => 'aprovado']);
             
+            // Resolve any pending alteration requests
+            $jogo->solicitacoesAlteracao()->where('status', 'pendente')->update(['status' => 'resolvido']);
+            
             try {
                 $eventType = $jogo->mandante->campeonato->cpo_term_tx_id ?? null;
                 $eventCategory = $jogo->mandante->equipe->categoria->cto_term_tx_id ?? null;
@@ -358,6 +361,9 @@ class AgendamentoController extends Controller
         }
 
         $jogo->update(['jgo_status_agendamento' => 'aprovado']);
+
+        // Resolve any pending alteration requests
+        $jogo->solicitacoesAlteracao()->where('status', 'pendente')->update(['status' => 'resolvido']);
 
         try {
             $wpService = new \App\Services\WordpressGameService();
