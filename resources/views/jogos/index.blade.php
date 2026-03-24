@@ -432,10 +432,9 @@
 
             <div class="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-lg p-3 mb-4 text-sm dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700 space-y-1">
                 <p><strong>⚠ Atenção:</strong> Apenas jogos <strong>com data e hora definidos</strong> serão numerados.</p>
-                <p>📋 <strong>Regras automáticas:</strong></p>
+                <p>📋 <strong>Regra de ordenação:</strong></p>
                 <ul class="list-disc list-inside pl-2 space-y-0.5">
-                    <li><strong>≤ 15 equipes:</strong> todos os jogos numerados por data/hora crescente.</li>
-                    <li><strong>≥ 16 equipes (com grupos):</strong> jogos numerados dentro de cada grupo (Grupo A → B → C…) por data/hora crescente, com numeração contínua.</li>
+                    <li>Todos os jogos listados serão numerados em ordem cronológica contínua, do menor (mais antigo) para o maior (mais recente), baseados na data e hora da partida.</li>
                 </ul>
             </div>
 

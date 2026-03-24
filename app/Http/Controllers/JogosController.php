@@ -856,66 +856,19 @@ class JogosController extends Controller
             ], 404);
         }
 
-        $wpService      = new WordpressGameService();
         $numero         = 1;
         $totalNumerados = 0;
 
-        // Detecta modo grupos: jgo_fase segue padrão "Grupo X - Turno Y"
-        $usaGrupos = $jogos->contains(
-            fn($jogo) => $jogo->jgo_fase && preg_match('/^(.+?)\s*-\s*Turno\s/i', $jogo->jgo_fase)
-        );
-
-        if ($usaGrupos) {
-            // ── Modo Grupos (≥ 16 equipes) ───────────────────────────────────
-            // Extrai nomes únicos de grupos (tudo antes de " - Turno ...")
-            $grupos = $jogos
-                ->map(function ($jogo) {
-                    if ($jogo->jgo_fase && preg_match('/^(.+?)\s*-\s*Turno\s/i', $jogo->jgo_fase, $m)) {
-                        return trim($m[1]);
-                    }
-                    return $jogo->jgo_fase ?? 'Sem Grupo';
-                })
-                ->unique()
-                ->sort()   // Ordena: Grupo A, Grupo B, Grupo C…
-                ->values();
-
-            foreach ($grupos as $grupo) {
-                // Filtra jogos do grupo e reordena por data/hora (garantia extra)
-                $jogosDoGrupo = $jogos
-                    ->filter(function ($jogo) use ($grupo) {
-                        if ($jogo->jgo_fase && preg_match('/^(.+?)\s*-\s*Turno\s/i', $jogo->jgo_fase, $m)) {
-                            return trim($m[1]) === $grupo;
-                        }
-                        return ($jogo->jgo_fase ?? 'Sem Grupo') === $grupo;
-                    })
-                    ->sortBy(fn($j) => $j->jgo_dt_jogo . ' ' . $j->jgo_hora_jogo)
-                    ->values();
-
-                foreach ($jogosDoGrupo as $jogo) {
-                    $jogo->update(['jgo_numero_jogo' => $numero]);
-                    $this->syncJogoNumeroWP($jogo, $numero, $wpService);
-                    $numero++;
-                    $totalNumerados++;
-                }
-            }
-
-            $detalhe = ' (por grupo: ' . $grupos->implode(', ') . ')';
-
-        } else {
-            // ── Modo Simples (≤ 15 equipes) ──────────────────────────────────
-            foreach ($jogos as $jogo) {
-                $jogo->update(['jgo_numero_jogo' => $numero]);
-                $this->syncJogoNumeroWP($jogo, $numero, $wpService);
-                $numero++;
-                $totalNumerados++;
-            }
-
-            $detalhe = '';
+        // ── Numeração Cronológica Contínua ──────────────────────────────────
+        foreach ($jogos as $jogo) {
+            $jogo->update(['jgo_numero_jogo' => $numero]);
+            $numero++;
+            $totalNumerados++;
         }
 
         return response()->json([
             'success' => true,
-            'message' => "{$totalNumerados} jogo(s) numerados com sucesso{$detalhe}!",
+            'message' => "{$totalNumerados} jogo(s) numerados com sucesso!",
         ]);
     }
 
