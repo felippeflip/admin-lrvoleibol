@@ -27,6 +27,7 @@ class JogoService
                 'jgo_arbitro_secundario' => $data['juiz_secundario_id'] ?? null,
                 'jgo_apontador' => $data['apontador_id'] ?? null,
                 'jgo_fase' => $data['fase'] ?? null,
+                'jgo_fase_tipo' => $data['fase_tipo'] ?? 'classificatoria',
             ]);
 
             Log::info("Jogo criado localmente com ID: {$jogo->jgo_id}");
@@ -57,6 +58,7 @@ class JogoService
                 'jgo_arbitro_secundario' => $data['juiz_secundario_id'] ?? null,
                 'jgo_apontador' => $data['apontador_id'] ?? null,
                 'jgo_fase' => $data['fase'] ?? null,
+                'jgo_fase_tipo' => $data['fase_tipo'] ?? 'classificatoria',
             ]);
 
             Log::info("Jogo atualizado localmente com ID: {$jogo->jgo_id}");

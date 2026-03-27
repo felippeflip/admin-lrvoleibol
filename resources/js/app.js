@@ -361,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Lógica para Mensagens Flash (Sucesso, Erro, etc.) ---
     const flashMessages = document.querySelectorAll('.flash-message');
 
+    // Desativado a pedido do usuário: manter a mensagem fixa até a página atualizar.
+    /*
     if (flashMessages.length > 0) {
         flashMessages.forEach(message => {
             setTimeout(() => {
@@ -371,5 +373,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 3000); // 3000 milissegundos = 3 segundos
         });
     }
+    */
 
 });

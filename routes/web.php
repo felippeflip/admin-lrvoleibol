@@ -143,6 +143,10 @@ Route::middleware('auth')->group(function () {
         // CRUD Documentos (Admin)
         Route::resource('documentos', App\Http\Controllers\DocumentoController::class)->except(['index', 'show']);
 
+        // Sistema de Classificação
+        Route::get('/classificacao/preview/{campeonato_id}/{categoria_id}', [App\Http\Controllers\ClassificacaoController::class, 'preview'])->name('classificacao.preview');
+        Route::post('/classificacao/publicar/{campeonato_id}/{categoria_id}', [App\Http\Controllers\ClassificacaoController::class, 'publicar'])->name('classificacao.publicar');
+
 
     });
 

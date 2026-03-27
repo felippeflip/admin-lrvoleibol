@@ -51,7 +51,22 @@
                                 $turnoValue = count($faseParts) > 1 ? $faseParts[1] : (!str_contains($faseParts[0] ?? '', 'Grupo') ? ($faseParts[0] ?? '') : '');
                             @endphp
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Tipo de Fase -->
+                                <div class="mb-4">
+                                    <label for="jgo_fase_tipo" class="block text-gray-700 dark:text-gray-300 font-bold mb-2">Tipo de Fase *:</label>
+                                    <select name="jgo_fase_tipo" id="jgo_fase_tipo" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 p-2 rounded" required>
+                                        <option value="classificatoria" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'classificatoria' ? 'selected' : '' }}>Fase Classificatória / Grupos</option>
+                                        <option value="quartas_de_final" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'quartas_de_final' ? 'selected' : '' }}>Quartas de Final</option>
+                                        <option value="semi_final_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_ouro' ? 'selected' : '' }}>Semi-Final (Série Ouro)</option>
+                                        <option value="semi_final_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_prata' ? 'selected' : '' }}>Semi-Final (Série Prata)</option>
+                                        <option value="semi_final_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_bronze' ? 'selected' : '' }}>Semi-Final (Série Bronze)</option>
+                                        <option value="final_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_ouro' ? 'selected' : '' }}>Final (Série Ouro)</option>
+                                        <option value="final_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_prata' ? 'selected' : '' }}>Final (Série Prata)</option>
+                                        <option value="final_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_bronze' ? 'selected' : '' }}>Final (Série Bronze)</option>
+                                    </select>
+                                </div>
+
                                 <!-- Grupo -->
                                 <div class="mb-4">
                                     <label for="grupo" class="block text-gray-700 dark:text-gray-300 font-bold mb-2">Grupo:</label>

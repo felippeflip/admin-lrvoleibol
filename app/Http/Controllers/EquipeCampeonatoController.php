@@ -86,8 +86,10 @@ class EquipeCampeonatoController extends Controller
 
         $equipesDisponiveis = $query->orderBy('eqp_nome_detalhado')->get();
 
+        $categorias = Categoria::orderBy('cto_nome')->get();
+
         // Passa as duas listas de equipes para a view
-        return view('equipes_campeonato.create', compact('campeonato', 'equipesDisponiveis', 'equipesInscritas'));
+        return view('equipes_campeonato.create', compact('campeonato', 'equipesDisponiveis', 'equipesInscritas', 'categorias'));
     }
 
     /**
@@ -116,40 +118,83 @@ class EquipeCampeonatoController extends Controller
                     ];
                 }
             }
+
             // Identifica as equipes que serão removidas
             $equipesAtuaisIds = $campeonato->equipes()->pluck('equipes.eqp_id')->toArray();
             $equipesMantidasIds = array_keys($dataToSync);
             $equipesParaRemover = array_diff($equipesAtuaisIds, $equipesMantidasIds);
 
-            if (!empty($equipesParaRemover)) {
-                // Verifica se alguma das equipes a serem removidas possui elenco inscrito
-                $equipesComElenco = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
-                    ->whereIn('eqp_fk_id', $equipesParaRemover)
-                    ->whereHas('elenco')
-                    ->exists();
+            $msgAdicional = '';
 
-                if ($equipesComElenco) {
-                    return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem elenco cadastrado neste campeonato e não podem ser removidas.']);
+            if (!empty($equipesParaRemover)) {
+                $wpService = new \App\Services\WordpressGameService();
+                $totalAnulados = 0;
+                $totalDeletados = 0;
+
+                foreach ($equipesParaRemover as $eqpParaRemoverId) {
+                    $equipeCampeonato = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
+                        ->where('eqp_fk_id', $eqpParaRemoverId)
+                        ->first();
+
+                    if (!$equipeCampeonato) continue;
+
+                    // Verifica se a equipe possui elenco inscrito
+                    if ($equipeCampeonato->elenco()->exists()) {
+                        return redirect()->back()->withErrors(['error' => "A equipe " . ($equipeCampeonato->equipe->eqp_nome_detalhado ?? 'desconhecida') . " possui elenco cadastrado neste campeonato e não pode ser removida. Remova o elenco antes."]);
+                    }
+
+                    // Processa os jogos desta equipe sendo removida
+                    $jogos = \App\Models\Jogo::where('jgo_eqp_cpo_mandante_id', $equipeCampeonato->eqp_cpo_id)
+                        ->orWhere('jgo_eqp_cpo_visitante_id', $equipeCampeonato->eqp_cpo_id)
+                        ->get();
+
+                    $anuladosDestaEquipe = 0;
+
+                    foreach ($jogos as $jogo) {
+                        $isRealizado = $jogo->jgo_status_agendamento === 'realizado' 
+                                    || $jogo->jgo_resultado_aprovado == 1 
+                                    || in_array($jogo->jgo_res_status, ['pendente', 'aprovado']);
+
+                        if ($isRealizado) {
+                            $jogo->update([
+                                'jgo_status_agendamento' => 'anulado',
+                                'jgo_res_status' => 'anulado'
+                            ]);
+
+                            if ($jogo->jgo_wp_id) {
+                                $wpService->delete($jogo->jgo_wp_id);
+                            }
+                            $anuladosDestaEquipe++;
+                            $totalAnulados++;
+                        } else {
+                            if ($jogo->jgo_wp_id) {
+                                $wpService->delete($jogo->jgo_wp_id);
+                            }
+                            $jogo->delete();
+                            $totalDeletados++;
+                        }
+                    }
+
+                    // Se a equipe tinha jogos anulados, não podemos desvincular do campeonato
+                    // pois precisamos preservar o histórico dos confrontos passados!
+                    if ($anuladosDestaEquipe > 0) {
+                        // Re-adicionamos aos dados para sync para que não seja detached
+                        $dataToSync[$eqpParaRemoverId] = [
+                            'eqp_cpo_dt_inscricao' => $equipeCampeonato->eqp_cpo_dt_inscricao
+                        ];
+                    }
                 }
 
-                // Verifica se alguma das equipes a serem removidas possui jogos vinculados
-                $equipesComJogos = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
-                    ->whereIn('eqp_fk_id', $equipesParaRemover)
-                    ->where(function ($query) {
-                        $query->whereHas('jogosMandante')
-                            ->orWhereHas('jogosVisitante');
-                    })
-                    ->exists();
-
-                if ($equipesComJogos) {
-                    return redirect()->back()->withErrors(['error' => 'Uma ou mais equipes removidas já possuem jogos agendados/realizados neste campeonato e não podem ser removidas.']);
+                if ($totalAnulados > 0 || $totalDeletados > 0) {
+                    $msgAdicional = " Ao processar as remoções: $totalDeletados jogo(s) futuro(s) excluído(s) e $totalAnulados jogo(s) realizado(s) anulado(s). As equipes com jogos realizados foram mantidas ativas no sistema apenas para preservar o histórico.";
                 }
             }
 
             // Usa sync para remover as equipes que não foram selecionadas e adicionar as novas
             $campeonato->equipes()->sync($dataToSync);
 
-            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)->with('success', 'Equipes atualizadas no campeonato com sucesso!');
+            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)->with('success', 'Equipes atualizadas no campeonato com sucesso!' . $msgAdicional);
+
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar equipes no campeonato: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->withErrors(['error' => 'Erro ao atualizar equipes no campeonato.'])->withInput();
@@ -174,29 +219,66 @@ class EquipeCampeonatoController extends Controller
                 ->exists();
 
             if ($possuiElenco) {
-                return redirect()->back()->withErrors(['error' => 'Esta equipe já possui elenco cadastrado neste campeonato e não pode ser removida.']);
+                return redirect()->back()->withErrors(['error' => 'Esta equipe já possui elenco cadastrado neste campeonato e não pode ser removida antes de remover seu elenco.']);
             }
 
-            // Verifica se a equipe possui jogos vinculados no campeonato
-            $possuiJogos = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
+            $equipeCampeonato = \App\Models\EquipeCampeonato::where('cpo_fk_id', $campeonato->cpo_id)
                 ->where('eqp_fk_id', $equipe->eqp_id)
-                ->where(function ($query) {
-                    $query->whereHas('jogosMandante')
-                        ->orWhereHas('jogosVisitante');
-                })
-                ->exists();
+                ->first();
 
-            if ($possuiJogos) {
-                return redirect()->back()->withErrors(['error' => 'Esta equipe já possui jogos agendados/realizados neste campeonato e não pode ser removida.']);
+            if (!$equipeCampeonato) {
+                return redirect()->back()->withErrors(['error' => 'A equipe não está vinculada a este campeonato.']);
             }
 
-            // Remove a associação da equipe com o campeonato na tabela pivot
-            $campeonato->equipes()->detach($equipe->eqp_id);
+            // Busca os jogos da equipe neste campeonato
+            $jogos = \App\Models\Jogo::where('jgo_eqp_cpo_mandante_id', $equipeCampeonato->eqp_cpo_id)
+                ->orWhere('jgo_eqp_cpo_visitante_id', $equipeCampeonato->eqp_cpo_id)
+                ->get();
 
-            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)->with('success', 'Equipe removida do campeonato com sucesso!');
+            $wpService = new \App\Services\WordpressGameService();
+            $deletados = 0;
+            $anulados = 0;
+
+            foreach ($jogos as $jogo) {
+                $isRealizado = $jogo->jgo_status_agendamento === 'realizado' 
+                            || $jogo->jgo_resultado_aprovado == 1 
+                            || in_array($jogo->jgo_res_status, ['pendente', 'aprovado']);
+
+                if ($isRealizado) {
+                    // Anular do campeonato local
+                    $jogo->update([
+                        'jgo_status_agendamento' => 'anulado',
+                        'jgo_res_status' => 'anulado'
+                    ]);
+
+                    // Deletar do WP para não aparecer publicamente o jogo com pontuação
+                    if ($jogo->jgo_wp_id) {
+                        $wpService->delete($jogo->jgo_wp_id);
+                    }
+                    $anulados++;
+                } else {
+                    // Jogo futuro / não preenchido -> Deletar
+                    if ($jogo->jgo_wp_id) {
+                        $wpService->delete($jogo->jgo_wp_id);
+                    }
+                    $jogo->delete();
+                    $deletados++;
+                }
+            }
+
+            // Se não restou ou havia jogos realizados, podemos prosseguir com o delete do pivot (remove equipe do campeonato)
+            if ($anulados === 0) {
+                $campeonato->equipes()->detach($equipe->eqp_id);
+                $msg = "Equipe removida do campeonato com sucesso! $deletados jogo(s) futuro(s) excluído(s).";
+            } else {
+                $msg = "A equipe possuía $anulados jogo(s) já realizado(s), os quais foram anulados para não computar pontos na tabela. Além disso, $deletados jogo(s) futuro(s) foram excluídos. A equipe foi mantida no registro do campeonato para preservar o histórico dos confrontos anulados.";
+            }
+
+            return redirect()->route('equipes.campeonato.index', $campeonato->cpo_id)->with('success', $msg);
+
         } catch (\Exception $e) {
-            Log::error('Erro ao remover equipe do campeonato: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return redirect()->back()->withErrors(['error' => 'Erro ao remover equipe do campeonato.']);
+            \Illuminate\Support\Facades\Log::error('Erro ao remover equipe do campeonato: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->back()->withErrors(['error' => 'Erro ao processar a remoção ou anulação dos jogos associados à equipe.']);
         }
     }
     /**

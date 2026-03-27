@@ -12,8 +12,8 @@
 
                     {{-- Actions --}}
                     @hasrole('Administrador')
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="space-x-2">
+                    <div class="flex flex-col md:flex-row items-start md:items-center mb-6 gap-4">
+                        <div class="flex flex-wrap gap-2">
                             <a href="{{ route('jogos.create') }}"
                                 class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">NOVO
                                 JOGO</a>
@@ -22,6 +22,10 @@
                             <button type="button" onclick="abrirModalNumeracao()"
                                 class="text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-purple-600 dark:hover:bg-purple-700 focus:outline-none dark:focus:ring-purple-800">
                                 🔢 NUMERAR JOGOS
+                            </button>
+                            <button type="button" onclick="abrirModalClassificacao()"
+                                class="text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-extrabold rounded-lg text-sm px-5 py-2.5 shadow-md transition-all dark:focus:ring-yellow-800">
+                                🏆 GERAR TABELA
                             </button>
                         </div>
                     </div>
@@ -547,6 +551,94 @@
         // Fechar modal ao clicar fora
         document.getElementById('modal-numeracao').addEventListener('click', function(e) {
             if (e.target === this) fecharModalNumeracao();
+        });
+    </script>
+
+    {{-- Modal Gerar Tabela (Classificação) --}}
+    <div id="modal-classificacao" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">🏆 Gerar Tabela de Classificação</h3>
+
+            <div class="bg-blue-50 border border-blue-300 text-blue-800 rounded-lg p-3 mb-4 text-sm dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700 space-y-1">
+                <p>Selecione abaixo o <strong>Campeonato</strong> e a <strong>Categoria</strong> que deseja para calcular e pré-visualizar a tabela da fase classificatória.</p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campeonato *</label>
+                <select id="modal-class-campeonato" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded-lg text-sm">
+                    <option value="">Selecione o Campeonato...</option>
+                    @foreach($campeonatos as $camp)
+                        <option value="{{ $camp->cpo_id }}">{{ $camp->cpo_nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoria *</label>
+                <select id="modal-class-categoria" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded-lg text-sm">
+                    <option value="">Selecione a Categoria...</option>
+                    @foreach($categorias as $cat)
+                        <option value="{{ $cat->cto_id }}">{{ $cat->cto_nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div id="modal-class-resultado" class="hidden mb-4"></div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="fecharModalClassificacao()"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-classificacao" onclick="confirmarClassificacao()"
+                    class="px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg text-sm font-extrabold shadow-md">
+                    ➡ Visualizar Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalClassificacao() {
+            // Pré-preencher com os filtros ativos na tela
+            const campeonatoAtual = '{{ request("campeonato_id") }}';
+            const categoriaAtual  = '{{ request("categoria_id") }}';
+            if (campeonatoAtual) document.getElementById('modal-class-campeonato').value = campeonatoAtual;
+            if (categoriaAtual)  document.getElementById('modal-class-categoria').value  = categoriaAtual;
+
+            document.getElementById('modal-class-resultado').classList.add('hidden');
+            document.getElementById('modal-class-resultado').innerHTML = '';
+            document.getElementById('modal-classificacao').classList.remove('hidden');
+            document.getElementById('modal-classificacao').classList.add('flex');
+        }
+
+        function fecharModalClassificacao() {
+            document.getElementById('modal-classificacao').classList.add('hidden');
+            document.getElementById('modal-classificacao').classList.remove('flex');
+        }
+
+        function confirmarClassificacao() {
+            const campeonatoId = document.getElementById('modal-class-campeonato').value;
+            const categoriaId  = document.getElementById('modal-class-categoria').value;
+            const resultado    = document.getElementById('modal-class-resultado');
+
+            if (!campeonatoId || !categoriaId) {
+                resultado.classList.remove('hidden');
+                resultado.className = 'mb-4 bg-red-100 border border-red-400 text-red-800 rounded-lg p-3 text-sm';
+                resultado.textContent = 'Por favor, selecione o Campeonato e a Categoria.';
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirmar-classificacao');
+            btn.disabled = true;
+            btn.textContent = 'Carregando...';
+
+            window.location.href = `/classificacao/preview/${campeonatoId}/${categoriaId}`;
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modal-classificacao').addEventListener('click', function(e) {
+            if (e.target === this) fecharModalClassificacao();
         });
     </script>
     @endhasrole

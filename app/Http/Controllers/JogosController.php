@@ -391,6 +391,7 @@ class JogosController extends Controller
             'juiz_linha2' => 'nullable|exists:users,id',
             'grupo' => 'nullable|string|max:100',
             'turno' => 'nullable|string|max:100',
+            'jgo_fase_tipo' => 'nullable|string|max:50',
         ]);
 
         try {
@@ -413,6 +414,7 @@ class JogosController extends Controller
                 'juiz_secundario_id' => $request->juiz_linha1,
                 'apontador_id' => $request->juiz_linha2,
                 'fase' => $fase,
+                'fase_tipo' => $request->jgo_fase_tipo ?? 'classificatoria',
             ]);
 
             $campeonato = Campeonato::find($request->campeonato_id);
@@ -529,6 +531,7 @@ class JogosController extends Controller
             'juiz_linha2' => 'nullable|exists:users,id',
             'grupo' => 'nullable|string|max:100',
             'turno' => 'nullable|string|max:100',
+            'jgo_fase_tipo' => 'nullable|string|max:50',
         ]);
 
         // 1. Find or Create Local Jogo
@@ -553,6 +556,7 @@ class JogosController extends Controller
             'jgo_apontador'            => $request->juiz_linha2,
             'jgo_numero_jogo'          => $request->event_number ?: null,
             'jgo_fase'                 => $fase,
+            'jgo_fase_tipo'            => $request->jgo_fase_tipo ?? 'classificatoria',
         ];
 
         $localJogo->update($data);

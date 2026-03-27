@@ -23,6 +23,18 @@
                             </div>
                         @endif
 
+                        <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="filterCategoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filtrar por Categoria (Para visualizar equipes e arrastar)</label>
+                                <select id="filterCategoria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    <option value="">Todas as Categorias</option>
+                                    @foreach($categorias as $cat)
+                                        <option value="{{ $cat->cto_id }}">{{ $cat->cto_nome }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 items-center">
                             
                             <!-- Coluna de Equipes Disponíveis -->
@@ -40,11 +52,13 @@
                                 </div>
                                 <div id="listDisponiveis" class="custom-list flex-1 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg h-[calc(100vh-28rem)] min-h-[300px] overflow-y-auto bg-white">
                                     @foreach ($equipesDisponiveis as $equipe)
-                                        <div class="list-item cursor-pointer p-3 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" 
+                                        <div class="list-item cursor-grab active:cursor-grabbing p-3 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" 
+                                             draggable="true"
                                              data-value="{{ $equipe->eqp_id }}" 
+                                             data-categoria="{{ $equipe->eqp_categoria_id }}"
                                              data-search="{{ strtolower($equipe->eqp_nome_detalhado . ' ' . ($equipe->time->tim_nome ?? '')) }}">
                                             <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $equipe->eqp_nome_detalhado }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">Time: {{ $equipe->time->tim_nome ?? 'N/A' }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Time: {{ $equipe->time->tim_nome ?? 'N/A' }} | Cat: {{ $equipe->categoria->cto_nome ?? 'N/A' }}</div>
                                         </div>
                                     @endforeach
                                 </div>
@@ -82,11 +96,13 @@
                                 </div>
                                 <div id="listSelecionadas" class="custom-list flex-1 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg h-[calc(100vh-28rem)] min-h-[300px] overflow-y-auto bg-white">
                                     @foreach ($equipesInscritas as $equipe)
-                                        <div class="list-item cursor-pointer p-3 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" 
+                                        <div class="list-item cursor-grab active:cursor-grabbing p-3 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" 
+                                             draggable="true"
                                              data-value="{{ $equipe->eqp_id }}" 
+                                             data-categoria="{{ $equipe->eqp_categoria_id }}"
                                              data-search="{{ strtolower($equipe->eqp_nome_detalhado . ' ' . ($equipe->time->tim_nome ?? '')) }}">
                                             <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $equipe->eqp_nome_detalhado }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">Time: {{ $equipe->time->tim_nome ?? 'N/A' }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Time: {{ $equipe->time->tim_nome ?? 'N/A' }} | Cat: {{ $equipe->categoria->cto_nome ?? 'N/A' }}</div>
                                             <input type="hidden" name="equipe_ids[]" value="{{ $equipe->eqp_id }}">
                                         </div>
                                     @endforeach
@@ -129,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const listDisponiveis = document.getElementById('listDisponiveis');
     const listSelecionadas = document.getElementById('listSelecionadas');
     const searchInput = document.getElementById('searchDisponiveis');
+    const filterCategoria = document.getElementById('filterCategoria');
     
     const btnAdd = document.getElementById('addSelected');
     const btnRemove = document.getElementById('removeSelected');
@@ -143,103 +160,152 @@ document.addEventListener('DOMContentLoaded', function() {
     registerEvents(listSelecionadas);
     updateCounters();
 
-    // Filtro de Busca type-to-filter
-    searchInput.addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        const items = listDisponiveis.getElementsByClassName('list-item');
+    // Filtros
+    function filterItems() {
+        const term = searchInput.value.toLowerCase();
+        const catId = filterCategoria.value;
         
-        Array.from(items).forEach(item => {
-            const text = item.getAttribute('data-search') || '';
-            item.style.display = text.includes(term) ? 'block' : 'none';
+        [listDisponiveis, listSelecionadas].forEach(list => {
+            const items = list.getElementsByClassName('list-item');
+            Array.from(items).forEach(item => {
+                const text = item.getAttribute('data-search') || '';
+                const itemCat = item.getAttribute('data-categoria') || '';
+                
+                let textMatch = true;
+                if (list === listDisponiveis && term !== '') {
+                    textMatch = text.includes(term);
+                }
+                
+                let catMatch = true;
+                if (catId !== '') {
+                    catMatch = (itemCat === catId);
+                }
+                
+                item.style.display = (textMatch && catMatch) ? 'block' : 'none';
+            });
         });
-    });
+        updateCounters();
+    }
+
+    searchInput.addEventListener('input', filterItems);
+    if (filterCategoria) {
+        filterCategoria.addEventListener('change', filterItems);
+    }
 
     // Eventos Click nos Botões
-    btnAdd.addEventListener('click', () => moveSelectedItems(listDisponiveis, listSelecionadas));
-    btnRemove.addEventListener('click', () => moveSelectedItems(listSelecionadas, listDisponiveis));
-    btnAddAll.addEventListener('click', () => moveAllItems(listDisponiveis, listSelecionadas));
-    btnRemoveAll.addEventListener('click', () => moveAllItems(listSelecionadas, listDisponiveis));
+    btnAdd.addEventListener('click', () => { moveSelectedItems(listDisponiveis, listSelecionadas); filterItems(); });
+    btnRemove.addEventListener('click', () => { moveSelectedItems(listSelecionadas, listDisponiveis); filterItems(); });
+    btnAddAll.addEventListener('click', () => { moveAllItems(listDisponiveis, listSelecionadas); filterItems(); });
+    btnRemoveAll.addEventListener('click', () => { moveAllItems(listSelecionadas, listDisponiveis); filterItems(); });
 
-    // Funções de Registro de Eventos (para novos itens movidos)
-    function registerEvents(container) {
-        // Usa delegação de eventos para melhor performance e lidar com itens dinâmicos
-        container.removeEventListener('click', handleItemClick); // Evita duplicidade
-        container.addEventListener('click', handleItemClick);
+    // Drag and Drop implementation
+    let draggedItem = null;
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        e.dataTransfer.effectAllowed = 'move';
+        // e.dataTransfer.setData('text/html', this.outerHTML);
+        setTimeout(() => this.classList.add('opacity-50'), 0);
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('opacity-50');
+        draggedItem = null;
+        cleanItemStyles(this);
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        this.classList.add('bg-gray-100', 'dark:bg-gray-600');
+        return false;
     }
     
+    function handleDragLeave(e) {
+        this.classList.remove('bg-gray-100', 'dark:bg-gray-600');
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        this.classList.remove('bg-gray-100', 'dark:bg-gray-600');
+        
+        if (draggedItem && this !== draggedItem.parentNode) {
+            cleanItemStyles(draggedItem);
+            const isSelectedCol = this.id === 'listSelecionadas';
+            manageHiddenInput(draggedItem, isSelectedCol);
+            this.appendChild(draggedItem);
+            
+            sortItems(this);
+            filterItems();
+        }
+        return false;
+    }
+
+    function registerEvents(container) {
+        container.removeEventListener('click', handleItemClick);
+        container.addEventListener('click', handleItemClick);
+        
+        container.removeEventListener('dragover', handleDragOver);
+        container.removeEventListener('dragleave', handleDragLeave);
+        container.removeEventListener('drop', handleDrop);
+        container.addEventListener('dragover', handleDragOver);
+        container.addEventListener('dragleave', handleDragLeave);
+        container.addEventListener('drop', handleDrop);
+        
+        bindDragEventsToItems(container);
+    }
+
+    function bindDragEventsToItems(container) {
+        const items = container.getElementsByClassName('list-item');
+        Array.from(items).forEach(item => {
+            item.removeEventListener('dragstart', handleDragStart);
+            item.removeEventListener('dragend', handleDragEnd);
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragend', handleDragEnd);
+        });
+    }
+
     function handleItemClick(e) {
-        // Encontra o parente mais próximo que seja um .list-item
         const item = e.target.closest('.list-item');
         if (item && this.contains(item)) {
-            // Toggle seleção
             item.classList.toggle('bg-blue-100');
             item.classList.toggle('dark:bg-blue-900');
-            item.classList.toggle('border-blue-300'); // Borda de destaque
-            item.classList.toggle('selected-item'); // Classe lógica
+            item.classList.toggle('border-blue-300');
+            item.classList.toggle('selected-item');
         }
     }
 
-    // Mover itens selecionados
     function moveSelectedItems(from, to) {
-        // Pega todos items com a classe 'selected-item' DENTRO do container origem
         const selected = Array.from(from.getElementsByClassName('selected-item'));
-        
         if (selected.length === 0) return;
         
         selected.forEach(item => {
-            // Remove classes de seleção visual
             cleanItemStyles(item);
-            
-            // Gerencia input hidden
             manageHiddenInput(item, to.id === 'listSelecionadas');
-            
-            // Move elemento
             to.appendChild(item);
-            
-            // Se veio de disponíveis, reseta o display (busca)
-            if (from === listDisponiveis) {
-                item.style.display = 'block'; 
-            }
         });
         
         sortItems(to);
-        updateCounters();
-        
-        // Refazer busca se necessário (se moveu de volta pra disponíveis)
-        if (to === listDisponiveis) {
-           searchInput.dispatchEvent(new Event('input'));
-        }
+        bindDragEventsToItems(to);
     }
 
-    // Mover Todos
     function moveAllItems(from, to) {
-        // Considera apenas itens visíveis (respeitando filtro de busca se for origem)
         const items = Array.from(from.getElementsByClassName('list-item')).filter(el => el.style.display !== 'none');
         
         items.forEach(item => {
             cleanItemStyles(item);
             manageHiddenInput(item, to.id === 'listSelecionadas');
             to.appendChild(item);
-            
-            if (from === listDisponiveis) {
-                item.style.display = 'block';
-            }
         });
 
         sortItems(to);
-        updateCounters();
-        
-        if (to === listDisponiveis) {
-             searchInput.dispatchEvent(new Event('input'));
-        }
+        bindDragEventsToItems(to);
     }
 
-    // Adiciona ou remove input hidden
     function manageHiddenInput(item, isSelectedCol) {
         const existingInput = item.querySelector('input[name="equipe_ids[]"]');
         
         if (isSelectedCol) {
-            // Adicionar input se não existir
             if (!existingInput) {
                 const id = item.getAttribute('data-value');
                 const input = document.createElement('input');
@@ -249,7 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 item.appendChild(input);
             }
         } else {
-            // Remover input se existir
             if (existingInput) {
                 existingInput.remove();
             }
@@ -273,8 +338,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCounters() {
-        countDisponiveis.textContent = `(${listDisponiveis.getElementsByClassName('list-item').length})`;
-        countSelecionadas.textContent = `(${listSelecionadas.getElementsByClassName('list-item').length})`;
+        const visDisp = Array.from(listDisponiveis.getElementsByClassName('list-item')).filter(el => el.style.display !== 'none').length;
+        const visSel = Array.from(listSelecionadas.getElementsByClassName('list-item')).filter(el => el.style.display !== 'none').length;
+        countDisponiveis.textContent = `(${visDisp})`;
+        countSelecionadas.textContent = `(${visSel})`;
     }
 });
 </script>
