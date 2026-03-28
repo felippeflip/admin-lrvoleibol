@@ -65,9 +65,65 @@
                 <svg class="w-5 h-5 mr-2 text-principal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Equipes Participantes
             </h3>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-3">
                 @forelse($equipesParticipantes as $eqp)
-                    <span class="bg-blue-50 border border-blue-200 text-blue-800 text-sm font-semibold px-3 py-1 rounded-md">{{ $eqp->equipe->time->tim_nome ?? 'Time Desconhecido' }}</span>
+                    <div class="relative group cursor-pointer inline-block">
+                        <span class="bg-blue-50 border border-blue-200 text-blue-800 text-sm font-semibold px-3 py-1.5 rounded-md transition-colors group-hover:bg-principal group-hover:text-white group-hover:border-principal shadow-sm whitespace-nowrap">
+                            {{ $eqp->equipe->time->tim_nome ?? 'Time Desconhecido' }}
+                        </span>
+                        
+                        <!-- Wrapper para manter o hover fluindo sem falhas visuais de gap -->
+                        <div class="absolute z-50 left-0 top-full pt-2 hidden group-hover:block">
+                            <!-- Tooltip com a agenda do Time -->
+                            <div class="w-[280px] sm:w-[320px] bg-white rounded-xl shadow-2xl border border-gray-200 text-left overflow-hidden">
+                                <div class="p-3 bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200">
+                                    <h4 class="font-bold text-gray-800 text-xs">Agenda: {{ \Illuminate\Support\Str::limit($eqp->equipe->time->tim_nome ?? '', 30) }}</h4>
+                                </div>
+                                <div class="max-h-60 overflow-y-auto p-2 bg-gray-50/50 table-scroll">
+                                    @php
+                                        $meusJogos = collect($jogosTodos)->filter(function($j) use ($eqp) {
+                                            return $j->jgo_eqp_cpo_mandante_id == $eqp->eqp_cpo_id || $j->jgo_eqp_cpo_visitante_id == $eqp->eqp_cpo_id;
+                                        });
+                                    @endphp
+                                    @forelse($meusJogos as $mj)
+                                        <div class="mb-2 pb-2 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0 bg-white p-2 rounded shadow-sm">
+                                            <div class="flex justify-between items-center text-[10px] text-gray-500 mb-1.5">
+                                                <span class="font-bold text-principal bg-blue-50 px-1.5 py-0.5 rounded">{{ $mj->jgo_fase ?? 'Classificatória' }}</span>
+                                                <span>
+                                                    {{ $mj->jgo_dt_jogo ? \Carbon\Carbon::parse($mj->jgo_dt_jogo)->format('d/m') : 'A Def' }} 
+                                                    {{ $mj->jgo_hora_jogo ? \Carbon\Carbon::parse($mj->jgo_hora_jogo)->format('H:i') : '' }}
+                                                </span>
+                                            </div>
+                                            <div class="flex flex-col space-y-1">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-[11px] font-bold truncate pr-1 {{ $mj->jgo_vencedor_mandante === 1 ? 'text-green-600' : 'text-gray-700' }}">
+                                                        {{ $mj->mandante->equipe->time->tim_nome ?? 'A Def' }}
+                                                    </span>
+                                                    @if(in_array($mj->jgo_res_status, ['pendente', 'aprovado']))
+                                                        <span class="text-[10px] font-black w-4 h-4 flex items-center justify-center rounded bg-gray-100 text-gray-800">
+                                                            @php $setsM = 0; foreach($mj->resultadoSets as $set) { if(($set->set_pontos_mandante ?? 0) > ($set->set_pontos_visitante ?? 0)) $setsM++; } echo $setsM; @endphp
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-[11px] font-bold truncate pr-1 {{ $mj->jgo_vencedor_mandante === 0 ? 'text-green-600' : 'text-gray-700' }}">
+                                                        {{ $mj->visitante->equipe->time->tim_nome ?? 'A Def' }}
+                                                    </span>
+                                                    @if(in_array($mj->jgo_res_status, ['pendente', 'aprovado']))
+                                                        <span class="text-[10px] font-black w-4 h-4 flex items-center justify-center rounded bg-gray-100 text-gray-800">
+                                                            @php $setsV = 0; foreach($mj->resultadoSets as $set) { if(($set->set_pontos_visitante ?? 0) > ($set->set_pontos_mandante ?? 0)) $setsV++; } echo $setsV; @endphp
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <p class="text-xs text-gray-500 italic p-3 text-center">Nenhum jogo na agenda.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @empty
                     <span class="text-gray-500 text-sm italic">Nenhuma equipe configurada para esta categoria.</span>
                 @endforelse
@@ -77,14 +133,34 @@
         <!-- JOGOS DA CATEGORIA -->
         <div class="bg-gray-50 border-t border-b border-gray-200">
             <div class="p-6">
-                <h3 class="text-lg font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4 uppercase flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-principal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Tabela de Jogos
-                </h3>
+                <!-- Controle de Filtros Dinâmico -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-300 pb-3 mb-4 gap-4">
+                    <h3 class="text-lg font-bold text-gray-800 uppercase flex items-center whitespace-nowrap">
+                        <svg class="w-5 h-5 mr-2 text-principal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Tabela de Jogos
+                    </h3>
+                    
+                    @php
+                        // Obter lista única de Grupos/Fases para gerar botões
+                        $fasesUnicas = collect($jogosTodos)->pluck('jgo_fase')->map(function($fase) {
+                            return $fase ?? 'classificatoria';
+                        })->unique()->filter()->sort();
+                    @endphp
+                    
+                    @if($fasesUnicas->count() > 1)
+                        <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 table-scroll">
+                            <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Filtro:</span>
+                            <button onclick="filtrarJogos(event, 'todos')" class="filter-jogo-btn active px-3 py-1.5 bg-principal text-white border border-principal text-xs font-bold rounded shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity">Todos</button>
+                            @foreach($fasesUnicas as $fu)
+                                <button onclick="filtrarJogos(event, '{{ Str::slug($fu) }}')" class="filter-jogo-btn px-3 py-1.5 bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 text-xs font-bold rounded shadow-sm whitespace-nowrap transition-colors">{{ $fu }}</button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="jogos-grid-container">
                     @forelse($jogosTodos as $jogo)
-                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 relative overflow-hidden flex flex-col justify-between">
+                        <div class="jogo-card bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 relative overflow-hidden flex flex-col justify-between" data-fase="{{ Str::slug($jogo->jgo_fase ?? 'classificatoria') }}">
                             <!-- Tipo de Fase -->
                             <div class="absolute top-0 right-0 bg-gray-100 text-gray-500 text-[9px] font-bold px-2 py-1 rounded-bl-lg uppercase border-l border-b border-gray-200">
                                 {{ $jogo->jgo_fase ?? 'classificatoria' }}
@@ -106,8 +182,8 @@
                             <!-- Placar / Times -->
                             <div class="flex flex-col space-y-1 relative mb-2">
                                 <!-- Mandante -->
-                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ $jogo->jgo_vencedor_mandante === 1 ? 'border border-green-300' : '' }}">
-                                    <span class="font-bold text-gray-800 text-xs truncate max-w-[70%]" title="{{ $jogo->mandante->equipe->time->tim_nome ?? 'A Definir' }}">
+                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ $jogo->jgo_vencedor_mandante === 1 ? 'border border-green-300 ring-1 ring-green-300' : '' }}">
+                                    <span class="font-bold text-gray-800 text-[11px] truncate max-w-[70%]" title="{{ $jogo->mandante->equipe->time->tim_nome ?? 'A Definir' }}">
                                         {{ $jogo->mandante->equipe->time->tim_nome ?? 'A Definir' }}
                                     </span>
                                     @if(in_array($jogo->jgo_res_status, ['pendente', 'aprovado']))
@@ -117,13 +193,13 @@
                                                 @php if(($set->set_pontos_mandante ?? 0) > ($set->set_pontos_visitante ?? 0)) $setsM++; @endphp
                                                 <span class="text-[9px] w-4 h-4 flex items-center justify-center bg-gray-200 text-gray-700 rounded-sm">{{ $set->set_pontos_mandante ?? 0 }}</span>
                                             @endforeach
-                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 1 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1' }}">{{ $setsM }}</span>
+                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 1 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1 bg-white border border-gray-200' }}">{{ $setsM }}</span>
                                         </div>
                                     @endif
                                 </div>
                                 <!-- Vis -->
-                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ $jogo->jgo_vencedor_mandante === 0 ? 'border border-green-300' : '' }}">
-                                    <span class="font-bold text-gray-800 text-xs truncate max-w-[70%]" title="{{ $jogo->visitante->equipe->time->tim_nome ?? 'A Definir' }}">
+                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ $jogo->jgo_vencedor_mandante === 0 ? 'border border-green-300 ring-1 ring-green-300' : '' }}">
+                                    <span class="font-bold text-gray-800 text-[11px] truncate max-w-[70%]" title="{{ $jogo->visitante->equipe->time->tim_nome ?? 'A Definir' }}">
                                         {{ $jogo->visitante->equipe->time->tim_nome ?? 'A Definir' }}
                                     </span>
                                     @if(in_array($jogo->jgo_res_status, ['pendente', 'aprovado']))
@@ -133,20 +209,20 @@
                                                 @php if(($set->set_pontos_visitante ?? 0) > ($set->set_pontos_mandante ?? 0)) $setsV++; @endphp
                                                 <span class="text-[9px] w-4 h-4 flex items-center justify-center bg-gray-200 text-gray-700 rounded-sm">{{ $set->set_pontos_visitante ?? 0 }}</span>
                                             @endforeach
-                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 0 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1' }}">{{ $setsV }}</span>
+                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 0 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1 bg-white border border-gray-200' }}">{{ $setsV }}</span>
                                         </div>
                                     @endif
                                 </div>
                                 <div class="absolute inset-y-0 left-1/2 flex items-center justify-center -translate-x-1/2">
-                                     <span class="text-[8px] text-gray-400 font-bold bg-white px-0.5 rounded">X</span>
+                                     <span class="text-[8px] text-gray-300 font-bold bg-white px-0.5 rounded shadow-sm border border-gray-100">X</span>
                                 </div>
                             </div>
                             
                             <!-- Local -->
                             @if($jogo->ginasio)
-                            <div class="text-[10px] text-gray-400 truncate flex items-center pt-1 border-t border-gray-100">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                {{ $jogo->ginasio->gin_nome }}
+                            <div class="text-[10px] text-gray-400 truncate flex items-center pt-1 border-t border-gray-100 mt-auto">
+                                <svg class="w-3 h-3 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span class="truncate">{{ $jogo->ginasio->gin_nome }}</span>
                             </div>
                             @endif
                         </div>
@@ -360,6 +436,46 @@
             if(tabBtn) {
                 tabBtn.classList.remove('text-gray-500', 'hover:text-gray-700', 'border-transparent');
                 tabBtn.classList.add('text-principal', 'border-secundario');
+            }
+        }
+
+        // JS Filtragem de Jogos
+        function filtrarJogos(event, fase) {
+            // Update active state visual configs of buttons
+            const btns = document.querySelectorAll('.filter-jogo-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-principal', 'text-white', 'border-principal');
+                b.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
+            });
+            event.currentTarget.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
+            event.currentTarget.classList.add('bg-principal', 'text-white', 'border-principal');
+
+            // Find all cards
+            const cards = document.querySelectorAll('.jogo-card');
+            let anyVisible = false;
+            
+            cards.forEach(c => {
+                if(fase === 'todos' || c.getAttribute('data-fase') === fase) {
+                    c.style.display = 'flex';
+                    anyVisible = true;
+                } else {
+                    c.style.display = 'none';
+                }
+            });
+
+            // Fallback message handling if all filtered out
+            let fallbackMsg = document.getElementById('filt-fallback-msg');
+            if(!anyVisible) {
+                if(!fallbackMsg) {
+                    fallbackMsg = document.createElement('div');
+                    fallbackMsg.id = 'filt-fallback-msg';
+                    fallbackMsg.className = 'col-span-full text-center text-gray-500 italic py-4 text-sm';
+                    fallbackMsg.innerText = 'Nenhum jogo encontrado para este turno/fase.';
+                    document.getElementById('jogos-grid-container').appendChild(fallbackMsg);
+                }
+                fallbackMsg.style.display = 'block';
+            } else if(fallbackMsg) {
+                fallbackMsg.style.display = 'none';
             }
         }
     </script>
