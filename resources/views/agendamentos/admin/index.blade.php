@@ -26,7 +26,7 @@
                             <h3 class="text-lg font-bold mb-4">Gerar Novo Agendamento</h3>
                             <form action="{{ route('agendamentos.gerar', ['campeonato' => $cmp->cpo_id, 'categoria' => '__CAT__']) }}" method="POST" id="form-gerar" onsubmit="return handleGerarSubmit()">
                                 @csrf
-                                <div class="flex items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex-wrap h-full">
+                                <div class="flex items-end gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg flex-wrap">
                                     <div class="flex flex-col gap-1">
                                         <label for="categoria_id" class="font-semibold text-sm">Categoria:</label>
                                         <select id="categoria_id" class="border p-2 rounded w-64 dark:bg-gray-800 dark:text-white dark:border-gray-600" onchange="verificarCategoria(this)">
@@ -39,7 +39,7 @@
                                         </select>
                                     </div>
                                     
-                                    <button type="submit" class="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 font-bold rounded mt-auto h-[42px]">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 font-bold rounded-lg shadow-sm transition-colors h-[42px]">
                                         GERAR JOGOS
                                     </button>
                                 </div>
@@ -50,7 +50,7 @@
                             <h3 class="text-lg font-bold mb-4">Adicionar Equipe (Exceção)</h3>
                             <form action="{{ route('agendamentos.adicionar-equipe', $cmp->cpo_id) }}" method="POST">
                                 @csrf
-                                <div class="flex items-center gap-4 mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg flex-wrap h-full">
+                                <div class="flex items-end gap-4 mb-6 p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800 rounded-lg flex-wrap">
                                     <div class="flex flex-col gap-1 text-sm">
                                         <label for="eqp_cpo_id" class="font-semibold">Nova Equipe:</label>
                                         <select name="eqp_cpo_id" id="eqp_cpo_id" required class="border p-2 rounded w-64 dark:bg-gray-800 dark:text-white dark:border-gray-600">
@@ -68,7 +68,7 @@
                                         <input type="text" name="grupo_nome" id="grupo_nome" class="border p-2 rounded w-40 dark:bg-gray-800 dark:text-white dark:border-gray-600" placeholder="Ex: Grupo A">
                                     </div>
                                     
-                                    <button type="submit" class="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 font-bold rounded mt-auto h-[42px]">
+                                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 font-bold rounded-lg shadow-sm transition-colors h-[42px]">
                                         ADICIONAR
                                     </button>
                                 </div>
