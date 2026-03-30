@@ -46,7 +46,8 @@ class JogosController extends Controller
             'ginasio',
             'arbitroPrincipal',
             'arbitroSecundario',
-            'apontador'
+            'apontador',
+            'solicitacoesAlteracao.user'
         ]);
 
         $user = Auth::user();
@@ -213,7 +214,7 @@ class JogosController extends Controller
             $startDate = now()->subDays(7)->startOfDay();
             $endDate = now()->addDays(30)->endOfDay();
 
-            $adminJogos = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            $adminJogos = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user'])
                 ->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
                 ->orderBy('jgo_dt_jogo')
                 ->orderBy('jgo_hora_jogo')
@@ -285,7 +286,7 @@ class JogosController extends Controller
                     ->pluck('equipe_campeonato.eqp_cpo_id');
 
                 $jogosQuery = Jogo::aprovadosOuNormais()
-                    ->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao'])
+                    ->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user'])
                     ->where(function ($query) use ($equipeIds) {
                         $query->whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
                             ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds);

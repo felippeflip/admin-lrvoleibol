@@ -21,25 +21,60 @@
                         </div>
                     @endif
 
-                    <h3 class="text-lg font-bold mb-4">Gerar Novo Agendamento</h3>
-                    <form action="{{ route('agendamentos.gerar', ['campeonato' => $cmp->cpo_id, 'categoria' => '__CAT__']) }}" method="POST" id="form-gerar" onsubmit="return handleGerarSubmit()">
-                        @csrf
-                        <div class="flex items-center gap-4 mb-6 p-4 bg-gray-100 rounded flex-wrap">
-                            <label for="categoria_id" class="font-semibold">Categoria:</label>
-                            <select id="categoria_id" class="border p-2 rounded w-64" onchange="verificarCategoria(this)">
-                                <option value="" data-qtd="0">Selecione uma categoria...</option>
-                                @foreach($categorias as $cat)
-                                    <option value="{{ $cat->cto_id }}" data-qtd="{{ $cat->qtd_equipes ?? 0 }}">
-                                        {{ $cat->cto_nome }} ({{ $cat->qtd_equipes ?? 0 }} equipes)
-                                    </option>
-                                @endforeach
-                            </select>
-                            
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 font-bold rounded">
-                                GERAR JOGOS
-                            </button>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-bold mb-4">Gerar Novo Agendamento</h3>
+                            <form action="{{ route('agendamentos.gerar', ['campeonato' => $cmp->cpo_id, 'categoria' => '__CAT__']) }}" method="POST" id="form-gerar" onsubmit="return handleGerarSubmit()">
+                                @csrf
+                                <div class="flex items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex-wrap h-full">
+                                    <div class="flex flex-col gap-1">
+                                        <label for="categoria_id" class="font-semibold text-sm">Categoria:</label>
+                                        <select id="categoria_id" class="border p-2 rounded w-64 dark:bg-gray-800 dark:text-white dark:border-gray-600" onchange="verificarCategoria(this)">
+                                            <option value="" data-qtd="0">Selecione...</option>
+                                            @foreach($categorias as $cat)
+                                                <option value="{{ $cat->cto_id }}" data-qtd="{{ $cat->qtd_equipes ?? 0 }}">
+                                                    {{ $cat->cto_nome }} ({{ $cat->qtd_equipes ?? 0 }} equipes)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 font-bold rounded mt-auto h-[42px]">
+                                        GERAR JOGOS
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+
+                        <div>
+                            <h3 class="text-lg font-bold mb-4">Adicionar Equipe (Exceção)</h3>
+                            <form action="{{ route('agendamentos.adicionar-equipe', $cmp->cpo_id) }}" method="POST">
+                                @csrf
+                                <div class="flex items-center gap-4 mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg flex-wrap h-full">
+                                    <div class="flex flex-col gap-1 text-sm">
+                                        <label for="eqp_cpo_id" class="font-semibold">Nova Equipe:</label>
+                                        <select name="eqp_cpo_id" id="eqp_cpo_id" required class="border p-2 rounded w-64 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                                            <option value="">Selecione a equipe tardia...</option>
+                                            @foreach($equipesSemJogos as $ei)
+                                                <option value="{{ $ei->eqp_cpo_id }}">
+                                                    {{ ($ei->equipe->time->tim_nome ?? 'N/A') . ' - ' . ($ei->equipe->categoria->cto_nome ?? 'N/A') }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="flex flex-col gap-1 text-sm">
+                                        <label for="grupo_nome" class="font-semibold">Grupo (se >= 16):</label>
+                                        <input type="text" name="grupo_nome" id="grupo_nome" class="border p-2 rounded w-40 dark:bg-gray-800 dark:text-white dark:border-gray-600" placeholder="Ex: Grupo A">
+                                    </div>
+                                    
+                                    <button type="submit" class="bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 font-bold rounded mt-auto h-[42px]">
+                                        ADICIONAR
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
                     <h3 class="text-lg font-bold mb-4 mt-8">Jogos Gerados e Pendentes</h3>
 
@@ -217,13 +252,22 @@
                                             <span class="text-gray-400 italic">Pendente preenchimento</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2">
+                                    <td class="px-3 py-2 flex flex-col items-center justify-center gap-1 h-full">
                                         @if($jogo->jgo_status_agendamento == 'pendente_preenchimento')
-                                            <span class="text-gray-500">Pendente Preench.</span>
+                                            <span class="text-gray-500 text-xs">Pendente Preench.</span>
                                         @elseif($jogo->jgo_status_agendamento == 'pendente_aprovacao')
-                                            <span class="text-yellow-600 font-bold">Aguardando Aprovação</span>
+                                            <span class="text-yellow-600 font-bold text-xs uppercase">Aguardando Aprovação</span>
                                         @elseif($jogo->jgo_status_agendamento == 'aprovado')
-                                            <span class="text-green-600">Aprovado</span>
+                                            <span class="text-green-600 text-xs uppercase">Aprovado</span>
+                                        @endif
+
+                                        @php
+                                            $solAlteracao = $jogo->solicitacoesAlteracao ? current(array_filter($jogo->solicitacoesAlteracao->all(), fn($s) => $s->status == 'pendente')) : null;
+                                        @endphp
+                                        @if($solAlteracao)
+                                            <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-300 dark:bg-yellow-900 dark:text-yellow-300 cursor-help" title="Solicitado por: {{ $solAlteracao->user->name ?? 'N/A' }} - Motivo: {{ $solAlteracao->motivo }}">
+                                                ⚠ Alteração Solicitada
+                                            </span>
                                         @endif
                                     </td>
                                     <td class="px-3 py-2 flex flex-col gap-1 justify-center">

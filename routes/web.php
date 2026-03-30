@@ -136,6 +136,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/campeonatos/{campeonato}/categorias/{categoria}/gerar-agendamento', [App\Http\Controllers\AgendamentoController::class, 'gerarAgendamento'])->name('agendamentos.gerar');
         Route::post('/agendamentos/{jogo}/aprovar', [App\Http\Controllers\AgendamentoController::class, 'aprovarAgendamento'])->name('agendamentos.aprovar');
         Route::post('/agendamentos/{jogo}/desbloquear', [App\Http\Controllers\AgendamentoController::class, 'desbloquearAgendamento'])->name('agendamentos.desbloquear');
+        Route::post('/campeonatos/{campeonato}/adicionar-equipe', [App\Http\Controllers\AgendamentoController::class, 'adicionarEquipe'])->name('agendamentos.adicionar-equipe');
         Route::post('/agendamentos/deletar-massa', [App\Http\Controllers\AgendamentoController::class, 'deletarMassa'])->name('agendamentos.deletarMassa');
         Route::post('/agendamentos/aprovar-massa', [App\Http\Controllers\AgendamentoController::class, 'aprovarMassa'])->name('agendamentos.aprovarMassa');
         Route::delete('/agendamentos/{jogo}/deletar', [App\Http\Controllers\AgendamentoController::class, 'deletarAgendamento'])->name('agendamentos.deletar');
@@ -147,6 +148,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/classificacao/preview/{campeonato_id}/{categoria_id}', [App\Http\Controllers\ClassificacaoController::class, 'preview'])->name('classificacao.preview');
         Route::post('/classificacao/publicar/{campeonato_id}/{categoria_id}', [App\Http\Controllers\ClassificacaoController::class, 'publicar'])->name('classificacao.publicar');
 
+        // Relatórios
+        Route::get('/relatorios', [App\Http\Controllers\RelatorioController::class, 'index'])->name('relatorios.index');
+        Route::get('/relatorios/atletas-por-time', [App\Http\Controllers\RelatorioController::class, 'atletasPorTime'])->name('relatorios.atletas-por-time');
+        Route::get('/relatorios/atletas-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportAtletasPorTime'])->name('relatorios.atletas-por-time.export');
 
     });
 

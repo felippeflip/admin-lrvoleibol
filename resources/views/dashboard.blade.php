@@ -207,7 +207,7 @@
                                                 </div>
                                                 @if($solicitacaoPendente)
                                                      <div class="flex items-center justify-between mt-2 px-2 py-1 bg-yellow-100 border border-yellow-300 text-yellow-800 text-xs font-bold rounded">
-                                                         <div class="truncate mr-2" title="{{ $solicitacaoPendente->motivo }}">
+                                                         <div class="truncate mr-2" title="Solicitado por: {{ $solicitacaoPendente->user->name ?? 'N/A' }} - Motivo: {{ $solicitacaoPendente->motivo }}">
                                                              ⚠ Alt: {{ Str::limit($solicitacaoPendente->motivo, 15) }}
                                                          </div>
                                                          <a href="{{ route('jogos.edit', $jogo->jgo_id) }}" class="underline text-yellow-900 hover:text-yellow-700 shrink-0">
@@ -639,7 +639,7 @@
                                                         </div>
                                                         @if($jogo->jgo_status == 'ativo' && $jogo->jgo_dt_jogo >= now()->format('Y-m-d'))
                                                             @if($solicitacaoPendente)
-                                                                <div class="text-center mt-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
+                                                                <div class="text-center mt-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded cursor-help" title="Solicitado por: {{ $solicitacaoPendente->user->name ?? 'N/A' }} - Motivo: {{ $solicitacaoPendente->motivo }}">
                                                                     Alteração Pendente
                                                                 </div>
                                                             @else

@@ -214,7 +214,7 @@
                                                 $solAlteracao = $jogo->solicitacoesAlteracao ? current(array_filter($jogo->solicitacoesAlteracao->all(), fn($s) => $s->status == 'pendente')) : null;
                                             @endphp
                                             @if($solAlteracao)
-                                                <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-300 dark:bg-yellow-900 dark:text-yellow-300 cursor-help" title="Motivo: {{ $solAlteracao->motivo }}">
+                                                <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-300 dark:bg-yellow-900 dark:text-yellow-300 cursor-help" title="Solicitado por: {{ $solAlteracao->user->name ?? 'N/A' }} - Motivo: {{ $solAlteracao->motivo }}">
                                                     ⚠ Alteração Solicitada
                                                 </span>
                                             @endif

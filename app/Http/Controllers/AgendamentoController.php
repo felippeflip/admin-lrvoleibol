@@ -168,7 +168,7 @@ class AgendamentoController extends Controller
     public function indexAdmin(Request $request, $campeonato)
     {
         $cmp = Campeonato::findOrFail($campeonato);
-        $query = Jogo::with(['mandante.equipe.time', 'visitante.equipe.time', 'mandante.equipe.categoria', 'ginasio'])
+        $query = Jogo::with(['mandante.equipe.time', 'visitante.equipe.time', 'mandante.equipe.categoria', 'ginasio', 'solicitacoesAlteracao.user'])
             ->whereNotNull('jgo_status_agendamento')
             ->whereHas('mandante', function ($q) use ($campeonato) {
                 $q->where('cpo_fk_id', $campeonato);
@@ -245,7 +245,111 @@ class AgendamentoController extends Controller
                 return ($item->equipe->time->tim_nome ?? '') . ' ' . ($item->equipe->categoria->cto_nome ?? '');
             });
 
-        return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats', 'equipesInscritas'));
+        $equipesSemJogos = $equipesInscritas->filter(function($ei) {
+            return $ei->jogosMandante->count() == 0 && $ei->jogosVisitante->count() == 0;
+        });
+
+        return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats', 'equipesInscritas', 'equipesSemJogos'));
+    }
+
+    /**
+     * Admin: Add a new team to an existing schedule (Exception rule)
+     */
+    public function adicionarEquipe(Request $request, $campeonato_id)
+    {
+        $request->validate([
+            'eqp_cpo_id' => 'required|exists:equipe_campeonato,eqp_cpo_id',
+        ]);
+
+        try {
+            $newTeamPivotId = $request->eqp_cpo_id;
+            $newTeamPivot = EquipeCampeonato::with('equipe')->findOrFail($newTeamPivotId);
+            $categoria_id = $newTeamPivot->equipe->eqp_categoria_id;
+
+            // Verifica se a equipe já possui jogos
+            $hasGames = Jogo::where('jgo_eqp_cpo_mandante_id', $newTeamPivotId)
+                            ->orWhere('jgo_eqp_cpo_visitante_id', $newTeamPivotId)
+                            ->exists();
+            if ($hasGames) {
+                return redirect()->back()->withErrors(['error' => 'A equipe selecionada já possui jogos agendados neste campeonato.']);
+            }
+
+            // Pega todas as outras equipes já inscritas no campeonato nesta categoria
+            $equipesPivot = EquipeCampeonato::where('cpo_fk_id', $campeonato_id)
+                ->whereHas('equipe', function($q) use ($categoria_id) {
+                    $q->where('eqp_categoria_id', $categoria_id);
+                })
+                ->where('eqp_cpo_id', '!=', $newTeamPivotId)
+                ->get();
+
+            if ($equipesPivot->isEmpty()) {
+                return redirect()->back()->withErrors(['error' => 'Não existem outras equipes nesta categoria para gerar jogos.']);
+            }
+
+            $N = $equipesPivot->count() + 1; // Total agora
+            $jogosAGerar = [];
+
+            if ($N <= 12) {
+                // Regra: Turno A e Turno B (Inversão)
+                foreach ($equipesPivot as $existingTeam) {
+                    $jogosAGerar[] = ['mandante' => $newTeamPivotId, 'visitante' => $existingTeam->eqp_cpo_id, 'fase' => 'Turno A'];
+                    $jogosAGerar[] = ['mandante' => $existingTeam->eqp_cpo_id, 'visitante' => $newTeamPivotId, 'fase' => 'Turno B'];
+                }
+            } elseif ($N >= 13 && $N <= 15) {
+                // Regra: Turno Único
+                foreach ($equipesPivot as $existingTeam) {
+                    $jogosAGerar[] = ['mandante' => $newTeamPivotId, 'visitante' => $existingTeam->eqp_cpo_id, 'fase' => 'Turno Único'];
+                }
+            } else {
+                // >= 16: Grupos
+                $groupName = $request->input('grupo_nome');
+                if (empty($groupName)) {
+                    return redirect()->back()->withErrors(['error' => 'Para categorias com 16 ou mais equipes, você deve informar o Grupo (ex: Grupo A).']);
+                }
+
+                // Identificar quem são as equipes que já estão no grupo informado nesta categoria
+                $teamsInGroupIds = Jogo::where(function($q) use ($groupName) {
+                        $q->where('jgo_fase', 'like', $groupName . ' %')
+                          ->orWhere('jgo_fase', $groupName);
+                    })
+                    ->whereIn('jgo_eqp_cpo_mandante_id', $equipesPivot->pluck('eqp_cpo_id'))
+                    ->pluck('jgo_eqp_cpo_mandante_id')
+                    ->merge(
+                        Jogo::where(function($q) use ($groupName) {
+                            $q->where('jgo_fase', 'like', $groupName . ' %')
+                              ->orWhere('jgo_fase', $groupName);
+                        })
+                        ->whereIn('jgo_eqp_cpo_visitante_id', $equipesPivot->pluck('eqp_cpo_id'))
+                        ->pluck('jgo_eqp_cpo_visitante_id')
+                    )
+                    ->unique();
+
+                if ($teamsInGroupIds->isEmpty()) {
+                    return redirect()->back()->withErrors(['error' => "Nenhuma outra equipe foi encontrada no '$groupName' para esta categoria."]);
+                }
+
+                foreach ($teamsInGroupIds as $eId) {
+                    $jogosAGerar[] = ['mandante' => $newTeamPivotId, 'visitante' => $eId, 'fase' => "$groupName - Turno A"];
+                    $jogosAGerar[] = ['mandante' => $eId, 'visitante' => $newTeamPivotId, 'fase' => "$groupName - Turno B"];
+                }
+            }
+
+            // Inserir os jogos
+            foreach ($jogosAGerar as $match) {
+                Jogo::create([
+                    'jgo_eqp_cpo_mandante_id' => $match['mandante'],
+                    'jgo_eqp_cpo_visitante_id' => $match['visitante'],
+                    'jgo_fase' => $match['fase'],
+                    'jgo_status_agendamento' => 'pendente_preenchimento',
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Foram gerados ' . count($jogosAGerar) . ' jogos para a nova equipe.');
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao adicionar equipe tardia: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Ocorreu um erro ao processar a inclusão da equipe.']);
+        }
     }
 
     public function deletarAgendamento($jogo_id)
