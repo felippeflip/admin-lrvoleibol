@@ -39,10 +39,14 @@ class ClassificacaoController extends Controller
         // Renderiza a view Blade "tabela_publica"
         $html = view('tabelas.tabela_publica', compact('campeonato', 'categoria', 'dados'))->render();
 
-        // Nome do arquivo fixo
-        $fileName = "tabela_{$campeonato_id}_{$categoria_id}.html";
+        // Nome do arquivo baseado no slug da categoria
+        $slug = !empty($categoria->cto_slug) ? $categoria->cto_slug : \Illuminate\Support\Str::slug($categoria->cto_nome);
+        $fileName = "{$slug}.html";
 
-        // Salva arquivo publicamente no storage
+        // Remove arquivo do padrão antigo para evitar lixo (ex: tabela_1_12.html)
+        Storage::disk('public')->delete("tabelas/tabela_{$campeonato_id}_{$categoria_id}.html");
+
+        // Salva arquivo publicamente no storage (já sobreescreve por padrão)
         Storage::disk('public')->put("tabelas/{$fileName}", $html);
 
         // Marcar todos os jogos "pendentes" como "aprovados" em publicacao (Opcional, mas útil)
