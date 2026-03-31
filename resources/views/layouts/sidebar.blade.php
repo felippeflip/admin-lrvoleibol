@@ -149,6 +149,14 @@
                 </button>
                 <ul id="dropdown-relatorios" class="hidden py-2 space-y-2">
                     <li>
+                        <a href="{{ route('relatorios.index') }}"
+                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Visão Geral</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('relatorios.tabelas-geradas') }}"
+                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Tabelas Geradas</a>
+                    </li>
+                    <li>
                         <a href="{{ route('relatorios.atletas-por-time') }}"
                             class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Atletas por Time</a>
                     </li>

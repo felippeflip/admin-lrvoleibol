@@ -84,4 +84,57 @@ class RelatorioController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
+
+    /**
+     * Relatório que exibe as tabelas (arquivos HTML) geradas.
+     */
+    public function tabelasGeradas()
+    {
+        $arquivos = [];
+        
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists('tabelas')) {
+            $files = \Illuminate\Support\Facades\Storage::disk('public')->files('tabelas');
+            
+            foreach ($files as $file) {
+                $pathInfo = pathinfo($file);
+                
+                // Só exibe arquivos html
+                if (isset($pathInfo['extension']) && strtolower($pathInfo['extension']) === 'html') {
+                    $arquivos[] = [
+                        'nome' => $pathInfo['basename'],
+                        'caminho' => asset('storage/' . $file),
+                        'tamanho' => self::formatSizeUnits(\Illuminate\Support\Facades\Storage::disk('public')->size($file)),
+                        'data_modificacao' => \Carbon\Carbon::createFromTimestamp(\Illuminate\Support\Facades\Storage::disk('public')->lastModified($file))->format('d/m/Y H:i:s'),
+                        'timestamp' => \Illuminate\Support\Facades\Storage::disk('public')->lastModified($file)
+                    ];
+                }
+            }
+        }
+
+        // Ordenar do mais recente para o mais antigo
+        usort($arquivos, function($a, $b) {
+            return $b['timestamp'] <=> $a['timestamp'];
+        });
+
+        return view('relatorios.tabelas_geradas', compact('arquivos'));
+    }
+
+    /**
+     * Helper para formatar o tamanho dos arquivos
+     */
+    private static function formatSizeUnits($bytes)
+    {
+        if ($bytes >= 1048576) {
+            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            $bytes = number_format($bytes / 1024, 2) . ' KB';
+        } elseif ($bytes > 1) {
+            $bytes = $bytes . ' bytes';
+        } elseif ($bytes == 1) {
+            $bytes = $bytes . ' byte';
+        } else {
+            $bytes = '0 bytes';
+        }
+        return $bytes;
+    }
 }

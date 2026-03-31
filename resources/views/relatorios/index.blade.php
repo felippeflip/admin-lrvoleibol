@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="text-lg font-medium mb-4">Selecione um relatório para visualizar</h3>
@@ -21,6 +21,18 @@
                                 <h5 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Atletas por Time</h5>
                             </div>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Relação completa de atletas agrupados por time. Ideal para protocolo de entrega de carteirinhas.</p>
+                        </a>
+
+                        <!-- Relatório de Tabelas Geradas -->
+                        <a href="{{ route('relatorios.tabelas-geradas') }}" class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 transition">
+                            <div class="flex items-center mb-2">
+                                <!-- Ícone de Código/Documento -->
+                                <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                </svg>
+                                <h5 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Tabelas Geradas</h5>
+                            </div>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Visualização e acompanhamento dos arquivos HTML estáticos gerados contendo a tabela de classificação.</p>
                         </a>
 
                         <!-- Espaço para futuros relatórios -->

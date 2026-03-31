@@ -152,6 +152,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/relatorios', [App\Http\Controllers\RelatorioController::class, 'index'])->name('relatorios.index');
         Route::get('/relatorios/atletas-por-time', [App\Http\Controllers\RelatorioController::class, 'atletasPorTime'])->name('relatorios.atletas-por-time');
         Route::get('/relatorios/atletas-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportAtletasPorTime'])->name('relatorios.atletas-por-time.export');
+        Route::get('/relatorios/tabelas-geradas', [App\Http\Controllers\RelatorioController::class, 'tabelasGeradas'])->name('relatorios.tabelas-geradas');
 
     });
 
