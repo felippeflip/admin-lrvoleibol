@@ -23,7 +23,7 @@ class RelatorioController extends Controller
      */
     public function atletasPorTime(Request $request)
     {
-        $query = Atleta::with(['time', 'categoria'])
+        $query = Atleta::with(['time', 'categoria', 'cartoes'])
             ->where('atl_ativo', 1);
 
         if ($request->filled('time_id')) {
@@ -45,7 +45,7 @@ class RelatorioController extends Controller
      */
     public function exportAtletasPorTime(Request $request)
     {
-        $query = Atleta::with(['time', 'categoria'])
+        $query = Atleta::with(['time', 'categoria', 'cartoes'])
             ->where('atl_ativo', 1);
 
         if ($request->filled('time_id')) {
@@ -63,7 +63,7 @@ class RelatorioController extends Controller
         $csv->setOutputBOM(Writer::BOM_UTF8);
 
         // Cabeçalho
-        $csv->insertOne(['Time', 'Atleta', 'Registro LRV', 'Categoria', 'CPF', 'RG', 'Data Nasc.']);
+        $csv->insertOne(['Time', 'Atleta', 'Registro LRV', 'Categoria', 'CPF', 'RG', 'Data Nasc.', 'Cartão Impresso']);
 
         foreach ($atletas as $atleta) {
             $csv->insertOne([
@@ -74,6 +74,7 @@ class RelatorioController extends Controller
                 $atleta->atl_cpf,
                 $atleta->atl_rg,
                 $atleta->atl_dt_nasc ? date('d/m/Y', strtotime($atleta->atl_dt_nasc)) : 'N/A',
+                $atleta->cartaoImpresso() ? 'SIM' : 'NÃO',
             ]);
         }
 

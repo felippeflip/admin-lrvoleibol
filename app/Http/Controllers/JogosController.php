@@ -861,13 +861,29 @@ class JogosController extends Controller
             ], 404);
         }
 
-        $numero         = 1;
+        $contadoresGrupo = [];
+        $numeroGeral = 1;
         $totalNumerados = 0;
 
-        // ── Numeração Cronológica Contínua ──────────────────────────────────
+        // ── Numeração Cronológica ──────────────────────────────────
         foreach ($jogos as $jogo) {
+            $faseAtual = $jogo->jgo_fase ?? '';
+            
+            // Extrai o nome base do grupo (Ex: "Grupo A" a partir de "Grupo A - Turno B")
+            if (preg_match('/(Grupo\s[A-Z0-9]+)/i', $faseAtual, $matches)) {
+                $grupoBase = mb_strtoupper($matches[1]);
+                
+                if (!isset($contadoresGrupo[$grupoBase])) {
+                    $contadoresGrupo[$grupoBase] = 1;
+                }
+                
+                $numero = $contadoresGrupo[$grupoBase]++;
+            } else {
+                // Caso não possua "Grupo", segue numeração sequencial geral (<= 15 equipes, semifinais, etc)
+                $numero = $numeroGeral++;
+            }
+
             $jogo->update(['jgo_numero_jogo' => $numero]);
-            $numero++;
             $totalNumerados++;
         }
 

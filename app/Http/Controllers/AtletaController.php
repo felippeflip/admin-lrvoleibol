@@ -700,8 +700,9 @@ class AtletaController extends Controller
                 'htr_user_id' => auth()->id(),
             ]);
 
-            // Atualiza o time do atleta
+            // Atualiza o time do atleta e garante o status como Ativo
             $atleta->atl_tim_id = $novoTimeId;
+            $atleta->atl_ativo = 1;
             $atleta->save();
 
             return redirect()->route('atletas.index')->with('success', 'Atleta transferido com sucesso para a sua equipe!');

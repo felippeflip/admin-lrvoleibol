@@ -83,6 +83,7 @@
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Registro LRV</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Atleta</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoria / DN</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status Cartão</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider print-only">Documentação</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider print-only w-1/4">Assinatura de Recebimento</th>
                                 </tr>
@@ -98,6 +99,17 @@
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                                             {{ $atleta->categoria->cto_nome ?? 'S/C' }} - {{ $atleta->atl_dt_nasc ? date('d/m/Y', strtotime($atleta->atl_dt_nasc)) : '' }}
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-xs">
+                                            @if($atleta->cartaoImpresso())
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200">
+                                                    Impresso
+                                                </span>
+                                            @else
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-200">
+                                                    Pendente
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500 print-only">
                                             RG: {{ $atleta->atl_rg }} | CPF: {{ $atleta->atl_cpf ?? 'N/A' }}

@@ -65,65 +65,14 @@
                 <svg class="w-5 h-5 mr-2 text-principal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Equipes Participantes
             </h3>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-3" id="equipes-filtros-container">
+                <button onclick="filtrarJogosEquipe(event, 'todos')" class="filter-eqp-btn active px-3 py-1.5 bg-principal text-white border border-principal text-sm font-semibold rounded-md shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity">
+                    Todas as Equipes
+                </button>
                 @forelse($equipesParticipantes as $eqp)
-                    <div class="relative group cursor-pointer inline-block">
-                        <span class="bg-blue-50 border border-blue-200 text-blue-800 text-sm font-semibold px-3 py-1.5 rounded-md transition-colors group-hover:bg-principal group-hover:text-white group-hover:border-principal shadow-sm whitespace-nowrap">
-                            {{ $eqp->equipe->time->tim_nome ?? 'Time Desconhecido' }}
-                        </span>
-                        
-                        <!-- Wrapper para manter o hover fluindo sem falhas visuais de gap -->
-                        <div class="absolute z-50 left-0 top-full pt-2 hidden group-hover:block">
-                            <!-- Tooltip com a agenda do Time -->
-                            <div class="w-[280px] sm:w-[320px] bg-white rounded-xl shadow-2xl border border-gray-200 text-left overflow-hidden">
-                                <div class="p-3 bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200">
-                                    <h4 class="font-bold text-gray-800 text-xs">Agenda: {{ \Illuminate\Support\Str::limit($eqp->equipe->time->tim_nome ?? '', 30) }}</h4>
-                                </div>
-                                <div class="max-h-60 overflow-y-auto p-2 bg-gray-50/50 table-scroll">
-                                    @php
-                                        $meusJogos = collect($jogosTodos)->filter(function($j) use ($eqp) {
-                                            return $j->jgo_eqp_cpo_mandante_id == $eqp->eqp_cpo_id || $j->jgo_eqp_cpo_visitante_id == $eqp->eqp_cpo_id;
-                                        });
-                                    @endphp
-                                    @forelse($meusJogos as $mj)
-                                        <div class="mb-2 pb-2 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0 bg-white p-2 rounded shadow-sm">
-                                            <div class="flex justify-between items-center text-[10px] text-gray-500 mb-1.5">
-                                                <span class="font-bold text-principal bg-blue-50 px-1.5 py-0.5 rounded">{{ $mj->jgo_fase ?? 'Classificatória' }}</span>
-                                                <span>
-                                                    {{ $mj->jgo_dt_jogo ? \Carbon\Carbon::parse($mj->jgo_dt_jogo)->format('d/m') : 'A Def' }} 
-                                                    {{ $mj->jgo_hora_jogo ? \Carbon\Carbon::parse($mj->jgo_hora_jogo)->format('H:i') : '' }}
-                                                </span>
-                                            </div>
-                                            <div class="flex flex-col space-y-1">
-                                                <div class="flex justify-between items-center">
-                                                    <span class="text-[11px] font-bold truncate pr-1 {{ $mj->jgo_vencedor_mandante === 1 ? 'text-green-600' : 'text-gray-700' }}">
-                                                        {{ $mj->mandante->equipe->time->tim_nome ?? 'A Def' }}
-                                                    </span>
-                                                    @if(in_array($mj->jgo_res_status, ['pendente', 'aprovado']))
-                                                        <span class="text-[10px] font-black w-4 h-4 flex items-center justify-center rounded bg-gray-100 text-gray-800">
-                                                            @php $setsM = 0; foreach($mj->resultadoSets as $set) { if(($set->set_pontos_mandante ?? 0) > ($set->set_pontos_visitante ?? 0)) $setsM++; } echo $setsM; @endphp
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                <div class="flex justify-between items-center">
-                                                    <span class="text-[11px] font-bold truncate pr-1 {{ $mj->jgo_vencedor_mandante === 0 ? 'text-green-600' : 'text-gray-700' }}">
-                                                        {{ $mj->visitante->equipe->time->tim_nome ?? 'A Def' }}
-                                                    </span>
-                                                    @if(in_array($mj->jgo_res_status, ['pendente', 'aprovado']))
-                                                        <span class="text-[10px] font-black w-4 h-4 flex items-center justify-center rounded bg-gray-100 text-gray-800">
-                                                            @php $setsV = 0; foreach($mj->resultadoSets as $set) { if(($set->set_pontos_visitante ?? 0) > ($set->set_pontos_mandante ?? 0)) $setsV++; } echo $setsV; @endphp
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <p class="text-xs text-gray-500 italic p-3 text-center">Nenhum jogo na agenda.</p>
-                                    @endforelse
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <button onclick="filtrarJogosEquipe(event, {{ $eqp->eqp_cpo_id }})" class="filter-eqp-btn px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-800 hover:bg-principal hover:text-white hover:border-principal text-sm font-semibold rounded-md shadow-sm whitespace-nowrap transition-colors">
+                        {{ $eqp->equipe->time->tim_nome ?? 'Time Desconhecido' }}
+                    </button>
                 @empty
                     <span class="text-gray-500 text-sm italic">Nenhuma equipe configurada para esta categoria.</span>
                 @endforelse
@@ -143,14 +92,18 @@
                     @php
                         // Obter lista única de Grupos/Fases para gerar botões
                         $fasesUnicas = collect($jogosTodos)->pluck('jgo_fase')->map(function($fase) {
-                            return $fase ?? 'classificatoria';
+                            $fStr = $fase ?? 'classificatoria';
+                            if (preg_match('/(Grupo\s[A-Z0-9]+)/i', $fStr, $matches)) {
+                                return mb_strtoupper($matches[1]);
+                            }
+                            return mb_strtoupper($fStr);
                         })->unique()->filter()->sort();
                     @endphp
                     
                     @if($fasesUnicas->count() > 1)
                         <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 table-scroll">
                             <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Filtro:</span>
-                            <button onclick="filtrarJogos(event, 'todos')" class="filter-jogo-btn active px-3 py-1.5 bg-principal text-white border border-principal text-xs font-bold rounded shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity">Todos</button>
+                            <button onclick="filtrarJogos(event, 'todos')" class="filter-jogo-btn active px-3 py-1.5 bg-principal text-white border border-principal text-xs font-bold rounded shadow-sm whitespace-nowrap hover:opacity-90 transition-opacity">TODOS</button>
                             @foreach($fasesUnicas as $fu)
                                 <button onclick="filtrarJogos(event, '{{ Str::slug($fu) }}')" class="filter-jogo-btn px-3 py-1.5 bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 text-xs font-bold rounded shadow-sm whitespace-nowrap transition-colors">{{ $fu }}</button>
                             @endforeach
@@ -160,7 +113,15 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="jogos-grid-container">
                     @forelse($jogosTodos as $jogo)
-                        <div class="jogo-card bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 relative overflow-hidden flex flex-col justify-between" data-fase="{{ Str::slug($jogo->jgo_fase ?? 'classificatoria') }}">
+                        @php
+                            $fStrItem = $jogo->jgo_fase ?? 'classificatoria';
+                            if (preg_match('/(Grupo\s[A-Z0-9]+)/i', $fStrItem, $matches)) {
+                                $fSimplificada = mb_strtoupper($matches[1]);
+                            } else {
+                                $fSimplificada = mb_strtoupper($fStrItem);
+                            }
+                        @endphp
+                        <div class="jogo-card bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 relative overflow-hidden flex flex-col justify-between" data-fase="{{ Str::slug($fSimplificada) }}" data-mandante="{{ $jogo->jgo_eqp_cpo_mandante_id }}" data-visitante="{{ $jogo->jgo_eqp_cpo_visitante_id }}">
                             <!-- Tipo de Fase -->
                             <div class="absolute top-0 right-0 bg-gray-100 text-gray-500 text-[9px] font-bold px-2 py-1 rounded-bl-lg uppercase border-l border-b border-gray-200">
                                 {{ $jogo->jgo_fase ?? 'classificatoria' }}
@@ -439,9 +400,48 @@
             }
         }
 
-        // JS Filtragem de Jogos
+        // Filtros globais
+        let currentFase = 'todos';
+        let currentEquipe = 'todos';
+
+        function applyFilters() {
+            const cards = document.querySelectorAll('.jogo-card');
+            let anyVisible = false;
+
+            cards.forEach(c => {
+                const faseCard = c.getAttribute('data-fase');
+                const mandanteCard = c.getAttribute('data-mandante');
+                const visitanteCard = c.getAttribute('data-visitante');
+
+                let matchFase = (currentFase === 'todos' || faseCard === currentFase);
+                let matchEquipe = (currentEquipe === 'todos' || mandanteCard === String(currentEquipe) || visitanteCard === String(currentEquipe));
+
+                if(matchFase && matchEquipe) {
+                    c.style.display = 'flex';
+                    anyVisible = true;
+                } else {
+                    c.style.display = 'none';
+                }
+            });
+
+            let fallbackMsg = document.getElementById('filt-fallback-msg');
+            if(!anyVisible) {
+                if(!fallbackMsg) {
+                    fallbackMsg = document.createElement('div');
+                    fallbackMsg.id = 'filt-fallback-msg';
+                    fallbackMsg.className = 'col-span-full text-center text-gray-500 italic py-4 text-sm';
+                    fallbackMsg.innerText = 'Nenhum jogo encontrado para os filtros selecionados.';
+                    document.getElementById('jogos-grid-container').appendChild(fallbackMsg);
+                }
+                fallbackMsg.style.display = 'block';
+            } else if(fallbackMsg) {
+                fallbackMsg.style.display = 'none';
+            }
+        }
+
+        // JS Filtragem de Jogos por Fase/Grupo
         function filtrarJogos(event, fase) {
-            // Update active state visual configs of buttons
+            currentFase = fase;
             const btns = document.querySelectorAll('.filter-jogo-btn');
             btns.forEach(b => {
                 b.classList.remove('bg-principal', 'text-white', 'border-principal');
@@ -450,33 +450,24 @@
             event.currentTarget.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
             event.currentTarget.classList.add('bg-principal', 'text-white', 'border-principal');
 
-            // Find all cards
-            const cards = document.querySelectorAll('.jogo-card');
-            let anyVisible = false;
-            
-            cards.forEach(c => {
-                if(fase === 'todos' || c.getAttribute('data-fase') === fase) {
-                    c.style.display = 'flex';
-                    anyVisible = true;
-                } else {
-                    c.style.display = 'none';
-                }
-            });
+            applyFilters();
+        }
 
-            // Fallback message handling if all filtered out
-            let fallbackMsg = document.getElementById('filt-fallback-msg');
-            if(!anyVisible) {
-                if(!fallbackMsg) {
-                    fallbackMsg = document.createElement('div');
-                    fallbackMsg.id = 'filt-fallback-msg';
-                    fallbackMsg.className = 'col-span-full text-center text-gray-500 italic py-4 text-sm';
-                    fallbackMsg.innerText = 'Nenhum jogo encontrado para este turno/fase.';
-                    document.getElementById('jogos-grid-container').appendChild(fallbackMsg);
-                }
-                fallbackMsg.style.display = 'block';
-            } else if(fallbackMsg) {
-                fallbackMsg.style.display = 'none';
-            }
+        // JS Filtragem de Jogos por Equipe
+        function filtrarJogosEquipe(event, equipeId) {
+            currentEquipe = equipeId;
+            const btns = document.querySelectorAll('.filter-eqp-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-principal', 'text-white', 'border-principal');
+                b.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200');
+            });
+            event.currentTarget.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200');
+            event.currentTarget.classList.add('bg-principal', 'text-white', 'border-principal');
+
+            // Scroll para tabela de jogos suavemente apenas se não for 'todos'
+            document.getElementById('jogos-grid-container').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            applyFilters();
         }
     </script>
 </body>

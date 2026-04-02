@@ -168,7 +168,7 @@ class Atleta extends Model // Renomeado para Atleta (convenção Laravel)
     public function cartaoImpresso(?int $ano = null): bool
     {
         $ano = $ano ?? date('Y');
-        $cartao = $this->cartoes()->where('atc_ano', $ano)->first();
+        $cartao = $this->cartoes->where('atc_ano', $ano)->first();
         return $cartao ? (bool) $cartao->atc_impresso : false;
     }
 }
