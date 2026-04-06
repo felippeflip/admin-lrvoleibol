@@ -17,6 +17,7 @@
                                 <tr>
                                     <th class="py-2 px-4 border-b">Nome</th>
                                     <th class="py-2 px-4 border-b">Funções</th>
+                                    <th class="py-2 px-4 border-b">Mobile?</th>
                                     <th class="py-2 px-4 border-b">Ações</th>
                                 </tr>
                             </thead>
@@ -28,6 +29,21 @@
                                             @foreach($profile->roles as $role)
                                                 <span class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full px-2 py-1 text-xs font-semibold">{{ $role->name }}</span>
                                             @endforeach
+                                        </td>
+                                        <td class="py-2 px-4 border-b text-center">
+                                            @if($profile->enable_mobile_view)
+                                                <span class="text-green-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            @else
+                                                <span class="text-red-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="flex space-x-2">
                                             <a href="{{ route('profiles.edit', $profile) }}" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" title="Editar Perfil">

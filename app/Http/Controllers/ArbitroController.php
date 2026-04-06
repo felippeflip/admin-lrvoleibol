@@ -29,11 +29,20 @@ class ArbitroController extends Controller
 
         $arbitros = $query->paginate(10);
 
+        if ($this->isMobileView()) {
+            return view('mobile.arbitros.index', compact('arbitros'));
+        }
+
         return view('arbitros.index', compact('arbitros'));
     }
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $arbitro = User::findOrFail($id);
+
+        if ($this->isMobileView()) {
+            return view('mobile.arbitros.show', compact('arbitro'));
+        }
+
         return view('arbitros.show', compact('arbitro'));
     }
 }

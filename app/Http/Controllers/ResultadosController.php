@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class ResultadosController extends Controller
 {
-    public function create($id)
+    public function create(Request $request, $id)
     {
         // 1. Find Local Jogo by ID (Primary Key)
         $jogo = Jogo::find($id);
@@ -38,6 +38,10 @@ class ResultadosController extends Controller
         // Teams names (Need to fetch via relations)
         $mandante = $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante';
         $visitante = $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante';
+
+        if ($this->isMobileView()) {
+            return view('mobile.resultados.create', compact('jogo', 'sets', 'mandante', 'visitante'));
+        }
 
         return view('resultados.create', compact('jogo', 'sets', 'mandante', 'visitante'));
     }

@@ -33,12 +33,23 @@ class GinasioController extends Controller
         $ginasios = $query->paginate(10)->appends($request->all());
         $times = Time::orderBy('tim_nome')->get();
 
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.ginasios.index', compact('ginasios', 'times'));
+        }
+
         return view('ginasios.index', compact('ginasios', 'times'));
     }
 
     public function create()
     {
         $times = Time::all();
+        
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.ginasios.create', compact('times'));
+        }
+
         return view('ginasios.create', compact('times'));
     }
 
@@ -63,6 +74,12 @@ class GinasioController extends Controller
     public function edit(Ginasio $ginasio)
     {
         $times = Time::all();
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.ginasios.edit', compact('ginasio', 'times'));
+        }
+
         return view('ginasios.edit', compact('ginasio', 'times'));
     }
 

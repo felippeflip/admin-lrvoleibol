@@ -9,15 +9,23 @@ use App\Models\Categoria;
 
 class CategoriasController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $categorias = Categoria::all();
+
+        if ($this->isMobileView()) {
+            return view('mobile.categorias.index', compact('categorias'));
+        }
 
         return view('categorias.index', compact('categorias'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        if ($this->isMobileView()) {
+            return view('mobile.categorias.create');
+        }
+
         return view('categorias.create');
     }
 
@@ -57,10 +65,14 @@ class CategoriasController extends Controller
         return redirect()->route('categorias.index')->with('success', 'Categoria criada com sucesso');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
 
         $categoria = Categoria::findOrFail($id);
+
+        if ($this->isMobileView()) {
+            return view('mobile.categorias.edit', compact('categoria'));
+        }
 
         return view('categorias.edit', compact('categoria'));
     }

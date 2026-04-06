@@ -87,13 +87,18 @@ class EquipesController extends Controller
         $categorias = Categoria::orderBy('cto_nome')->get();
         $campeonatos = Campeonato::orderBy('cpo_nome')->get();
 
-        // Para o filtro de times, se for admin carrega todos, se for responsável, só o seu (já estaria filtrado na query, mas para o dropdown é bom restringir visualmente também)
+        // Para o filtro de times, se for admin carrega todos, se for responsável, só o seu
         if ($user->hasRole('Administrador')) {
             $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         } elseif ($user->is_resp_time || $user->hasRole('ResponsavelTime')) {
             $times = Time::where('tim_user_id', $user->id)->get();
         } else {
             $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
+        }
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.equipes.index', compact('equipes', 'categorias', 'times', 'campeonatos'));
         }
 
         return view('equipes.index', compact('equipes', 'categorias', 'times', 'campeonatos'));
@@ -104,6 +109,7 @@ class EquipesController extends Controller
      */
     public function indexForTime(Time $time)
     {
+        $request = request();
         // Carrega as equipes com seus respectivos times e categorias para o time fornecido
         // Também filtra campeonatos ativos
         $equipes = Equipe::where('eqp_time_id', $time->tim_id)
@@ -115,6 +121,11 @@ class EquipesController extends Controller
                 },
             ])
             ->paginate(10);
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.equipes.index', compact('equipes', 'time'));
+        }
 
         // Passa o objeto do time para a view para customizar o header
         return view('equipes.index', compact('equipes', 'time'));
@@ -176,6 +187,10 @@ class EquipesController extends Controller
             $tecnicos = $tecnicosQuery->orderBy('nome')->get();
         } else {
             $tecnicos = collect();
+        }
+
+        if ($this->isMobileView()) {
+            return view('mobile.equipes.create', compact('times', 'categorias', 'timeId', 'campeonatos', 'tecnicos'));
         }
 
         return view('equipes.create', compact('times', 'categorias', 'timeId', 'campeonatos', 'tecnicos'));
@@ -290,6 +305,10 @@ class EquipesController extends Controller
             $tecnicos = $tecnicosQuery->orderBy('nome')->get();
         } else {
             $tecnicos = collect();
+        }
+
+        if ($this->isMobileView()) {
+            return view('mobile.equipes.edit', compact('equipe', 'times', 'categorias', 'tecnicos'));
         }
 
         return view('equipes.edit', compact('equipe', 'times', 'categorias', 'tecnicos'));

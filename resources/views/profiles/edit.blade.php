@@ -25,6 +25,12 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="mb-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="enable_mobile_view" value="1" {{ $profile->enable_mobile_view ? 'checked' : '' }} class="form-checkbox h-5 w-5 text-blue-600">
+                                <span class="ml-2 text-gray-700 dark:text-gray-200">Habilitar Visualização Mobile</span>
+                            </label>
+                        </div>
                         <div class="flex justify-between">
                             <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Atualizar</button>
                             <a href="{{ route('profiles.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</a>

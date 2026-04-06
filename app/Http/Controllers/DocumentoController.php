@@ -36,6 +36,11 @@ use Illuminate\Http\Request;
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
         }
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.documentos.index', compact('documentos'));
+        }
+
         return view('documentos.index', compact('documentos'));
     }
 

@@ -19,7 +19,15 @@ use App\Http\Controllers\GinasioController;
 use App\Http\Controllers\ComissaoTecnicaController;
 
 
-Route::get('/', function () {
+Route::get('/', function (Illuminate\Http\Request $request) {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    
+    $isMobile = preg_match('/Mobile|Android|BlackBerry|iPhone|Windows Phone/i', $request->userAgent());
+    if ($isMobile) {
+        return view('mobile.auth.login');
+    }
     return view('auth.login');
 });
 
@@ -123,7 +131,7 @@ Route::middleware('auth')->group(function () {
             'role-permission' => 'role'
         ]);
 
-        Route::resource('profiles', UserProfileController::class);
+        Route::resource('profiles', \App\Http\Controllers\ProfilesController::class);
         Route::resource('profile_user', ProfileUserController::class);
 
         Route::get('/jogos/import', [JogosController::class, 'show'])->name('jogos.showImportForm');

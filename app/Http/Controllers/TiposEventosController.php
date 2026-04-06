@@ -36,11 +36,20 @@ class TiposEventosController extends Controller
 
         $campeonatos = $query->orderBy('cpo_id', 'desc')->paginate(10)->appends($request->all());
    
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.eventos.index', compact('campeonatos'));
+        }
+
         return view('eventos.index', compact('campeonatos'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        if ($this->isMobileView()) {
+            return view('mobile.eventos.create');
+        }
+
         return view('eventos.create');
     }
 
@@ -99,7 +108,7 @@ class TiposEventosController extends Controller
         return redirect()->route('eventos.index')->with('success', 'Campeonato criado com sucesso');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
 
         $campeonato = Campeonato::findOrFail($id);
@@ -107,6 +116,10 @@ class TiposEventosController extends Controller
 
         $wpTermTaxonomy = Wp_Term_Taxonomy::with('term')->findOrFail($campeonato->cpo_term_tx_id);
         $wpTerm = $wpTermTaxonomy->term;
+
+        if ($this->isMobileView()) {
+            return view('mobile.eventos.edit', compact('campeonato' , 'wpTermTaxonomy', 'wpTerm'));
+        }
 
         return view('eventos.edit', compact('campeonato' , 'wpTermTaxonomy', 'wpTerm'));
     }

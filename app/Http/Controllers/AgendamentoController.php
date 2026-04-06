@@ -15,7 +15,7 @@ class AgendamentoController extends Controller
     /**
      * Admin: Render the form to manually define groups
      */
-    public function definirGrupos($campeonato_id, $categoria_id)
+    public function definirGrupos(Request $request, $campeonato_id, $categoria_id)
     {
         $equipes = EquipeCampeonato::where('cpo_fk_id', $campeonato_id)
             ->whereHas('equipe', function($q) use ($categoria_id) {
@@ -33,6 +33,10 @@ class AgendamentoController extends Controller
 
         if ($existingGames) {
             return redirect()->route('agendamentos.admin.index', $campeonato_id)->withErrors(['error' => 'Já existem jogos gerados (ou em andamento) para esta categoria.']);
+        }
+
+        if ($this->isMobileView()) {
+            return view('mobile.agendamentos.admin.definir_grupos', compact('equipes', 'cmp', 'cat'));
         }
 
         return view('agendamentos.admin.definir_grupos', compact('equipes', 'cmp', 'cat'));
@@ -248,6 +252,10 @@ class AgendamentoController extends Controller
         $equipesSemJogos = $equipesInscritas->filter(function($ei) {
             return $ei->jogosMandante->count() == 0 && $ei->jogosVisitante->count() == 0;
         });
+
+        if ($this->isMobileView()) {
+            return view('mobile.agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats', 'equipesInscritas', 'equipesSemJogos'));
+        }
 
         return view('agendamentos.admin.index', compact('jogos', 'cmp', 'categorias', 'fases', 'stats', 'equipesInscritas', 'equipesSemJogos'));
     }
@@ -564,10 +572,14 @@ class AgendamentoController extends Controller
             ->paginate(15)
             ->appends($request->all());
 
-        // Also fetch Ginasios for suggesting local
         $ginasios = \App\Models\Ginasio::where('gin_status', true)->get();
 
         $categorias = \App\Models\Categoria::orderBy('cto_nome')->get();
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.agendamentos.index_comissao', compact('jogos', 'ginasios', 'time_id', 'categorias'));
+        }
 
         return view('agendamentos.comissao.index', compact('jogos', 'ginasios', 'time_id', 'categorias'));
     }

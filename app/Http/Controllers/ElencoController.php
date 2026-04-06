@@ -72,6 +72,11 @@ class ElencoController extends Controller
             })->orderBy('eqp_nome_detalhado')->get();
         }
 
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.elencos.index', compact('participacoes', 'campeonatos', 'categorias', 'equipes'));
+        }
+
         return view('campeonatos.elenco.list', compact('participacoes', 'campeonatos', 'categorias', 'equipes'));
     }
 

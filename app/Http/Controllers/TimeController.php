@@ -57,6 +57,12 @@ class TimeController extends Controller
         }
 
         $times = $query->paginate(10);
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.times.index', compact('times'));
+        }
+
         return view('times.index', compact('times'));
     }
 
@@ -83,6 +89,11 @@ class TimeController extends Controller
 
         // Buscando apenas usuários que possuem a ROLE de Responsável de Time
         $users = User::role('ResponsavelTime')->get();
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.times.create', compact('users'));
+        }
 
         // Retorna a view para criar um novo time
         return view('times.create', compact('users'));
@@ -201,6 +212,11 @@ class TimeController extends Controller
             }
         }
 
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.times.show', compact('time'));
+        }
+
         // Retorna a view para exibir detalhes de um time específico
         return view('times.show', compact('time'));
     }
@@ -217,6 +233,11 @@ class TimeController extends Controller
 
         // Buscando apenas usuários que possuem a ROLE de Responsável de Time
         $users = User::role('ResponsavelTime')->get();
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.times.edit', compact('time', 'users'));
+        }
 
         // Retorna a view para editar um time específico
         return view('times.edit', compact('time', 'users')); // Passa $users para a view

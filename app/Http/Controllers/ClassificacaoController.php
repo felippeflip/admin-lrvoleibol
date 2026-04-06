@@ -16,13 +16,17 @@ class ClassificacaoController extends Controller
     /**
      * Preview da tabela de classificação antes de publicar.
      */
-    public function preview($campeonato_id, $categoria_id)
+    public function preview(Request $request, $campeonato_id, $categoria_id)
     {
         $campeonato = Campeonato::findOrFail($campeonato_id);
         $categoria = Categoria::findOrFail($categoria_id);
 
         $dados = $this->calcularTabela($campeonato_id, $categoria_id);
         
+        if ($this->isMobileView()) {
+            return view('mobile.tabelas.preview', compact('campeonato', 'categoria', 'dados'));
+        }
+
         return view('tabelas.preview', compact('campeonato', 'categoria', 'dados'));
     }
 

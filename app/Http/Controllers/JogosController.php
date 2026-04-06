@@ -163,11 +163,18 @@ class JogosController extends Controller
         $ginasios = Ginasio::orderBy('gin_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
 
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.jogos.index', compact('jogos', 'campeonatos', 'ginasios', 'categorias'));
+        }
+
         return view('jogos.index', compact('jogos', 'campeonatos', 'ginasios', 'categorias'));
     }
 
     public function index_dashboard(Request $request)
     {
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        // Removido preg_match redundante no início do método
         // Auto-update Status for Dashboard (Sync with index logic)
         Jogo::where('jgo_dt_jogo', '<', Carbon::now()->format('Y-m-d'))
             ->where('jgo_status', '!=', 'inativo')
@@ -361,17 +368,24 @@ class JogosController extends Controller
         // OR just rely on the new Stat variables.
         // For backward compatibility with the View (if I reuse parts), I should ensure strictly needed variables are passed.
         // But since I'm rewriting the view, I can control it.
+        if ($this->isMobileView()) {
+            return view('mobile.dashboard.index', $data);
+        }
 
         return view('dashboard', $data);
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
         $juizes = User::role('Juiz')->where('active', true)->orderBy('name')->get();
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
         $ginasios = Ginasio::orderBy('gin_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
+
+        if ($this->isMobileView()) {
+            return view('mobile.jogos.create', compact('campeonatos', 'ginasios', 'categorias', 'juizes'));
+        }
 
         return view('jogos.create', compact('campeonatos', 'ginasios', 'categorias', 'juizes'));
     }
@@ -444,7 +458,7 @@ class JogosController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         // 1. Encontra Jogo Local sempre primeiro (id pode ser local ou wp)
         $localJogo = Jogo::where('jgo_wp_id', $id)->orWhere('jgo_id', $id)->firstOrFail();
@@ -491,6 +505,27 @@ class JogosController extends Controller
         // Faking object format param that Edit blade needs just for form Action ID
         $jogo = clone $localJogo;
         $jogo->ID = $localJogo->jgo_wp_id ?: $localJogo->jgo_id;
+
+        if ($this->isMobileView()) {
+            return view('mobile.jogos.edit', compact(
+                'jogo',
+                'campeonatos',
+                'ginasios',
+                'categorias',
+                'juizes',
+                'eventNumber',
+                'juizPrincipalId',
+                'juizLinha1Id',
+                'juizLinha2Id',
+                'mandanteId',
+                'visitanteId',
+                'ginasioId',
+                'selectedCampeonatoId',
+                'selectedCategoriaId',
+                'dataJogo',
+                'horaJogo'
+            ));
+        }
 
         return view('jogos.edit', compact(
             'jogo',

@@ -78,6 +78,11 @@ class ComissaoTecnicaController extends Controller
         }
         $funcoes = ['Técnico', 'Assistente Técnico', 'Médico', 'Fisioterapeuta', 'Massagista'];
 
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.comissao_tecnica.index', compact('comissao', 'times', 'funcoes'));
+        }
+
         return view('comissao_tecnica.index', compact('comissao', 'times', 'funcoes'));
     }
 

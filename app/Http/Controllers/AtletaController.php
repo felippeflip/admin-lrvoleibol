@@ -100,17 +100,21 @@ class AtletaController extends Controller
 
         $atletas = $query->paginate(10)->appends($request->all());
 
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.atletas.index', compact('atletas', 'categorias', 'times'));
+        }
+
         return view('atletas.index', compact('atletas', 'categorias', 'times'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         $user = auth()->user();
 
-        // Verifica se o Responsável pelo Time possui um time vinculado
         // Verifica se o Responsável pelo Time ou Comissão Técnica possui um time vinculado
         if (!$user->hasRole('Administrador')) {
             $hasTime = false;
@@ -130,6 +134,11 @@ class AtletaController extends Controller
             $times = Time::all();
         }
         $categorias = Categoria::all();
+
+        if ($this->isMobileView()) {
+            return view('mobile.atletas.create', compact('times', 'categorias'));
+        }
+
         return view('atletas.create', compact('times', 'categorias'));
     }
 
@@ -379,7 +388,7 @@ class AtletaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Atleta $atleta)
+    public function edit(Request $request, Atleta $atleta)
     {
         $user = auth()->user();
         if (!$user->hasRole('Administrador')) {
@@ -401,6 +410,10 @@ class AtletaController extends Controller
             $times = Time::all();
         }
         $categorias = Categoria::all();
+
+        if ($this->isMobileView()) {
+            return view('mobile.atletas.edit', compact('atleta', 'times', 'categorias'));
+        }
 
         return view('atletas.edit', compact('atleta', 'times', 'categorias'));
     }

@@ -15,6 +15,11 @@ class RelatorioController extends Controller
      */
     public function index()
     {
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.relatorios.index');
+        }
+
         return view('relatorios.index');
     }
 
@@ -36,6 +41,11 @@ class RelatorioController extends Controller
             ->groupBy('atl_tim_id');
 
         $timesList = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.relatorios.atletas_por_time', compact('atletas', 'timesList'));
+        }
 
         return view('relatorios.atletas_por_time', compact('atletas', 'timesList'));
     }

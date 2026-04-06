@@ -49,6 +49,11 @@ class UserController extends Controller
         }
 
         $users = $query->paginate(10)->appends($request->all());
+
+        if ($this->isMobileView()) {
+            return view('mobile.users.index', compact('users'));
+        }
+
         return view('users.index', compact('users'));
     }
 
@@ -61,10 +66,15 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', "Usuário {$statusMessage} com sucesso.");
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'Responsável pelo Time')->get();
+
+        if ($this->isMobileView()) {
+            return view('mobile.users.create', compact('times', 'roles'));
+        }
+
         return view('users.create', compact('times', 'roles'));
     }
 
@@ -158,10 +168,15 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Usuário criado com sucesso.');
     }
 
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
         $times = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'Responsável pelo Time')->get();
+
+        if ($this->isMobileView()) {
+            return view('mobile.users.edit', compact('user', 'times', 'roles'));
+        }
+
         return view('users.edit', compact('user', 'times', 'roles'));
     }
 
