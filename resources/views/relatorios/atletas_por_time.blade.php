@@ -68,18 +68,48 @@
 
             <!-- Relatório -->
             @forelse($atletas as $timeId => $atletasTime)
-                @php $time = $atletasTime->first()->time; @endphp
-                <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg overflow-hidden mb-8 {{ $loop->last ? '' : 'page-break-after' }}">
-                    <div class="px-4 py-5 sm:px-6 bg-gray-50 dark:bg-gray-700">
-                        <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-gray-100 uppercase">
-                            {{ $time->tim_nome ?? 'Sem Time Vinculado' }} ({{ $atletasTime->count() }} Atletas)
+                @php 
+                    $time = $atletasTime->first()->time; 
+                    $allIds = $atletasTime->pluck('atl_id')->toArray();
+                @endphp
+                <div x-data="{ 
+                        selectedIds: {{ json_encode($allIds) }},
+                        toggleAll() {
+                            if (this.selectedIds.length === {{ count($allIds) }}) {
+                                this.selectedIds = [];
+                            } else {
+                                this.selectedIds = {{ json_encode($allIds) }};
+                            }
+                        }
+                    }" 
+                    class="bg-white dark:bg-gray-800 shadow sm:rounded-lg overflow-hidden mb-8 {{ $loop->last ? '' : 'page-break-after' }}">
+                    <div class="px-4 py-5 sm:px-6 bg-gray-50 dark:bg-gray-700 flex flex-wrap justify-between items-center gap-2">
+                        <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-gray-100 uppercase flex items-center">
+                            {{ $time->tim_nome ?? 'Sem Time Vinculado' }}
+                            <span class="print-only ml-2 text-sm font-normal normal-case text-gray-700">
+                                (<span x-text="selectedIds.length">{{ count($allIds) }}</span> de {{ count($allIds) }} atletas)
+                            </span>
                         </h3>
+                        <div class="no-print flex items-center shadow-sm rounded-full overflow-hidden border border-orange-200 dark:border-orange-800/50">
+                            <div class="bg-orange-500 text-white px-3 py-1 text-[10px] font-black uppercase tracking-wider">
+                                Atletas
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 px-3 py-1 text-xs font-bold text-gray-700 dark:text-gray-300">
+                                <span x-text="selectedIds.length">{{ count($allIds) }}</span> de {{ count($allIds) }} selecionados
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="border-t border-gray-200 dark:border-gray-600">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
+                                    <th scope="col" class="px-3 py-2 text-left no-print">
+                                        <input type="checkbox" 
+                                               @click="toggleAll()" 
+                                               :checked="selectedIds.length === {{ count($allIds) }}"
+                                               class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                    </th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Registro LRV</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Atleta</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoria / DN</th>
@@ -90,7 +120,13 @@
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 @foreach($atletasTime as $atleta)
-                                    <tr>
+                                    <tr :class="!selectedIds.includes({{ $atleta->atl_id }}) ? 'opacity-30 no-print-row' : ''" class="transition-opacity">
+                                        <td class="px-3 py-2 whitespace-nowrap no-print">
+                                            <input type="checkbox" 
+                                                   value="{{ $atleta->atl_id }}" 
+                                                   x-model.number="selectedIds"
+                                                   class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                        </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-mono">
                                             {{ $atleta->atl_resg ?? '---' }}
                                         </td>
@@ -111,11 +147,12 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500 print-only">
-                                            RG: {{ $atleta->atl_rg }} | CPF: {{ $atleta->atl_cpf ?? 'N/A' }}
+                                        <td class="px-3 py-2 whitespace-nowrap text-[10px] text-gray-600 dark:text-gray-400 print-only">
+                                            <span class="block">RG: {{ $atleta->atl_rg }}</span>
+                                            <span class="block">CPF: {{ $atleta->atl_cpf ?? 'N/A' }}</span>
                                         </td>
-                                        <td class="px-3 py-2 whitespace-nowrap border-b border-gray-300 print-only">
-                                            <!-- Linha para assinatura preenchida na mão -->
+                                        <td class="px-3 py-2 print-only min-w-[200px]">
+                                            <div class="border-b border-gray-400 h-8"></div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -150,15 +187,26 @@
     </div>
 
     <style>
+        .no-print-row {
+            /* Fallback case JS fail */
+        }
+
         .print-only {
             display: none;
         }
 
         @media print {
+            .no-print-row {
+                display: none !important;
+            }
             .no-print {
                 display: none !important;
             }
             .print-only {
+                display: table-cell !important;
+            }
+            /* Elementos que são blocos e não células de tabela */
+            div.print-only {
                 display: block !important;
             }
             body {
