@@ -23,7 +23,19 @@
                             <p class="font-normal text-gray-700 dark:text-gray-400">Relação completa de atletas agrupados por time. Ideal para protocolo de entrega de carteirinhas.</p>
                         </a>
 
+                        <!-- Relatório de Comissão por Time -->
+                        <a href="{{ route('relatorios.comissao-por-time') }}" class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 transition">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-6 h-6 text-orange-600 dark:text-orange-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <h5 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Comissão por Time</h5>
+                            </div>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Relação de membros da comissão técnica agrupados por time. Ideal para protocolo de credenciais.</p>
+                        </a>
+
                         <!-- Relatório de Tabelas Geradas -->
+                        @hasrole('Administrador')
                         <a href="{{ route('relatorios.tabelas-geradas') }}" class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 transition">
                             <div class="flex items-center mb-2">
                                 <!-- Ícone de Código/Documento -->
@@ -34,6 +46,7 @@
                             </div>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Visualização e acompanhamento dos arquivos HTML estáticos gerados contendo a tabela de classificação.</p>
                         </a>
+                        @endhasrole
 
                         <!-- Espaço para futuros relatórios -->
                         <div class="block p-6 bg-gray-50 border border-gray-200 rounded-lg shadow opacity-50 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700">

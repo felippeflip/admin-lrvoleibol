@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atleta;
+use App\Models\ComissaoTecnica;
 use App\Models\Time;
 use Illuminate\Http\Request;
 use League\Csv\Writer;
@@ -31,16 +32,31 @@ class RelatorioController extends Controller
         $query = Atleta::with(['time', 'categoria', 'cartoes'])
             ->where('atl_ativo', 1);
 
-        if ($request->filled('time_id')) {
-            $query->where('atl_tim_id', $request->time_id);
+        // RBAC: Se não for administrador, filtra pelo time vinculado ao usuário
+        if (!auth()->user()->hasRole('Administrador')) {
+            $userTimeId = auth()->user()->time_id;
+            
+            if (!$userTimeId) {
+                // Se o usuário não tem time vinculado e não é admin, retorna lista vazia
+                $atletas = collect([]);
+                $timesList = collect([]);
+                return view($this->isMobileView() ? 'mobile.relatorios.atletas_por_time' : 'relatorios.atletas_por_time', compact('atletas', 'timesList'));
+            }
+            
+            $query->where('atl_tim_id', $userTimeId);
+            $timesList = Time::where('tim_id', $userTimeId)->get();
+        } else {
+            // Administrador pode filtrar por qualquer time
+            if ($request->filled('time_id')) {
+                $query->where('atl_tim_id', $request->time_id);
+            }
+            $timesList = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         }
 
         $atletas = $query->orderBy('atl_tim_id')
             ->orderBy('atl_nome')
             ->get()
             ->groupBy('atl_tim_id');
-
-        $timesList = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
 
         // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
         if ($this->isMobileView()) {
@@ -58,8 +74,17 @@ class RelatorioController extends Controller
         $query = Atleta::with(['time', 'categoria', 'cartoes'])
             ->where('atl_ativo', 1);
 
-        if ($request->filled('time_id')) {
-            $query->where('atl_tim_id', $request->time_id);
+        // RBAC: Se não for administrador, filtra pelo time vinculado ao usuário
+        if (!auth()->user()->hasRole('Administrador')) {
+            $userTimeId = auth()->user()->time_id;
+            if (!$userTimeId) {
+                return redirect()->route('relatorios.index')->with('error', 'Usuário não vinculado a um time.');
+            }
+            $query->where('atl_tim_id', $userTimeId);
+        } else {
+            if ($request->filled('time_id')) {
+                $query->where('atl_tim_id', $request->time_id);
+            }
         }
 
         $atletas = $query->orderBy('atl_tim_id')
@@ -128,6 +153,102 @@ class RelatorioController extends Controller
         });
 
         return view('relatorios.tabelas_geradas', compact('arquivos'));
+    }
+
+    /**
+     * Relatório de Comissão Técnica por Time.
+     */
+    public function comissaoPorTime(Request $request)
+    {
+        $query = ComissaoTecnica::with(['time'])
+            ->where('status', 1);
+
+        // RBAC: Se não for administrador, filtra pelo time vinculado ao usuário
+        if (!auth()->user()->hasRole('Administrador')) {
+            $userTimeId = auth()->user()->time_id;
+            
+            if (!$userTimeId) {
+                // Se o usuário não tem time vinculado e não é admin, retorna lista vazia
+                $comissao = collect([]);
+                $timesList = collect([]);
+                return view($this->isMobileView() ? 'mobile.relatorios.comissao_por_time' : 'relatorios.comissao_por_time', compact('comissao', 'timesList'));
+            }
+            
+            $query->where('time_id', $userTimeId);
+            $timesList = Time::where('tim_id', $userTimeId)->get();
+        } else {
+            // Administrador pode filtrar por qualquer time
+            if ($request->filled('time_id')) {
+                $query->where('time_id', $request->time_id);
+            }
+            $timesList = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
+        }
+
+        $comissao = $query->orderBy('time_id')
+            ->orderBy('nome')
+            ->get()
+            ->groupBy('time_id');
+
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.relatorios.comissao_por_time', compact('comissao', 'timesList'));
+        }
+
+        return view('relatorios.comissao_por_time', compact('comissao', 'timesList'));
+    }
+
+    /**
+     * Exporta o relatório de Comissão Técnica para CSV/Excel.
+     */
+    public function exportComissaoPorTime(Request $request)
+    {
+        $query = ComissaoTecnica::with(['time'])
+            ->where('status', 1);
+
+        // RBAC: Se não for administrador, filtra pelo time vinculado ao usuário
+        if (!auth()->user()->hasRole('Administrador')) {
+            $userTimeId = auth()->user()->time_id;
+            if (!$userTimeId) {
+                return redirect()->route('relatorios.index')->with('error', 'Usuário não vinculado a um time.');
+            }
+            $query->where('time_id', $userTimeId);
+        } else {
+            if ($request->filled('time_id')) {
+                $query->where('time_id', $request->time_id);
+            }
+        }
+
+        $membros = $query->orderBy('time_id')
+            ->orderBy('nome')
+            ->get();
+
+        $csv = Writer::createFromFileObject(new SplTempFileObject());
+        $csv->setDelimiter(';');
+        $csv->setOutputBOM(Writer::BOM_UTF8);
+
+        // Cabeçalho
+        $csv->insertOne(['Time', 'Nome', 'Função', 'Registro LRV', 'CPF', 'RG', 'Celular', 'Email', 'Cartão Impresso']);
+
+        foreach ($membros as $membro) {
+            $csv->insertOne([
+                $membro->time->tim_nome ?? 'N/A',
+                $membro->nome,
+                $membro->funcao ?? 'N/A',
+                $membro->registro_lrv ?? 'N/A',
+                $membro->cpf,
+                $membro->rg,
+                $membro->celular,
+                $membro->email,
+                $membro->cartaoImpresso() ? 'SIM' : 'NÃO',
+            ]);
+        }
+
+        $filename = 'relatorio_comissao_por_time_' . date('Ymd_His') . '.csv';
+
+        return response((string) $csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     /**

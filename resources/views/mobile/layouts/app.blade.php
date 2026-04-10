@@ -167,12 +167,14 @@
                                 </div>
                                 <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300">Docs</span>
                             </a>
+                            @hasanyrole('Administrador|ResponsavelTime|ComissaoTecnica')
                             <a href="{{ route('relatorios.index') }}" class="flex flex-col items-center gap-2 group">
                                 <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900/20 flex items-center justify-center text-slate-600 group-active:scale-90 transition">
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9 7V2.221a2 2 0 0 0-.5.365L4.586 6.5a2 2 0 0 0-.365.5H9Zm2 0V2h7a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h5a2 2 0 0 0 2-2Zm2-2a1 1 0 1 0 0 2h3a1 1 0 1 0 0-2h-3Zm0 3a1 1 0 1 0 0 2h3a1 1 0 1 0 0-2h-3Zm-4 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H10a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H10a1 1 0 0 1-1-1Z"/></svg>
                                 </div>
                                 <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300">Relatórios</span>
                             </a>
+                            @endhasanyrole
                         </div>
                     </div>
 

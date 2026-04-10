@@ -107,6 +107,13 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{elenco_id}', [App\Http\Controllers\ElencoController::class, 'destroy'])->name('elenco.destroy');
         });
 
+        // Relatórios (Shared)
+        Route::get('/relatorios', [App\Http\Controllers\RelatorioController::class, 'index'])->name('relatorios.index');
+        Route::get('/relatorios/atletas-por-time', [App\Http\Controllers\RelatorioController::class, 'atletasPorTime'])->name('relatorios.atletas-por-time');
+        Route::get('/relatorios/atletas-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportAtletasPorTime'])->name('relatorios.atletas-por-time.export');
+        Route::get('/relatorios/comissao-por-time', [App\Http\Controllers\RelatorioController::class, 'comissaoPorTime'])->name('relatorios.comissao-por-time');
+        Route::get('/relatorios/comissao-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportComissaoPorTime'])->name('relatorios.comissao-por-time.export');
+
     });
 
 
@@ -156,10 +163,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/classificacao/preview/{campeonato_id}/{categoria_id}', [App\Http\Controllers\ClassificacaoController::class, 'preview'])->name('classificacao.preview');
         Route::post('/classificacao/publicar/{campeonato_id}/{categoria_id}', [App\Http\Controllers\ClassificacaoController::class, 'publicar'])->name('classificacao.publicar');
 
-        // Relatórios
-        Route::get('/relatorios', [App\Http\Controllers\RelatorioController::class, 'index'])->name('relatorios.index');
-        Route::get('/relatorios/atletas-por-time', [App\Http\Controllers\RelatorioController::class, 'atletasPorTime'])->name('relatorios.atletas-por-time');
-        Route::get('/relatorios/atletas-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportAtletasPorTime'])->name('relatorios.atletas-por-time.export');
+        // Relatórios (Admin only)
         Route::get('/relatorios/tabelas-geradas', [App\Http\Controllers\RelatorioController::class, 'tabelasGeradas'])->name('relatorios.tabelas-geradas');
 
     });
