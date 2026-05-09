@@ -166,6 +166,12 @@
                         <a href="{{ route('relatorios.comissao-por-time') }}"
                             class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Comissão por Time</a>
                     </li>
+                    @hasrole('Administrador')
+                    <li>
+                        <a href="{{ route('relatorios.jogos-por-arbitro') }}"
+                            class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Jogos por Árbitro</a>
+                    </li>
+                    @endhasrole
                 </ul>
             </li>
             @endhasanyrole

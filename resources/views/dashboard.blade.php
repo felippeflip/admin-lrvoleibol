@@ -70,11 +70,69 @@
                         @endif
 
                         {{-- 1.1 WEEKLY GAMES CARDS (ADMIN) --}}
-                        @if(isset($adminJogos) && count($adminJogos) > 0)
+                        @if(isset($adminJogos))
                             <div class="mt-8">
                                 <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">
-                                    Jogos da Semana (Recentes e Próximos)
+                                    Jogos (Resultados Filtrados)
                                 </h3>
+
+                                <!-- Filters -->
+                                <div class="mb-4">
+                                    <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row flex-wrap gap-3">
+                                        <div class="w-full sm:w-auto">
+                                            <label for="periodo" class="sr-only">Período</label>
+                                            <select name="periodo" id="periodo" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="7" {{ request('periodo') == '7' ? 'selected' : '' }}>7 dias</option>
+                                                <option value="14" {{ request('periodo') == '14' ? 'selected' : '' }}>14 dias</option>
+                                                <option value="30" {{ request('periodo') == '30' ? 'selected' : '' }}>1 mês</option>
+                                            </select>
+                                        </div>
+                                        <div class="w-full sm:w-auto">
+                                            <label for="tipo_periodo" class="sr-only">Mostrar</label>
+                                            <select name="tipo_periodo" id="tipo_periodo" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="futuros" {{ request('tipo_periodo', 'futuros') == 'futuros' ? 'selected' : '' }}>Apenas Futuros/Atuais</option>
+                                                <option value="anteriores" {{ request('tipo_periodo') == 'anteriores' ? 'selected' : '' }}>Apenas Anteriores</option>
+                                                <option value="ambos" {{ request('tipo_periodo') == 'ambos' ? 'selected' : '' }}>Ambos (Anteriores e Futuros)</option>
+                                            </select>
+                                        </div>
+                                        @if(isset($adminCategorias) && $adminCategorias->count())
+                                        <div class="w-full sm:w-auto">
+                                            <label for="categoria_id" class="sr-only">Categoria</label>
+                                            <select name="categoria_id" id="categoria_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="">Todas as Categorias</option>
+                                                @foreach($adminCategorias as $cat)
+                                                    <option value="{{ $cat->cto_id }}" {{ request('categoria_id') == $cat->cto_id ? 'selected' : '' }}>
+                                                        {{ $cat->cto_nome }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        @endif
+                                        @if(isset($adminTimes) && $adminTimes->count())
+                                        <div class="w-full sm:w-auto">
+                                            <label for="time_id" class="sr-only">Time</label>
+                                            <select name="time_id" id="time_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="">Todos os Times</option>
+                                                @foreach($adminTimes as $time)
+                                                    <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>
+                                                        {{ $time->tim_nome }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        @endif
+                                        <div class="flex gap-2 items-start">
+                                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                Filtrar
+                                            </button>
+                                            <a href="{{ route('dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                                                Limpar
+                                            </a>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                @if(count($adminJogos) > 0)
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     @foreach($adminJogos as $jogo)
                                         @php
@@ -220,6 +278,11 @@
                                         </div>
                                     @endforeach
                                 </div>
+                                @else
+                                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md">
+                                        <p class="text-blue-700 dark:text-blue-300">Nenhum jogo encontrado com os filtros selecionados.</p>
+                                    </div>
+                                @endif
                             </div>
                         @endif
 

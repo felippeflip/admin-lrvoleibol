@@ -25,7 +25,7 @@
 
                     <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
                         <form method="GET" action="{{ route('agendamentos.comissao.index') }}">
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-{{ auth()->user()->hasRole('Administrador') ? '6' : '4' }} gap-4">
                                 <!-- Categoria -->
                                 <div>
                                     <label for="categoria_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
@@ -38,6 +38,34 @@
                                         @endforeach
                                     </select>
                                 </div>
+
+                                @if(auth()->user()->hasRole('Administrador'))
+                                <!-- Time -->
+                                <div>
+                                    <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                                    <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <option value="">Todos</option>
+                                        @foreach($times as $time)
+                                            <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>
+                                                {{ $time->tim_nome }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Equipe -->
+                                <div>
+                                    <label for="equipe_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Equipe</label>
+                                    <select name="equipe_id" id="equipe_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:text-gray-100">
+                                        <option value="">Todas</option>
+                                        @foreach($equipes as $eqp)
+                                            <option value="{{ $eqp->eqp_id }}" {{ request('equipe_id') == $eqp->eqp_id ? 'selected' : '' }}>
+                                                {{ $eqp->eqp_nome_detalhado ?? $eqp->time->tim_nome }} - {{ $eqp->categoria->cto_nome ?? '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
 
                                 <!-- Fase -->
                                 <div>

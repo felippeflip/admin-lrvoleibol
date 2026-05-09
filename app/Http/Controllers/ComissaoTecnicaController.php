@@ -66,8 +66,9 @@ class ComissaoTecnicaController extends Controller
         if ($request->filled('funcao')) {
             $query->where('funcao', $request->funcao);
         }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $status = $request->input('status', '1');
+        if ($status !== 'todos') {
+            $query->where('status', $status);
         }
 
         $comissao = $query->paginate(10)->appends($request->all());
@@ -293,6 +294,15 @@ class ComissaoTecnicaController extends Controller
     {
         $comissaoTecnica = ComissaoTecnica::findOrFail($id);
         return view('comissao_tecnica.show', compact('comissaoTecnica'));
+    }
+
+    /**
+     * Print the specified resource.
+     */
+    public function print($id)
+    {
+        $comissaoTecnica = ComissaoTecnica::findOrFail($id);
+        return view('comissao_tecnica.print', compact('comissaoTecnica'));
     }
 
     /**

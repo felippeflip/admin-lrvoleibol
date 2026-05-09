@@ -52,9 +52,9 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 ml-1">STATUS</label>
                         <select name="status" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-xs rounded-xl p-3 dark:text-white outline-none focus:ring-2 focus:ring-orange-500">
-                            <option value="">Todos</option>
-                            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Ativos</option>
-                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inativos</option>
+                            <option value="todos" {{ request('status', '1') === 'todos' ? 'selected' : '' }}>Todos</option>
+                            <option value="1" {{ request('status', '1') === '1' ? 'selected' : '' }}>Ativos</option>
+                            <option value="0" {{ request('status', '1') === '0' ? 'selected' : '' }}>Inativos</option>
                         </select>
                     </div>
                 </div>

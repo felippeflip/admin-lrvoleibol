@@ -217,17 +217,54 @@ class JogosController extends Controller
             }
             $data['adminStats'] = $adminStats;
 
-            // Dashboard Cards: Games from -7 to +30 days (Expanded to show more games)
-            $startDate = now()->subDays(7)->startOfDay();
-            $endDate = now()->addDays(30)->endOfDay();
+            // Filters for Admin
+            $periodo = $request->input('periodo', '7'); // 7, 14, 30
+            $tipo_periodo = $request->input('tipo_periodo', 'futuros'); // anteriores, futuros, ambos
+            $categoria_id = $request->input('categoria_id');
+            $time_id = $request->input('time_id');
 
-            $adminJogos = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user'])
-                ->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
-                ->orderBy('jgo_dt_jogo')
-                ->orderBy('jgo_hora_jogo')
+            $query = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user']);
+
+            $days = (int) $periodo;
+            if (!in_array($days, [7, 14, 30])) {
+                $days = 7;
+            }
+
+            if ($tipo_periodo == 'anteriores') {
+                $startDate = now()->subDays($days)->startOfDay();
+                $endDate = now()->endOfDay();
+                $query->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
+            } elseif ($tipo_periodo == 'ambos') {
+                $startDate = now()->subDays($days)->startOfDay();
+                $endDate = now()->addDays($days)->endOfDay();
+                $query->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
+            } else { // futuros
+                $startDate = now()->startOfDay();
+                $endDate = now()->addDays($days)->endOfDay();
+                $query->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
+            }
+
+            if ($categoria_id) {
+                $query->where(function($q) use ($categoria_id) {
+                    $q->whereHas('mandante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $categoria_id))
+                      ->orWhereHas('visitante.equipe', fn($eq) => $eq->where('eqp_categoria_id', $categoria_id));
+                });
+            }
+
+            if ($time_id) {
+                $query->where(function($q) use ($time_id) {
+                    $q->whereHas('mandante.equipe', fn($eq) => $eq->where('eqp_time_id', $time_id))
+                      ->orWhereHas('visitante.equipe', fn($eq) => $eq->where('eqp_time_id', $time_id));
+                });
+            }
+
+            $adminJogos = $query->orderBy('jgo_dt_jogo', 'asc')
+                ->orderBy('jgo_hora_jogo', 'asc')
                 ->get();
 
             $data['adminJogos'] = $adminJogos;
+            $data['adminCategorias'] = Categoria::orderBy('cto_nome')->get();
+            $data['adminTimes'] = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
         }
 
         // --- 2. JUIZ ---

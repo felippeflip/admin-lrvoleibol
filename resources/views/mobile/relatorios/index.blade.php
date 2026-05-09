@@ -27,6 +27,7 @@
         </a>
 
         {{-- Relatório: Tabelas Geradas --}}
+        @hasrole('Administrador')
         <a href="{{ route('relatorios.tabelas-geradas') }}" class="group block bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 active:scale-95 transition-all">
             <div class="flex items-center gap-5">
                 <div class="w-16 h-16 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center justify-center text-green-600 group-hover:rotate-6 transition-transform">
@@ -41,6 +42,23 @@
                 </div>
             </div>
         </a>
+
+        {{-- Relatório: Jogos por Árbitro --}}
+        <a href="{{ route('relatorios.jogos-por-arbitro') }}" class="group block bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 active:scale-95 transition-all">
+            <div class="flex items-center gap-5">
+                <div class="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:rotate-6 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-lg font-black text-gray-900 dark:text-white leading-tight mb-1">Jogos por Árbitro</h3>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Atuação Anual</p>
+                </div>
+                <div class="text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+            </div>
+        </a>
+        @endhasrole
 
         {{-- Em Breve --}}
         <div class="bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] p-6 border border-dashed border-gray-200 dark:border-gray-700 opacity-60">

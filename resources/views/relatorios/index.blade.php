@@ -46,6 +46,17 @@
                             </div>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Visualização e acompanhamento dos arquivos HTML estáticos gerados contendo a tabela de classificação.</p>
                         </a>
+
+                        <!-- Relatório Jogos por Árbitro -->
+                        <a href="{{ route('relatorios.jogos-por-arbitro') }}" class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 transition">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h5 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Jogos por Árbitro</h5>
+                            </div>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Relação e contagem de jogos realizados por árbitros e apontadores em um determinado ano.</p>
+                        </a>
                         @endhasrole
 
                         <!-- Espaço para futuros relatórios -->

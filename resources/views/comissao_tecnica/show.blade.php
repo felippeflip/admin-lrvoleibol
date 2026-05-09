@@ -71,6 +71,10 @@
                                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Registro (CREF, CRM, etc)</p>
                                         <p class="mt-1">{{ $comissaoTecnica->documento_registro ?? '-' }}</p>
                                     </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Data de Nascimento</p>
+                                        <p class="mt-1">{{ $comissaoTecnica->data_nascimento ? \Carbon\Carbon::parse($comissaoTecnica->data_nascimento)->format('d/m/Y') : '-' }}</p>
+                                    </div>
                                     @if($comissaoTecnica->comprovante_documento)
                                         <div>
                                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Comprovante</p>
@@ -150,10 +154,7 @@
                                     class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md transition duration-150 ease-in-out">
                                     Voltar
                                 </a>
-                                {{-- Botão Imprimir (não funcional como view de impressao, mas talvez util para
-                                impressao do navegador) --}}
-                                {{--
-                                <button onclick="window.print()"
+                                <a href="{{ route('comissao-tecnica.print', $comissaoTecnica->id) }}" target="_blank"
                                     class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition duration-150 ease-in-out flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
@@ -162,8 +163,7 @@
                                         </path>
                                     </svg>
                                     Imprimir
-                                </button>
-                                --}}
+                                </a>
                                 <a href="{{ route('comissao-tecnica.edit', $comissaoTecnica->id) }}"
                                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition duration-150 ease-in-out flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"

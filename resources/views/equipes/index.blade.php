@@ -159,20 +159,6 @@
                                         </td>
                                         <td class="px-6 py-4">{{ $equipe->eqp_nome_treinador ?? 'N/A' }}</td>
                                         <td class="px-6 py-4 flex space-x-2 justify-center">
-                                            <!-- Botão Ver Campeonatos -->
-                                            <button type="button"
-                                                onclick="openCampeonatosModal('{{ $equipe->eqp_nome_detalhado }}', {{ json_encode($equipe->campeonatos) }}, {{ $equipe->eqp_id }})"
-                                                class="w-4 mr-2 transform hover:text-yellow-500 hover:scale-110"
-                                                title="Ver Campeonatos">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9.172 16.172a4 4 0 015.656 0M9 10a9 9 0 0118 0v1a1 1 0 01-1 1H2a1 1 0 01-1-1v-1a9 9 0 0118 0z" />
-                                                    <!-- Ícone genérico, substituindo por trofeu abaixo -->
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                                </svg>
-                                            </button>
 
                                             @role('Administrador')
                                             <!-- Botão Remover do Campeonato -->
@@ -195,20 +181,29 @@
                                                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                 </svg>
                                             </a>
-                                            <form action="{{ route('equipes.destroy', $equipe->eqp_id) }}" method="POST"
-                                                class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
-                                                onsubmit="return confirm('Tem certeza que deseja remover esta equipe?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" title="Excluir Equipe">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+
+                                            @if($equipe->campeonatos->count() > 0)
+                                                <button type="button" class="w-5 h-5 mr-2 transform text-gray-400 cursor-not-allowed" title="Não é possível excluir: Equipe inscrita em campeonato(s)" onclick="alert('Esta equipe está inscrita em um ou mais campeonatos.\n\nÉ necessário remover a equipe dos campeonatos antes de poder excluí-la.')">
+                                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
-                                            </form>
+                                            @else
+                                                <form action="{{ route('equipes.destroy', $equipe->eqp_id) }}" method="POST"
+                                                    class="w-5 h-5 mr-2 transform hover:text-purple-500 hover:scale-110"
+                                                    onsubmit="return confirm('Tem certeza que deseja remover esta equipe?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" title="Excluir Equipe" class="w-full h-full flex items-center justify-center focus:outline-none">
+                                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

@@ -252,6 +252,93 @@ class RelatorioController extends Controller
     }
 
     /**
+     * Relatório de Jogos por Árbitro
+     */
+    public function jogosPorArbitro(Request $request)
+    {
+        if (!auth()->user()->hasRole('Administrador')) {
+            return redirect()->route('dashboard')->withErrors(['error' => 'Acesso negado.']);
+        }
+
+        $arbitros = \App\Models\User::role('Juiz')->orderBy('name')->get();
+
+        $jogos = collect([]);
+        $arbitroSelecionado = null;
+        $totalJogos = 0;
+        
+        $ano = $request->input('ano', date('Y'));
+
+        if ($request->filled('arbitro_id')) {
+            $arbitroSelecionado = \App\Models\User::find($request->arbitro_id);
+
+            $query = \App\Models\Jogo::with([
+                    'mandante.equipe.categoria', 
+                    'mandante.equipe.time', 
+                    'visitante.equipe.time', 
+                    'mandante.campeonato',
+                    'ginasio',
+                    'arbitroPrincipal',
+                    'arbitroSecundario',
+                    'apontador'
+                ])
+                ->where(function($q) use ($request) {
+                    $q->where('jgo_arbitro_principal', $request->arbitro_id)
+                      ->orWhere('jgo_arbitro_secundario', $request->arbitro_id)
+                      ->orWhere('jgo_apontador', $request->arbitro_id);
+                })
+                ->whereYear('jgo_dt_jogo', $ano)
+                ->orderBy('jgo_dt_jogo', 'desc')
+                ->orderBy('jgo_hora_jogo', 'desc');
+
+            $jogos = $query->get();
+            $totalJogos = $jogos->count();
+        }
+
+        if ($this->isMobileView()) {
+            return view('mobile.relatorios.jogos_por_arbitro', compact('arbitros', 'jogos', 'arbitroSelecionado', 'totalJogos', 'ano'));
+        }
+
+        return view('relatorios.jogos_por_arbitro', compact('arbitros', 'jogos', 'arbitroSelecionado', 'totalJogos', 'ano'));
+    }
+
+    /**
+     * Print view for Jogos por Árbitro
+     */
+    public function jogosPorArbitroPrint(Request $request)
+    {
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403);
+        }
+
+        $ano = $request->input('ano', date('Y'));
+        
+        if (!$request->filled('arbitro_id')) {
+            return redirect()->back();
+        }
+
+        $arbitroSelecionado = \App\Models\User::findOrFail($request->arbitro_id);
+
+        $jogos = \App\Models\Jogo::with([
+                'mandante.equipe.categoria', 
+                'mandante.equipe.time', 
+                'visitante.equipe.time', 
+                'mandante.campeonato',
+                'ginasio'
+            ])
+            ->where(function($q) use ($request) {
+                $q->where('jgo_arbitro_principal', $request->arbitro_id)
+                  ->orWhere('jgo_arbitro_secundario', $request->arbitro_id)
+                  ->orWhere('jgo_apontador', $request->arbitro_id);
+            })
+            ->whereYear('jgo_dt_jogo', $ano)
+            ->orderBy('jgo_dt_jogo', 'asc')
+            ->orderBy('jgo_hora_jogo', 'asc')
+            ->get();
+
+        return view('relatorios.print_jogos_por_arbitro', compact('jogos', 'arbitroSelecionado', 'ano'));
+    }
+
+    /**
      * Helper para formatar o tamanho dos arquivos
      */
     private static function formatSizeUnits($bytes)

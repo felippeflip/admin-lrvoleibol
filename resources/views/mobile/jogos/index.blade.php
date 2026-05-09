@@ -64,6 +64,16 @@
                         @endforeach
                     </select>
                 </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Categoria</label>
+                    <select name="categoria_id" class="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Qualquer Categoria</option>
+                        @foreach($categorias as $cat)
+                            <option value="{{ $cat->cto_id }}" {{ request('categoria_id') == $cat->cto_id ? 'selected' : '' }}>{{ $cat->cto_nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 
                 <div class="grid grid-cols-2 gap-3">
                     <div>

@@ -82,6 +82,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('equipes/time/{time}', [EquipesController::class, 'indexForTime'])->name('equipes.index.for.time');
         Route::resource('equipes', EquipesController::class);
+        Route::get('comissao-tecnica/{id}/print', [ComissaoTecnicaController::class, 'print'])->name('comissao-tecnica.print');
         Route::patch('comissao-tecnica/{id}/mark-printed', [ComissaoTecnicaController::class, 'markPrinted'])->name('comissao-tecnica.markPrinted');
         Route::patch('comissao-tecnica/{id}/toggle-status', [ComissaoTecnicaController::class, 'toggleStatus'])->name('comissao-tecnica.toggleStatus');
         Route::get('comissao-tecnica/{id}/transferir', [ComissaoTecnicaController::class, 'confirmarTransferencia'])->name('comissao-tecnica.transferir.confirmar');
@@ -109,10 +110,16 @@ Route::middleware('auth')->group(function () {
 
         // Relatórios (Shared)
         Route::get('/relatorios', [App\Http\Controllers\RelatorioController::class, 'index'])->name('relatorios.index');
-        Route::get('/relatorios/atletas-por-time', [App\Http\Controllers\RelatorioController::class, 'atletasPorTime'])->name('relatorios.atletas-por-time');
-        Route::get('/relatorios/atletas-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportAtletasPorTime'])->name('relatorios.atletas-por-time.export');
-        Route::get('/relatorios/comissao-por-time', [App\Http\Controllers\RelatorioController::class, 'comissaoPorTime'])->name('relatorios.comissao-por-time');
-        Route::get('/relatorios/comissao-por-time/export', [App\Http\Controllers\RelatorioController::class, 'exportComissaoPorTime'])->name('relatorios.comissao-por-time.export');
+        Route::get('relatorios/atletas-por-time', [\App\Http\Controllers\RelatorioController::class, 'atletasPorTime'])->name('relatorios.atletas-por-time');
+        Route::get('relatorios/atletas-por-time/export', [\App\Http\Controllers\RelatorioController::class, 'exportAtletasPorTime'])->name('relatorios.atletas-por-time.export');
+        
+        Route::get('relatorios/comissao-por-time', [\App\Http\Controllers\RelatorioController::class, 'comissaoPorTime'])->name('relatorios.comissao-por-time');
+        Route::get('relatorios/comissao-por-time/export', [\App\Http\Controllers\RelatorioController::class, 'exportComissaoPorTime'])->name('relatorios.comissao-por-time.export');
+        
+        Route::get('relatorios/jogos-por-arbitro', [\App\Http\Controllers\RelatorioController::class, 'jogosPorArbitro'])->name('relatorios.jogos-por-arbitro');
+        Route::get('relatorios/jogos-por-arbitro/print', [\App\Http\Controllers\RelatorioController::class, 'jogosPorArbitroPrint'])->name('relatorios.jogos-por-arbitro.print');
+
+        Route::get('relatorios/tabelas-geradas', [\App\Http\Controllers\RelatorioController::class, 'tabelasGeradas'])->name('relatorios.tabelas-geradas');
 
     });
 

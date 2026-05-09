@@ -1,0 +1,1 @@
+<?php foreach(App\Models\Equipe::where("eqp_nome_detalhado", "like", "%teste%")->get() as $e) { echo "Equipe: {$e->eqp_nome_detalhado} (ID: {$e->eqp_id}) - Campeonatos: " . $e->campeonatos()->count() . "\n"; }

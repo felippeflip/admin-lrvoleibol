@@ -44,6 +44,11 @@ class ElencoController extends Controller
                     $qEqp->where('eqp_id', $request->equipe_id);
                 });
             })
+            ->when($request->filled('time_id'), function ($q) use ($request) {
+                $q->whereHas('equipe', function ($qEqp) use ($request) {
+                    $qEqp->where('eqp_time_id', $request->time_id);
+                });
+            })
             ->when($request->filled('categoria_id'), function ($q) use ($request) {
                 $q->whereHas('equipe', function ($qEqp) use ($request) {
                     $qEqp->where('eqp_categoria_id', $request->categoria_id);
@@ -58,12 +63,16 @@ class ElencoController extends Controller
         // Carregar listas para os dropdowns
         $campeonatos = Campeonato::where('cpo_ativo', true)->orderBy('cpo_nome')->get();
         $categorias = Categoria::orderBy('cto_nome')->get();
+        $times = [];
+        if ($user->hasRole('Administrador')) {
+            $times = \App\Models\Time::where('tim_status', true)->orderBy('tim_nome')->get();
+        }
 
         // Equipes: se for admin carrega todas, se não, carrega só as do usuário
         if ($user->hasRole('Administrador')) {
-            $equipes = Equipe::orderBy('eqp_nome_detalhado')->get();
+            $equipes = Equipe::with('categoria')->orderBy('eqp_nome_detalhado')->get();
         } else {
-            $equipes = Equipe::whereHas('time', function ($q) use ($user) {
+            $equipes = Equipe::with('categoria')->whereHas('time', function ($q) use ($user) {
                 if ($user->hasRole('ResponsavelTime')) {
                     $q->where('tim_user_id', $user->id);
                 } elseif ($user->hasRole('ComissaoTecnica')) {
@@ -74,10 +83,10 @@ class ElencoController extends Controller
 
         // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
         if ($this->isMobileView()) {
-            return view('mobile.elencos.index', compact('participacoes', 'campeonatos', 'categorias', 'equipes'));
+            return view('mobile.elencos.index', compact('participacoes', 'campeonatos', 'categorias', 'equipes', 'times'));
         }
 
-        return view('campeonatos.elenco.list', compact('participacoes', 'campeonatos', 'categorias', 'equipes'));
+        return view('campeonatos.elenco.list', compact('participacoes', 'campeonatos', 'categorias', 'equipes', 'times'));
     }
 
     public function index($campeonatoId, $equipeCampeonatoId)

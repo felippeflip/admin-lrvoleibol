@@ -566,6 +566,32 @@ class AgendamentoController extends Controller
             $query->where('jgo_status_agendamento', $request->status);
         }
 
+        // Filtro: Time (Admin)
+        if ($isAdmin && $request->filled('time_id')) {
+            $tId = $request->time_id;
+            $query->where(function ($q) use ($tId) {
+                $q->whereHas('mandante.equipe', function ($q2) use ($tId) {
+                    $q2->where('eqp_time_id', $tId);
+                })
+                ->orWhereHas('visitante.equipe', function ($q2) use ($tId) {
+                    $q2->where('eqp_time_id', $tId);
+                });
+            });
+        }
+
+        // Filtro: Equipe (Admin)
+        if ($isAdmin && $request->filled('equipe_id')) {
+            $eId = $request->equipe_id;
+            $query->where(function ($q) use ($eId) {
+                $q->whereHas('mandante.equipe', function ($q2) use ($eId) {
+                    $q2->where('eqp_id', $eId);
+                })
+                ->orWhereHas('visitante.equipe', function ($q2) use ($eId) {
+                    $q2->where('eqp_id', $eId);
+                });
+            });
+        }
+
         $jogos = $query->orderByRaw('jgo_dt_jogo IS NULL ASC')
             ->orderBy('jgo_dt_jogo', 'asc')
             ->orderBy('jgo_hora_jogo', 'asc')
@@ -576,12 +602,19 @@ class AgendamentoController extends Controller
 
         $categorias = \App\Models\Categoria::orderBy('cto_nome')->get();
 
-        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
-        if ($this->isMobileView()) {
-            return view('mobile.agendamentos.index_comissao', compact('jogos', 'ginasios', 'time_id', 'categorias'));
+        $times = [];
+        $equipes = [];
+        if ($isAdmin) {
+            $times = \App\Models\Time::where('tim_status', true)->orderBy('tim_nome')->get();
+            $equipes = \App\Models\Equipe::with(['categoria', 'time'])->orderBy('eqp_nome_detalhado')->get();
         }
 
-        return view('agendamentos.comissao.index', compact('jogos', 'ginasios', 'time_id', 'categorias'));
+        // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
+        if ($this->isMobileView()) {
+            return view('mobile.agendamentos.index_comissao', compact('jogos', 'ginasios', 'time_id', 'categorias', 'times', 'equipes'));
+        }
+
+        return view('agendamentos.comissao.index', compact('jogos', 'ginasios', 'time_id', 'categorias', 'times', 'equipes'));
     }
 
     // Comissão Técnica envia a data/hora para o adversário e Admin

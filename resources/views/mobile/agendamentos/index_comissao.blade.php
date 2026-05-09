@@ -52,6 +52,29 @@
                         <option value="pendente_aprovacao" {{ request('status') == 'pendente_aprovacao' ? 'selected' : '' }}>Bloqueado (Aguardando Admin)</option>
                     </select>
                 </div>
+
+                @if(auth()->user()->hasRole('Administrador'))
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">TIME</label>
+                    <select name="time_id" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-xs rounded-xl p-3 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 appearance-none">
+                        <option value="">Todos</option>
+                        @foreach($times as $time)
+                            <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">EQUIPE</label>
+                    <select name="equipe_id" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-xs rounded-xl p-3 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 appearance-none">
+                        <option value="">Todas</option>
+                        @foreach($equipes as $eqp)
+                             <option value="{{ $eqp->eqp_id }}" {{ request('equipe_id') == $eqp->eqp_id ? 'selected' : '' }}>
+                                {{ $eqp->eqp_nome_detalhado ?? $eqp->time->tim_nome }} - {{ $eqp->categoria->cto_nome ?? '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="flex-1 bg-gray-900 dark:bg-gray-700 text-white font-black text-xs py-3.5 rounded-xl uppercase tracking-wider transition active:scale-95 shadow-lg">Aplicar</button>
                     <a href="{{ route('agendamentos.comissao.index') }}" class="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-bold text-xs py-3.5 rounded-xl text-center uppercase tracking-wider transition active:scale-95">Limpar</a>
