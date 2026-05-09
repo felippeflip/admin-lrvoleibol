@@ -88,6 +88,11 @@
                                     <div class="w-1 h-1 rounded-full bg-gray-200"></div>
                                     <span class="text-[9px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest">{{ $membro->funcao ?? 'Membro' }}</span>
                                 </div>
+                                <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                                    @if($membro->data_nascimento)<span class="text-[9px] font-semibold text-gray-500">DN: {{ date('d/m/Y', strtotime($membro->data_nascimento)) }}</span>@endif
+                                    @if($membro->cpf)<span class="text-[9px] font-semibold text-gray-500">CPF: {{ $membro->cpf }}</span>@endif
+                                    @if($membro->documento_registro)<span class="text-[9px] font-semibold text-gray-500">CREF: {{ $membro->documento_registro }}</span>@endif
+                                </div>
                             </div>
                             <div class="flex-shrink-0">
                                 @if($membro->cartaoImpresso())

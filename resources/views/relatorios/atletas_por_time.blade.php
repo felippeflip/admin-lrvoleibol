@@ -26,12 +26,13 @@
     <div class="py-6">
         <div class="w-full mx-auto sm:px-6 lg:px-8">
             <!-- Filtros (Não aparece na impressão) -->
-            @hasrole('Administrador')
+            <!-- Filtros (Não aparece na impressão) -->
             <div class="mb-4 bg-white dark:bg-gray-800 shadow sm:rounded-lg p-4 no-print">
                 <form action="{{ route('relatorios.atletas-por-time') }}" method="GET" class="flex flex-wrap items-end gap-4">
+                    @hasrole('Administrador')
                     <div class="flex-1 min-w-[200px]">
                         <label for="time_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Filtrar por Time</label>
-                        <select name="time_id" id="time_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <select name="time_id" id="time_id" onchange="this.form.submit()" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="">Todos os Times</option>
                             @foreach($timesList as $time)
                                 <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>
@@ -40,17 +41,30 @@
                             @endforeach
                         </select>
                     </div>
+                    @endhasrole
+                    
+                    <div class="flex-1 min-w-[200px]">
+                        <label for="equipe_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Filtrar por Equipe/Categoria</label>
+                        <select name="equipe_id" id="equipe_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="">Todas as Equipes</option>
+                            @foreach($equipesList as $equipe)
+                                <option value="{{ $equipe->eqp_id }}" {{ request('equipe_id') == $equipe->eqp_id ? 'selected' : '' }}>
+                                    {{ $equipe->time->tim_nome ?? '' }} - {{ $equipe->categoria->cto_nome ?? '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 transition">
                         Filtrar
                     </button>
-                    @if(request()->filled('time_id'))
+                    @if(request()->filled('time_id') || request()->filled('equipe_id'))
                         <a href="{{ route('relatorios.atletas-por-time') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 dark:bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-gray-800 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-400 dark:hover:bg-gray-500 transition">
                             Limpar
                         </a>
                     @endif
                 </form>
             </div>
-            @endhasrole
 
             <!-- Cabeçalho de Impressão (Apenas Impressão) -->
             <div class="print-only mb-8">

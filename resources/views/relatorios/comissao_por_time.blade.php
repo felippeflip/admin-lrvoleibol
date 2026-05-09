@@ -115,8 +115,9 @@
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Registro LRV</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Função</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data Nasc.</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Documentos (CPF/CREF/RG)</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status Cartão</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider print-only">Documentação</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider print-only w-1/4">Assinatura de Recebimento</th>
                                 </tr>
                             </thead>
@@ -138,6 +139,14 @@
                                         <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                                             {{ $membro->funcao ?? 'S/F' }}
                                         </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $membro->data_nascimento ? date('d/m/Y', strtotime($membro->data_nascimento)) : 'N/A' }}
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-[10px] text-gray-600 dark:text-gray-400">
+                                            @if($membro->cpf)<span class="block">CPF: {{ $membro->cpf }}</span>@endif
+                                            @if($membro->documento_registro)<span class="block">CREF: {{ $membro->documento_registro }}</span>@endif
+                                            @if($membro->rg)<span class="block">RG: {{ $membro->rg }}</span>@endif
+                                        </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-xs">
                                             @if($membro->cartaoImpresso())
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200">
@@ -148,10 +157,6 @@
                                                     Pendente
                                                 </span>
                                             @endif
-                                        </td>
-                                        <td class="px-3 py-2 whitespace-nowrap text-[10px] text-gray-600 dark:text-gray-400 print-only">
-                                            <span class="block">RG: {{ $membro->rg }}</span>
-                                            <span class="block">CPF: {{ $membro->cpf ?? 'N/A' }}</span>
                                         </td>
                                         <td class="px-3 py-2 print-only min-w-[200px]">
                                             <div class="border-b border-gray-400 h-8"></div>

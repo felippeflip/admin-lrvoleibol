@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Atleta;
 use App\Models\ComissaoTecnica;
 use App\Models\Time;
+use App\Models\Equipe;
 use Illuminate\Http\Request;
 use League\Csv\Writer;
 use SplTempFileObject;
@@ -40,17 +41,31 @@ class RelatorioController extends Controller
                 // Se o usuário não tem time vinculado e não é admin, retorna lista vazia
                 $atletas = collect([]);
                 $timesList = collect([]);
-                return view($this->isMobileView() ? 'mobile.relatorios.atletas_por_time' : 'relatorios.atletas_por_time', compact('atletas', 'timesList'));
+                $equipesList = collect([]);
+                return view($this->isMobileView() ? 'mobile.relatorios.atletas_por_time' : 'relatorios.atletas_por_time', compact('atletas', 'timesList', 'equipesList'));
             }
             
             $query->where('atl_tim_id', $userTimeId);
             $timesList = Time::where('tim_id', $userTimeId)->get();
+            $equipesList = Equipe::with(['time', 'categoria'])->where('eqp_time_id', $userTimeId)->get();
         } else {
             // Administrador pode filtrar por qualquer time
             if ($request->filled('time_id')) {
                 $query->where('atl_tim_id', $request->time_id);
+                $equipesList = Equipe::with(['time', 'categoria'])->where('eqp_time_id', $request->time_id)->get();
+            } else {
+                $equipesList = Equipe::with(['time', 'categoria'])->get();
             }
             $timesList = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
+        }
+
+        // Filtro por Equipe (Time + Categoria)
+        if ($request->filled('equipe_id')) {
+            $equipe = Equipe::find($request->equipe_id);
+            if ($equipe) {
+                $query->where('atl_tim_id', $equipe->eqp_time_id)
+                      ->where('atl_categoria', $equipe->eqp_categoria_id);
+            }
         }
 
         $atletas = $query->orderBy('atl_tim_id')
@@ -60,10 +75,10 @@ class RelatorioController extends Controller
 
         // ── DETECÇÃO MOBILE ─────────────────────────────────────────────────
         if ($this->isMobileView()) {
-            return view('mobile.relatorios.atletas_por_time', compact('atletas', 'timesList'));
+            return view('mobile.relatorios.atletas_por_time', compact('atletas', 'timesList', 'equipesList'));
         }
 
-        return view('relatorios.atletas_por_time', compact('atletas', 'timesList'));
+        return view('relatorios.atletas_por_time', compact('atletas', 'timesList', 'equipesList'));
     }
 
     /**
@@ -84,6 +99,15 @@ class RelatorioController extends Controller
         } else {
             if ($request->filled('time_id')) {
                 $query->where('atl_tim_id', $request->time_id);
+            }
+        }
+
+        // Filtro por Equipe (Time + Categoria)
+        if ($request->filled('equipe_id')) {
+            $equipe = Equipe::find($request->equipe_id);
+            if ($equipe) {
+                $query->where('atl_tim_id', $equipe->eqp_time_id)
+                      ->where('atl_categoria', $equipe->eqp_categoria_id);
             }
         }
 

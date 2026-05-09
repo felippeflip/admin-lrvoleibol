@@ -151,16 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cidade) cidade.value = "";
         if (uf) uf.value = "";
         if (numero) numero.value = "";
-
-        if (endereco) endereco.readOnly = false;
-        if (bairro) bairro.readOnly = false;
-        if (cidade) cidade.readOnly = false;
-        if (uf) uf.readOnly = false;
-
-        if (endereco) endereco.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-        if (bairro) bairro.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-        if (cidade) cidade.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-        if (uf) uf.classList.remove('bg-gray-200', 'dark:bg-gray-600');
     }
 
     function preencheFormularioEndereco(data, endereco, bairro, cidade, uf, numero) {
@@ -168,16 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (bairro) bairro.value = data.bairro || "";
         if (cidade) cidade.value = data.localidade || "";
         if (uf) uf.value = data.uf || "";
-
-        if (endereco) endereco.readOnly = true;
-        if (bairro) bairro.readOnly = true;
-        if (cidade) cidade.readOnly = true;
-        if (uf) uf.readOnly = true;
-
-        if (endereco) endereco.classList.add('bg-gray-200', 'dark:bg-gray-600');
-        if (bairro) bairro.classList.add('bg-gray-200', 'dark:bg-gray-600');
-        if (cidade) cidade.classList.add('bg-gray-200', 'dark:bg-gray-600');
-        if (uf) uf.classList.add('bg-gray-200', 'dark:bg-gray-600');
 
         if (numero) numero.focus();
     }
@@ -188,17 +168,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Aplicar máscara ao carregar (útil para edição)
             if (cepInputEl.value) {
                 cepInputEl.value = maskCEP(cepInputEl.value);
-                // Se o CEP já veio preenchido, aplica o estilo de "readOnly"
-                if (enderecoInputEl && enderecoInputEl.value) {
-                    enderecoInputEl.readOnly = true;
-                    bairroInputEl.readOnly = true;
-                    cidadeInputEl.readOnly = true;
-                    ufInputEl.readOnly = true;
-                    enderecoInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
-                    bairroInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
-                    cidadeInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
-                    ufInputEl.classList.add('bg-gray-200', 'dark:bg-gray-600');
-                }
             }
 
             cepInputEl.addEventListener('input', (e) => {

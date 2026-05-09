@@ -11,19 +11,34 @@
     </div>
 
     {{-- Filtro Rápido --}}
-    @hasrole('Administrador')
     <div class="bg-white dark:bg-gray-800 rounded-[2rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 mb-8">
         <form method="GET" action="{{ route('relatorios.atletas-por-time') }}">
-             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-4">Filtrar por Equipe</p>
-             <select name="time_id" onchange="this.form.submit()" class="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-2xl py-4 px-4 text-sm font-black text-gray-700 dark:text-gray-300 focus:ring-4 focus:ring-indigo-500/10 transition-all">
-                <option value="">Todas as Equipes</option>
-                @foreach($timesList as $time)
-                    <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
-                @endforeach
-             </select>
+             
+             @hasrole('Administrador')
+             <div class="mb-4">
+                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-4">Filtrar por Time</p>
+                 <select name="time_id" onchange="this.form.submit()" class="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-2xl py-4 px-4 text-sm font-black text-gray-700 dark:text-gray-300 focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                    <option value="">Todos os Times</option>
+                    @foreach($timesList as $time)
+                        <option value="{{ $time->tim_id }}" {{ request('time_id') == $time->tim_id ? 'selected' : '' }}>{{ $time->tim_nome }}</option>
+                    @endforeach
+                 </select>
+             </div>
+             @endhasrole
+
+             <div>
+                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-4">Filtrar por Equipe/Categoria</p>
+                 <select name="equipe_id" onchange="this.form.submit()" class="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-2xl py-4 px-4 text-sm font-black text-gray-700 dark:text-gray-300 focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                    <option value="">Todas as Equipes</option>
+                    @foreach($equipesList as $equipe)
+                        <option value="{{ $equipe->eqp_id }}" {{ request('equipe_id') == $equipe->eqp_id ? 'selected' : '' }}>
+                            {{ $equipe->time->tim_nome ?? '' }} - {{ $equipe->categoria->cto_nome ?? '' }}
+                        </option>
+                    @endforeach
+                 </select>
+             </div>
         </form>
     </div>
-    @endhasrole
 
     {{-- Listagem Agrupada --}}
     <div class="space-y-10">
@@ -112,7 +127,7 @@
 
     {{-- Export Rápido --}}
     <div class="mt-12 px-1">
-        <a href="{{ route('relatorios.export-atletas-por-time', ['time_id' => request('time_id')]) }}" class="block w-full bg-gray-900 dark:bg-gray-800 text-white font-black py-6 rounded-[2rem] text-center shadow-xl active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-3">
+        <a href="{{ route('relatorios.atletas-por-time.export', ['time_id' => request('time_id'), 'equipe_id' => request('equipe_id')]) }}" class="block w-full bg-gray-900 dark:bg-gray-800 text-white font-black py-6 rounded-[2rem] text-center shadow-xl active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-3">
             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             Exportar Protocolo (CSV)
         </a>
