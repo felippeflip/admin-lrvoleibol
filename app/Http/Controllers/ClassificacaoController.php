@@ -93,7 +93,7 @@ class ClassificacaoController extends Controller
             ->get();
 
         // Também pega jogos de finais pra exibir no rodapé (eliminatórias)
-        $jogosFinais = Jogo::with(['mandante.equipe.time', 'visitante.equipe.time', 'resultadoSets'])
+        $jogosFinais = Jogo::with(['mandante.equipe.time', 'visitante.equipe.time', 'resultadoSets', 'ginasio'])
             ->whereHas('mandante', function ($q) use ($campeonato_id) {
                 $q->where('cpo_fk_id', $campeonato_id);
             })
@@ -269,12 +269,123 @@ class ClassificacaoController extends Controller
         // Sort keys (Group A, Group B...)
         ksort($grupos);
 
+        $seriesPlayoffs = $this->organizarPlayoffs($jogosFinais);
+
         return [
             'grupos' => $grupos,
             'finais' => $jogosFinais,
+            'series_playoffs' => $seriesPlayoffs,
+            'tem_playoffs' => !empty($seriesPlayoffs),
             'equipes' => $equipesCamp,
             'jogos_todos' => $todosJogosCategoria
         ];
+    }
+
+    private function organizarPlayoffs($jogosFinais)
+    {
+        $series = [
+            'ouro' => [
+                'slug' => 'serie-ouro',
+                'nome' => 'Série Ouro',
+                'cor' => 'yellow',
+                'semifinal' => [],
+                'final' => [],
+                'disputa_3' => [],
+                'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
+            ],
+            'prata' => [
+                'slug' => 'serie-prata',
+                'nome' => 'Série Prata',
+                'cor' => 'gray',
+                'semifinal' => [],
+                'final' => [],
+                'disputa_3' => [],
+                'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
+            ],
+            'bronze' => [
+                'slug' => 'serie-bronze',
+                'nome' => 'Série Bronze',
+                'cor' => 'amber',
+                'semifinal' => [],
+                'final' => [],
+                'disputa_3' => [],
+                'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
+            ],
+            'quartas' => [
+                'slug' => 'quartas-de-final',
+                'nome' => 'Quartas de Final',
+                'cor' => 'blue',
+                'jogos' => [],
+            ],
+        ];
+
+        foreach ($jogosFinais as $j) {
+            $tipo = $j->jgo_fase_tipo;
+            if (str_contains($tipo, 'ouro')) {
+                if (str_contains($tipo, 'semi')) $series['ouro']['semifinal'][] = $j;
+                elseif (str_contains($tipo, 'disputa')) $series['ouro']['disputa_3'][] = $j;
+                elseif (str_contains($tipo, 'final')) $series['ouro']['final'][] = $j;
+            } elseif (str_contains($tipo, 'prata')) {
+                if (str_contains($tipo, 'semi')) $series['prata']['semifinal'][] = $j;
+                elseif (str_contains($tipo, 'disputa')) $series['prata']['disputa_3'][] = $j;
+                elseif (str_contains($tipo, 'final')) $series['prata']['final'][] = $j;
+            } elseif (str_contains($tipo, 'bronze')) {
+                if (str_contains($tipo, 'semi')) $series['bronze']['semifinal'][] = $j;
+                elseif (str_contains($tipo, 'disputa')) $series['bronze']['disputa_3'][] = $j;
+                elseif (str_contains($tipo, 'final')) $series['bronze']['final'][] = $j;
+            } elseif ($tipo === 'quartas_de_final') {
+                $series['quartas']['jogos'][] = $j;
+            }
+        }
+
+        // Calcula pódio para cada série (ouro, prata, bronze)
+        foreach (['ouro', 'prata', 'bronze'] as $sKey) {
+            // Final
+            $finais = $series[$sKey]['final'];
+            if (!empty($finais)) {
+                $ultimoJogoFinal = end($finais);
+                if (in_array($ultimoJogoFinal->jgo_res_status, ['pendente', 'aprovado']) && $ultimoJogoFinal->jgo_vencedor_mandante !== null) {
+                    $campeao = $ultimoJogoFinal->jgo_vencedor_mandante === 1 
+                        ? ($ultimoJogoFinal->mandante->equipe->time->tim_nome ?? 'Mandante')
+                        : ($ultimoJogoFinal->visitante->equipe->time->tim_nome ?? 'Visitante');
+                    $vice = $ultimoJogoFinal->jgo_vencedor_mandante === 1
+                        ? ($ultimoJogoFinal->visitante->equipe->time->tim_nome ?? 'Visitante')
+                        : ($ultimoJogoFinal->mandante->equipe->time->tim_nome ?? 'Mandante');
+                    $series[$sKey]['podio']['primeiro'] = $campeao;
+                    $series[$sKey]['podio']['segundo'] = $vice;
+                }
+            }
+
+            // Disputa de 3º e 4º
+            $disp3 = $series[$sKey]['disputa_3'];
+            if (!empty($disp3)) {
+                $jogo3 = reset($disp3);
+                if (in_array($jogo3->jgo_res_status, ['pendente', 'aprovado']) && $jogo3->jgo_vencedor_mandante !== null) {
+                    $terceiro = $jogo3->jgo_vencedor_mandante === 1
+                        ? ($jogo3->mandante->equipe->time->tim_nome ?? 'Mandante')
+                        : ($jogo3->visitante->equipe->time->tim_nome ?? 'Visitante');
+                    $quarto = $jogo3->jgo_vencedor_mandante === 1
+                        ? ($jogo3->visitante->equipe->time->tim_nome ?? 'Visitante')
+                        : ($jogo3->mandante->equipe->time->tim_nome ?? 'Mandante');
+                    $series[$sKey]['podio']['terceiro'] = $terceiro;
+                    $series[$sKey]['podio']['quarto'] = $quarto;
+                }
+            }
+        }
+
+        // Remove séries vazias
+        $seriesAtivas = [];
+        foreach ($series as $k => $s) {
+            $temJogos = false;
+            if ($k === 'quartas' && !empty($s['jogos'])) $temJogos = true;
+            elseif ($k !== 'quartas' && (!empty($s['semifinal']) || !empty($s['final']) || !empty($s['disputa_3']))) $temJogos = true;
+
+            if ($temJogos) {
+                $seriesAtivas[$k] = $s;
+            }
+        }
+
+        return $seriesAtivas;
     }
 
     private function extrairGrupo($faseString)

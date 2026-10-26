@@ -28,6 +28,7 @@ class JogoService
                 'jgo_apontador' => $data['apontador_id'] ?? null,
                 'jgo_fase' => $data['fase'] ?? null,
                 'jgo_fase_tipo' => $data['fase_tipo'] ?? 'classificatoria',
+                'jgo_status_agendamento' => $data['status_agendamento'] ?? null,
             ]);
 
             Log::info("Jogo criado localmente com ID: {$jogo->jgo_id}");
@@ -48,18 +49,24 @@ class JogoService
         return DB::transaction(function () use ($id, $data) {
             $jogo = Jogo::findOrFail($id);
 
-            $jogo->update([
+            $updateData = [
                 'jgo_eqp_cpo_mandante_id' => $data['mandante_id'],
                 'jgo_eqp_cpo_visitante_id' => $data['visitante_id'],
-                'jgo_dt_jogo' => $data['data_jogo'],
-                'jgo_hora_jogo' => $data['hora_jogo'],
-                'jgo_local_jogo_id' => $data['ginasio_id'],
+                'jgo_dt_jogo' => $data['data_jogo'] ?? null,
+                'jgo_hora_jogo' => $data['hora_jogo'] ?? null,
+                'jgo_local_jogo_id' => $data['ginasio_id'] ?? null,
                 'jgo_arbitro_principal' => $data['juiz_principal_id'] ?? null,
                 'jgo_arbitro_secundario' => $data['juiz_secundario_id'] ?? null,
                 'jgo_apontador' => $data['apontador_id'] ?? null,
                 'jgo_fase' => $data['fase'] ?? null,
                 'jgo_fase_tipo' => $data['fase_tipo'] ?? 'classificatoria',
-            ]);
+            ];
+
+            if (isset($data['status_agendamento'])) {
+                $updateData['jgo_status_agendamento'] = $data['status_agendamento'];
+            }
+
+            $jogo->update($updateData);
 
             Log::info("Jogo atualizado localmente com ID: {$jogo->jgo_id}");
 

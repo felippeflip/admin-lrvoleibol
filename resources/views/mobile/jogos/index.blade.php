@@ -171,6 +171,8 @@
                     </h3>
                     @if($jogo->jgo_fase)
                         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-bold uppercase mb-3">{{ $jogo->jgo_fase }}</p>
+                    @elseif($jogo->jgo_fase_tipo && $jogo->jgo_fase_tipo !== 'classificatoria')
+                        <p class="text-[11px] text-purple-600 dark:text-purple-400 font-bold uppercase mb-3">({{ str_replace('_', ' ', $jogo->jgo_fase_tipo) }})</p>
                     @endif
 
                     {{-- Data e Local Box --}}
@@ -180,7 +182,7 @@
                             <div>
                                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium leading-none mb-0.5">Data</p>
                                 <p class="text-xs font-bold text-gray-900 dark:text-gray-200 leading-none">
-                                    {{ isset($jogo->meta['_event_start_date']) ? Carbon\Carbon::parse($jogo->meta['_event_start_date']->meta_value)->format('d/m/Y') : '--/--/----' }}
+                                    {{ !empty($jogo->meta['_event_start_date']->meta_value) ? Carbon\Carbon::parse($jogo->meta['_event_start_date']->meta_value)->format('d/m/Y') : 'A Definir' }}
                                 </p>
                             </div>
                         </div>
@@ -189,7 +191,7 @@
                             <div>
                                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium leading-none mb-0.5">Horário</p>
                                 <p class="text-xs font-bold text-gray-900 dark:text-gray-200 leading-none">
-                                    {{ isset($jogo->meta['_event_start_time']) ? Carbon\Carbon::parse($jogo->meta['_event_start_time']->meta_value)->format('H:i') : '--:--' }}
+                                    {{ !empty($jogo->meta['_event_start_time']->meta_value) ? Carbon\Carbon::parse($jogo->meta['_event_start_time']->meta_value)->format('H:i') : 'A Definir' }}
                                 </p>
                             </div>
                         </div>
@@ -205,11 +207,17 @@
 
                     {{-- Badges de Status Inferiores --}}
                     <div class="flex flex-wrap gap-1.5 items-center justify-between">
-                        <div class="flex gap-1.5">
+                        <div class="flex gap-1.5 flex-wrap">
                             @if($jogo->jgo_status == 'ativo')
                                 <span class="bg-green-100/80 text-green-700 text-[10px] font-bold px-2 py-1 rounded dark:bg-green-900/40 dark:text-green-400">Ativo</span>
                             @else
                                 <span class="bg-red-100/80 text-red-700 text-[10px] font-bold px-2 py-1 rounded dark:bg-red-900/40 dark:text-red-400">Inativo</span>
+                            @endif
+
+                            @if($jogo->jgo_status_agendamento === 'pendente_preenchimento')
+                                <span class="bg-amber-100/80 border border-amber-300 text-amber-800 text-[10px] font-bold px-2 py-1 rounded dark:bg-amber-900/40 dark:text-amber-300">Agend. Pendente</span>
+                            @elseif($jogo->jgo_status_agendamento === 'pendente_aprovacao')
+                                <span class="bg-blue-100/80 border border-blue-300 text-blue-800 text-[10px] font-bold px-2 py-1 rounded dark:bg-blue-900/40 dark:text-blue-300">Aguardando Aprovação</span>
                             @endif
 
                             @php $resStatus = $jogo->jgo_res_status ?? 'nao_informado'; @endphp

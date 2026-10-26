@@ -38,10 +38,10 @@ class JogosController extends Controller
             ->update(['jgo_status' => 'inativo']);
 
         // 2. Build Query
-        $query = Jogo::aprovadosOuNormais()->with([
+        $query = Jogo::with([
             'mandante.campeonato',
-            'mandante.equipe',
-            'visitante.equipe',
+            'mandante.equipe.time',
+            'visitante.equipe.time',
             'mandante.equipe.categoria',
             'ginasio',
             'arbitroPrincipal',
@@ -51,8 +51,8 @@ class JogosController extends Controller
         ]);
 
         $user = Auth::user();
-        if ($user->hasRole('Juiz') && !$user->hasRole('Administrador')) {
-            $query->where(function ($q) use ($user) {
+        if ($user && $user->hasRole('Juiz') && !$user->hasRole('Administrador')) {
+            $query->aprovadosOuNormais()->where(function ($q) use ($user) {
                 $q->where('jgo_arbitro_principal', $user->id)
                     ->orWhere('jgo_arbitro_secundario', $user->id)
                     ->orWhere('jgo_apontador', $user->id);
@@ -60,15 +60,19 @@ class JogosController extends Controller
         }
 
         // Filters
-        // Título não existe localmente, buscaremos pelo nome das equipes
         if ($request->filled('titulo')) {
-            $term = $request->titulo;
+            $term = trim($request->titulo);
             $query->where(function ($q) use ($term) {
                 $q->whereHas('mandante.equipe', function ($sq) use ($term) {
-                    $sq->where('eqp_nome_detalhado', 'like', "%{$term}%");
+                    $sq->where('eqp_nome_detalhado', 'like', "%{$term}%")
+                       ->orWhereHas('time', fn($tq) => $tq->where('tim_nome', 'like', "%{$term}%"));
                 })->orWhereHas('visitante.equipe', function ($sq) use ($term) {
-                    $sq->where('eqp_nome_detalhado', 'like', "%{$term}%");
-                });
+                    $sq->where('eqp_nome_detalhado', 'like', "%{$term}%")
+                       ->orWhereHas('time', fn($tq) => $tq->where('tim_nome', 'like', "%{$term}%"));
+                })->orWhere('jgo_id', $term)
+                  ->orWhere('jgo_numero_jogo', $term)
+                  ->orWhere('jgo_fase', 'like', "%{$term}%")
+                  ->orWhere('jgo_fase_tipo', 'like', "%{$term}%");
             });
         }
 
@@ -430,14 +434,14 @@ class JogosController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'event_number' => 'required|integer',
+            'event_number' => 'nullable|integer',
             'campeonato_id' => 'required|exists:campeonatos,cpo_id',
             'mandante_id' => 'required|exists:equipe_campeonato,eqp_cpo_id|different:visitante_id',
             'visitante_id' => 'required|exists:equipe_campeonato,eqp_cpo_id',
             'categoria_id' => 'required|exists:categorias,cto_id',
-            'ginasio_id' => 'required|exists:ginasios,gin_id',
-            'data_jogo' => 'required|date_format:Y-m-d',
-            'hora_jogo' => 'required|date_format:H:i',
+            'ginasio_id' => 'nullable|exists:ginasios,gin_id',
+            'data_jogo' => 'nullable|date_format:Y-m-d',
+            'hora_jogo' => 'nullable|date_format:H:i',
             'juiz_principal' => 'nullable|exists:users,id',
             'juiz_linha1' => 'nullable|exists:users,id',
             'juiz_linha2' => 'nullable|exists:users,id',
@@ -454,40 +458,52 @@ class JogosController extends Controller
                 $fase = $request->turno;
             }
 
+            $hasFullSchedule = $request->filled('data_jogo') && $request->filled('hora_jogo') && $request->filled('ginasio_id');
+            $statusAgendamento = $hasFullSchedule ? 'aprovado' : 'pendente_preenchimento';
+
             // 1. Create Local Jogo
             $jogoService = new JogoService();
             $jogo = $jogoService->create([
                 'mandante_id' => $request->mandante_id,
                 'visitante_id' => $request->visitante_id,
-                'data_jogo' => $request->data_jogo,
-                'hora_jogo' => $request->hora_jogo,
-                'ginasio_id' => $request->ginasio_id,
+                'data_jogo' => $request->data_jogo ?: null,
+                'hora_jogo' => $request->hora_jogo ?: null,
+                'ginasio_id' => $request->ginasio_id ?: null,
                 'juiz_principal_id' => $request->juiz_principal,
                 'juiz_secundario_id' => $request->juiz_linha1,
                 'apontador_id' => $request->juiz_linha2,
                 'fase' => $fase,
                 'fase_tipo' => $request->jgo_fase_tipo ?? 'classificatoria',
+                'status_agendamento' => $statusAgendamento,
             ]);
 
-            $campeonato = Campeonato::find($request->campeonato_id);
-            $categoria = Categoria::find($request->categoria_id);
+            $eventNumber = $request->event_number ?: $jogo->jgo_id;
+            $jogoUpdate = ['jgo_numero_jogo' => $eventNumber];
 
-            // 2. Sync to WordPress
-            $wpService = new WordpressGameService();
-            $wpPostId = $wpService->sync($jogo, [
-                'event_number' => $request->event_number,
-                'event_type' => $campeonato->cpo_term_tx_id,
-                'event_category' => $categoria->cto_term_tx_id,
-            ]);
+            // 2. Sync to WordPress if schedule is already defined
+            if ($hasFullSchedule) {
+                $campeonato = Campeonato::find($request->campeonato_id);
+                $categoria = Categoria::find($request->categoria_id);
 
-            // 3. Link WP ID back to Local Jogo (Bidirectional Link) e salva numero do jogo
-            $jogoUpdate = ['jgo_numero_jogo' => $request->event_number ?: null];
-            if ($wpPostId) {
-                $jogoUpdate['jgo_wp_id'] = $wpPostId;
+                $wpService = new WordpressGameService();
+                $wpPostId = $wpService->sync($jogo, [
+                    'event_number' => $eventNumber,
+                    'event_type' => $campeonato->cpo_term_tx_id ?? null,
+                    'event_category' => $categoria->cto_term_tx_id ?? null,
+                ]);
+
+                if ($wpPostId) {
+                    $jogoUpdate['jgo_wp_id'] = $wpPostId;
+                }
             }
+
             $jogo->update($jogoUpdate);
 
-            return redirect()->route('jogos.index')->with('success', 'Jogo criado com sucesso e sincronizado!');
+            $msg = $hasFullSchedule 
+                ? 'Jogo criado com sucesso e sincronizado!' 
+                : 'Jogo criado com sucesso e adicionado aos agendamentos pendentes!';
+
+            return redirect()->route('jogos.index')->with('success', $msg);
 
         } catch (\Exception $e) {
             Log::error("Erro ao criar jogo: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
@@ -591,14 +607,14 @@ class JogosController extends Controller
         }
 
         $request->validate([
-            'event_number' => 'required|integer',
+            'event_number' => 'nullable|integer',
             'campeonato_id' => 'required|exists:campeonatos,cpo_id',
             'mandante_id' => 'required|exists:equipe_campeonato,eqp_cpo_id|different:visitante_id',
             'visitante_id' => 'required|exists:equipe_campeonato,eqp_cpo_id',
             'categoria_id' => 'required|exists:categorias,cto_id',
-            'ginasio_id' => 'required|exists:ginasios,gin_id',
-            'data_jogo' => 'required|date_format:Y-m-d',
-            'hora_jogo' => 'required|date_format:H:i',
+            'ginasio_id' => 'nullable|exists:ginasios,gin_id',
+            'data_jogo' => 'nullable|date_format:Y-m-d',
+            'hora_jogo' => 'nullable|date_format:H:i',
             'juiz_principal' => 'nullable|exists:users,id',
             'juiz_linha1' => 'nullable|exists:users,id',
             'juiz_linha2' => 'nullable|exists:users,id',
@@ -617,35 +633,47 @@ class JogosController extends Controller
             $fase = $request->turno;
         }
 
+        $hasFullSchedule = $request->filled('data_jogo') && $request->filled('hora_jogo') && $request->filled('ginasio_id');
+
         // Data to update/create
         $data = [
             'jgo_eqp_cpo_mandante_id'  => $request->mandante_id,
             'jgo_eqp_cpo_visitante_id' => $request->visitante_id,
-            'jgo_dt_jogo'              => $request->data_jogo,
-            'jgo_hora_jogo'            => $request->hora_jogo,
-            'jgo_local_jogo_id'        => $request->ginasio_id,
+            'jgo_dt_jogo'              => $request->data_jogo ?: null,
+            'jgo_hora_jogo'            => $request->hora_jogo ?: null,
+            'jgo_local_jogo_id'        => $request->ginasio_id ?: null,
             'jgo_arbitro_principal'    => $request->juiz_principal,
             'jgo_arbitro_secundario'   => $request->juiz_linha1,
             'jgo_apontador'            => $request->juiz_linha2,
-            'jgo_numero_jogo'          => $request->event_number ?: null,
+            'jgo_numero_jogo'          => $request->event_number ?: ($localJogo->jgo_numero_jogo ?: $localJogo->jgo_id),
             'jgo_fase'                 => $fase,
             'jgo_fase_tipo'            => $request->jgo_fase_tipo ?? 'classificatoria',
         ];
 
+        if ($hasFullSchedule && $localJogo->jgo_status_agendamento === 'pendente_preenchimento') {
+            $data['jgo_status_agendamento'] = 'aprovado';
+        }
+
         $localJogo->update($data);
 
-        // 2. Sync to WordPress (Use Service)
-        $campeonato = Campeonato::find($request->campeonato_id);
-        $categoria = Categoria::find($request->categoria_id);
+        // 2. Sync to WordPress (Use Service) if has WP ID or has full schedule
+        if ($localJogo->jgo_wp_id || $hasFullSchedule) {
+            $campeonato = Campeonato::find($request->campeonato_id);
+            $categoria = Categoria::find($request->categoria_id);
 
-        $wpService = new WordpressGameService();
-        $wpService->sync($localJogo, [
-            'event_number' => $request->event_number,
-            'event_type'   => $campeonato->cpo_term_tx_id,
-            'event_category' => $categoria->cto_term_tx_id,
-        ], $id); // Pass $id to update
+            $wpService = new WordpressGameService();
+            $wpPostId = $wpService->sync($localJogo, [
+                'event_number' => $localJogo->jgo_numero_jogo,
+                'event_type'   => $campeonato->cpo_term_tx_id ?? null,
+                'event_category' => $categoria->cto_term_tx_id ?? null,
+            ], $localJogo->jgo_wp_id ?: $id);
 
-        return redirect()->route('jogos.index')->with('success', 'Jogo atualizado e sincronizado com sucesso!');
+            if ($wpPostId && !$localJogo->jgo_wp_id) {
+                $localJogo->update(['jgo_wp_id' => $wpPostId]);
+            }
+        }
+
+        return redirect()->route('jogos.index')->with('success', 'Jogo atualizado e salvo com sucesso!');
     }
 
 

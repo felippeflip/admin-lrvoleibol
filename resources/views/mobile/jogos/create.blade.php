@@ -69,12 +69,21 @@
                         class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="classificatoria" {{ old('jgo_fase_tipo') == 'classificatoria' ? 'selected' : '' }}>Fase Classificatória / Grupos</option>
                     <option value="quartas_de_final" {{ old('jgo_fase_tipo') == 'quartas_de_final' ? 'selected' : '' }}>Quartas de Final</option>
-                    <option value="semi_final_ouro" {{ old('jgo_fase_tipo') == 'semi_final_ouro' ? 'selected' : '' }}>Semi-Final (Ouro)</option>
-                    <option value="semi_final_prata" {{ old('jgo_fase_tipo') == 'semi_final_prata' ? 'selected' : '' }}>Semi-Final (Prata)</option>
-                    <option value="semi_final_bronze" {{ old('jgo_fase_tipo') == 'semi_final_bronze' ? 'selected' : '' }}>Semi-Final (Bronze)</option>
-                    <option value="final_ouro" {{ old('jgo_fase_tipo') == 'final_ouro' ? 'selected' : '' }}>Final (Série Ouro)</option>
-                    <option value="final_prata" {{ old('jgo_fase_tipo') == 'final_prata' ? 'selected' : '' }}>Final (Série Prata)</option>
-                    <option value="final_bronze" {{ old('jgo_fase_tipo') == 'final_bronze' ? 'selected' : '' }}>Final (Série Bronze)</option>
+                    <optgroup label="Série Ouro">
+                        <option value="semi_final_ouro" {{ old('jgo_fase_tipo') == 'semi_final_ouro' ? 'selected' : '' }}>Semi-Final (Ouro)</option>
+                        <option value="final_ouro" {{ old('jgo_fase_tipo') == 'final_ouro' ? 'selected' : '' }}>Final (Série Ouro)</option>
+                        <option value="disputa_3_ouro" {{ old('jgo_fase_tipo') == 'disputa_3_ouro' ? 'selected' : '' }}>Disputa 3º/4º (Série Ouro)</option>
+                    </optgroup>
+                    <optgroup label="Série Prata">
+                        <option value="semi_final_prata" {{ old('jgo_fase_tipo') == 'semi_final_prata' ? 'selected' : '' }}>Semi-Final (Prata)</option>
+                        <option value="final_prata" {{ old('jgo_fase_tipo') == 'final_prata' ? 'selected' : '' }}>Final (Série Prata)</option>
+                        <option value="disputa_3_prata" {{ old('jgo_fase_tipo') == 'disputa_3_prata' ? 'selected' : '' }}>Disputa 3º/4º (Série Prata)</option>
+                    </optgroup>
+                    <optgroup label="Série Bronze">
+                        <option value="semi_final_bronze" {{ old('jgo_fase_tipo') == 'semi_final_bronze' ? 'selected' : '' }}>Semi-Final (Bronze)</option>
+                        <option value="final_bronze" {{ old('jgo_fase_tipo') == 'final_bronze' ? 'selected' : '' }}>Final (Série Bronze)</option>
+                        <option value="disputa_3_bronze" {{ old('jgo_fase_tipo') == 'disputa_3_bronze' ? 'selected' : '' }}>Disputa 3º/4º (Série Bronze)</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -87,7 +96,7 @@
                 <div>
                     <label for="turno" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Turno</label>
                     <input type="text" name="turno" id="turno" value="{{ old('turno') }}" 
-                           class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: 1º">
+                           class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Ex: Ida / Volta">
                 </div>
             </div>
         </div>
@@ -137,10 +146,10 @@
             </div>
 
             <div>
-                <label for="ginasio_id" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Local (Ginásio) *</label>
-                <select name="ginasio_id" id="ginasio_id" required
+                <label for="ginasio_id" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Local (Ginásio) - Opcional</label>
+                <select name="ginasio_id" id="ginasio_id"
                         class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">Selecione o Local</option>
+                    <option value="">Definir Posteriormente (Pendente)</option>
                     @foreach ($ginasios as $gin)
                         <option value="{{ $gin->gin_id }}" {{ old('ginasio_id') == $gin->gin_id ? 'selected' : '' }}>
                             {{ $gin->gin_nome }}
@@ -151,13 +160,13 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="data_jogo" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Data *</label>
-                    <input type="date" name="data_jogo" id="data_jogo" value="{{ old('data_jogo') }}" required 
+                    <label for="data_jogo" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Data (Opcional)</label>
+                    <input type="date" name="data_jogo" id="data_jogo" value="{{ old('data_jogo') }}" 
                            class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
                 <div>
-                    <label for="hora_jogo" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Horário *</label>
-                    <input type="time" name="hora_jogo" id="hora_jogo" value="{{ old('hora_jogo') }}" required 
+                    <label for="hora_jogo" class="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 tracking-tight">Horário (Opcional)</label>
+                    <input type="time" name="hora_jogo" id="hora_jogo" value="{{ old('hora_jogo') }}" 
                            class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
             </div>

@@ -44,6 +44,8 @@ class Jogo extends Model
         'jgo_status_agendamento',
         'jgo_sugerido_por_equipe_id',
         'jgo_fase',
+        'jgo_fase_tipo',
+        'jgo_status_publicacao',
         'jgo_numero_jogo',
     ];
 
@@ -108,5 +110,35 @@ class Jogo extends Model
     public function solicitacoesAlteracao()
     {
         return $this->hasMany(JogoSolicitacao::class, 'jogo_id', 'jgo_id');
+    }
+
+    /**
+     * Verifica se o jogo pertence a uma fase eliminatória/playoff
+     */
+    public function isPlayoff(): bool
+    {
+        $tipo = $this->jgo_fase_tipo ?? '';
+        return in_array($tipo, [
+            'semi_final_ouro', 'final_ouro', 'disputa_3_ouro',
+            'semi_final_prata', 'final_prata', 'disputa_3_prata',
+            'semi_final_bronze', 'final_bronze', 'disputa_3_bronze',
+            'quartas_de_final'
+        ]) || str_contains($tipo, 'semi_final') || str_contains($tipo, 'final');
+    }
+
+    /**
+     * Retorna o Golden Set (set 6) se houver
+     */
+    public function goldenSet()
+    {
+        return $this->resultadoSets->firstWhere('set_numero', 6);
+    }
+
+    /**
+     * Retorna apenas os sets regulares (1 a 5)
+     */
+    public function setsRegulares()
+    {
+        return $this->resultadoSets->where('set_numero', '<=', 5);
     }
 }

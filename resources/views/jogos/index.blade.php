@@ -169,6 +169,8 @@
                                             <span>{{ $jogo->meta['_event_title']->meta_value ?? $jogo->post_title }}</span>
                                             @if($jogo->jgo_fase)
                                                 <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">({{ $jogo->jgo_fase }})</span>
+                                            @elseif($jogo->jgo_fase_tipo && $jogo->jgo_fase_tipo !== 'classificatoria')
+                                                <span class="text-[10px] text-purple-600 font-bold uppercase ml-1">({{ str_replace('_', ' ', $jogo->jgo_fase_tipo) }})</span>
                                             @endif
                                         </th>
                                         <td class="px-6 py-4">
@@ -191,13 +193,13 @@
                                         <td class="px-6 py-4">{{ $jogo->meta['_event_location']->meta_value ?? 'N/A' }}</td>
                                         <td class="px-6 py-4">
                                             @php
-                                                $startDate = isset($jogo->meta['_event_start_date']) ? Carbon\Carbon::parse($jogo->meta['_event_start_date']->meta_value)->format('d/m/Y') : 'N/A';
+                                                $startDate = !empty($jogo->meta['_event_start_date']->meta_value) ? Carbon\Carbon::parse($jogo->meta['_event_start_date']->meta_value)->format('d/m/Y') : 'A Definir';
                                             @endphp
                                             {{ $startDate }}
                                         </td>
                                         <td class="px-6 py-4">
                                             @php
-                                                $startTime = isset($jogo->meta['_event_start_time']) ? Carbon\Carbon::parse($jogo->meta['_event_start_time']->meta_value)->format('H:i') : 'N/A';
+                                                $startTime = !empty($jogo->meta['_event_start_time']->meta_value) ? Carbon\Carbon::parse($jogo->meta['_event_start_time']->meta_value)->format('H:i') : 'A Definir';
                                             @endphp
                                             {{ $startTime }}
                                         </td>
@@ -208,6 +210,12 @@
                                                 <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Inativo</span>
                                             @else
                                                 <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">{{ ucfirst($jogo->jgo_status ?? 'Desconhecido') }}</span>
+                                            @endif
+
+                                            @if($jogo->jgo_status_agendamento === 'pendente_preenchimento')
+                                                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300 dark:bg-amber-900 dark:text-amber-300">Agend. Pendente</span>
+                                            @elseif($jogo->jgo_status_agendamento === 'pendente_aprovacao')
+                                                <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-300 dark:bg-blue-900 dark:text-blue-300">Aguardando Aprovação</span>
                                             @endif
 
                                             @php

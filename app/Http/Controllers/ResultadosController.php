@@ -39,11 +39,14 @@ class ResultadosController extends Controller
         $mandante = $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante';
         $visitante = $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante';
 
+        $isPlayoff = $jogo->isPlayoff();
+        $hasGoldenSet = isset($sets[6]);
+
         if ($this->isMobileView()) {
-            return view('mobile.resultados.create', compact('jogo', 'sets', 'mandante', 'visitante'));
+            return view('mobile.resultados.create', compact('jogo', 'sets', 'mandante', 'visitante', 'isPlayoff', 'hasGoldenSet'));
         }
 
-        return view('resultados.create', compact('jogo', 'sets', 'mandante', 'visitante'));
+        return view('resultados.create', compact('jogo', 'sets', 'mandante', 'visitante', 'isPlayoff', 'hasGoldenSet'));
     }
 
     public function store(Request $request, $jgoId)
@@ -55,7 +58,11 @@ class ResultadosController extends Controller
             'sets' => 'required|array',
             'sets.*.mandante' => 'nullable|integer|min:0',
             'sets.*.visitante' => 'nullable|integer|min:0',
+            'tem_golden_set' => 'nullable',
         ]);
+
+        $isPlayoff = $jogo->isPlayoff();
+        $temGoldenSet = $request->boolean('tem_golden_set') || (isset($request->sets[6]) && ($request->sets[6]['mandante'] !== null || $request->sets[6]['visitante'] !== null));
 
         try {
             DB::beginTransaction();
@@ -67,11 +74,21 @@ class ResultadosController extends Controller
             $setsWonVisitante = 0;
             $resultsToSave = [];
 
-            // Sort sets by number to process sequentially
-            $setsInput = $request->sets;
-            ksort($setsInput);
+            // Separar sets regulares (1 a 5) do Golden Set (set 6)
+            $setsRegularesInput = [];
+            $goldenSetInput = null;
 
-            foreach ($setsInput as $num => $scores) {
+            foreach ($request->sets as $num => $scores) {
+                if ((int)$num === 6) {
+                    $goldenSetInput = $scores;
+                } elseif ((int)$num >= 1 && (int)$num <= 5) {
+                    $setsRegularesInput[(int)$num] = $scores;
+                }
+            }
+
+            ksort($setsRegularesInput);
+
+            foreach ($setsRegularesInput as $num => $scores) {
                 // Skip if both null (empty row)
                 if (($scores['mandante'] ?? null) === null && ($scores['visitante'] ?? null) === null) {
                     continue;
@@ -87,7 +104,7 @@ class ResultadosController extends Controller
 
                 // Rule: Check if game is already decided
                 if ($setsWonMandante >= 3 || $setsWonVisitante >= 3) {
-                    return back()->with('error', "Erro no Set $num: O jogo já deveria ter encerrado (3 sets vencidos). Remova os sets excedentes.")->withInput();
+                    return back()->with('error', "Erro no Set $num: O jogo regular encerra com 3 sets vencidos. Remova os sets regulares excedentes.")->withInput();
                 }
 
                 // Regra 1: Alvo de pontos (25 para sets 1-4, 15 para o set 5)
@@ -127,9 +144,50 @@ class ResultadosController extends Controller
             }
 
             // Rule: Game must have a winner (Best of 5)
-            // If the loop finished without declaring a winner (3 sets), and we processed all inputs
             if ($setsWonMandante < 3 && $setsWonVisitante < 3) {
-                return back()->with('error', "Resultado inválido. A partida não foi concluída. Nenhuma equipe venceu 3 sets. Verifique se informou todos os sets necessários.")->withInput();
+                return back()->with('error', "Resultado inválido. A partida regular não foi concluída. Nenhuma equipe venceu 3 sets. Verifique se informou todos os sets necessários.")->withInput();
+            }
+
+            // Validação e Processamento do Golden Set (Set 6)
+            $winnerGS = null;
+            if ($temGoldenSet) {
+                if (!$isPlayoff) {
+                    return back()->with('error', "O Golden Set é permitido apenas em fases eliminatórias de playoffs (Semifinais e Finais).")->withInput();
+                }
+
+                $pMandanteGS = $goldenSetInput['mandante'] ?? null;
+                $pVisitanteGS = $goldenSetInput['visitante'] ?? null;
+
+                if ($pMandanteGS === null || $pVisitanteGS === null) {
+                    return back()->with('error', "Golden Set: Placar incompleto. Informe os pontos de ambos os times no set de desempate.")->withInput();
+                }
+
+                // Regra do Golden Set: 25 pontos com 2 de diferença
+                $targetGS = 25;
+                $maxScoreGS = max($pMandanteGS, $pVisitanteGS);
+                $diffGS = abs($pMandanteGS - $pVisitanteGS);
+
+                if ($maxScoreGS < $targetGS) {
+                    return back()->with('error', "Golden Set: Placar inválido. O vencedor do Golden Set deve atingir pelo menos $targetGS pontos.")->withInput();
+                }
+
+                if ($maxScoreGS === $targetGS && $diffGS < 2) {
+                    return back()->with('error', "Golden Set: Placar inválido. É necessária uma diferença mínima de 2 pontos para fechar o Golden Set (ex: 25x23, 25x20).")->withInput();
+                }
+
+                if ($maxScoreGS > $targetGS && $diffGS !== 2) {
+                    return back()->with('error', "Golden Set: Placar inválido. Quando o placar passa de 24 pontos, o Golden Set só encerra com EXATOS 2 pontos de diferença (ex: " . ($maxScoreGS) . "x" . ($maxScoreGS - 2) . ").")->withInput();
+                }
+
+                $winnerGS = ($pMandanteGS > $pVisitanteGS) ? 1 : 2;
+
+                $resultsToSave[] = [
+                    'set_jgo_id' => $jogo->jgo_id,
+                    'set_numero' => 6,
+                    'set_pontos_mandante' => $pMandanteGS,
+                    'set_pontos_visitante' => $pVisitanteGS,
+                    'set_vencedor' => $winnerGS
+                ];
             }
 
             if (empty($resultsToSave)) {
@@ -141,8 +199,13 @@ class ResultadosController extends Controller
                 ResultadoSet::create($res);
             }
 
-            // Match Winner
-            $vencedorMandante = ($setsWonMandante > $setsWonVisitante);
+            // Vencedor do Confronto:
+            // Se houve Golden Set, o vencedor do desempate é quem avança / garante o título
+            if ($winnerGS !== null) {
+                $vencedorMandante = ($winnerGS === 1) ? 1 : 0;
+            } else {
+                $vencedorMandante = ($setsWonMandante > $setsWonVisitante) ? 1 : 0;
+            }
 
             // Update Jogo Status
             $jogo->update([

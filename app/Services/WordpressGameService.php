@@ -77,13 +77,23 @@ class WordpressGameService
         }
 
         // 4. Prepara MetaDados (+ Datas)
-        // jgo_dt_jogo e jgo_hora_jogo podem chegar com formatos variados (datetime, date, string).
-        // Extraímos apenas a parte necessária de cada um para evitar erro de especificação dupla de hora.
-        $datePart      = Carbon::parse($jogo->jgo_dt_jogo)->format('Y-m-d');
-        $timePart      = Carbon::parse($jogo->jgo_hora_jogo)->format('H:i:s');
-        $startDateTime = new \DateTime($datePart . ' ' . $timePart);
-        $endDateTime   = clone $startDateTime;
-        $endDateTime->modify('+2 hours 30 minutes');
+        $startDateStr = '';
+        $startTimeStr = '';
+        $endDateStr   = '';
+        $endTimeStr   = '';
+
+        if (!empty($jogo->jgo_dt_jogo) && !empty($jogo->jgo_hora_jogo)) {
+            $datePart      = Carbon::parse($jogo->jgo_dt_jogo)->format('Y-m-d');
+            $timePart      = Carbon::parse($jogo->jgo_hora_jogo)->format('H:i:s');
+            $startDateTime = new \DateTime($datePart . ' ' . $timePart);
+            $endDateTime   = clone $startDateTime;
+            $endDateTime->modify('+2 hours 30 minutes');
+
+            $startDateStr = $startDateTime->format('Y-m-d H:i:s');
+            $startTimeStr = $startDateTime->format('H:i:s');
+            $endDateStr   = $endDateTime->format('Y-m-d H:i:s');
+            $endTimeStr   = $endDateTime->format('H:i:s');
+        }
 
         // Note: Todos os campos custom fields foram validados no wordpress para aceitarem single strings
         $payload = [
@@ -92,14 +102,14 @@ class WordpressGameService
             'content' => $postTitle,
             'slug' => Str::slug($postTitle),
             'meta' => [
-                '_event_number' => (string) $extraData['event_number'],
+                '_event_number' => (string) ($extraData['event_number'] ?? ''),
                 '_event_title' => $postTitle,
                 '_event_location' => $local,
                 '_event_country' => 'Brasil',
-                '_event_start_date' => $startDateTime->format('Y-m-d H:i:s'),
-                '_event_start_time' => $startDateTime->format('H:i:s'),
-                '_event_end_date' => $endDateTime->format('Y-m-d H:i:s'),
-                '_event_end_time' => $endDateTime->format('H:i:s'),
+                '_event_start_date' => $startDateStr,
+                '_event_start_time' => $startTimeStr,
+                '_event_end_date' => $endDateStr,
+                '_event_end_time' => $endTimeStr,
                 '_juiz_principal' => (string) $jogo->jgo_arbitro_principal,
                 '_juiz_linha1' => (string) $jogo->jgo_arbitro_secundario,
                 '_juiz_linha2' => (string) $jogo->jgo_apontador,

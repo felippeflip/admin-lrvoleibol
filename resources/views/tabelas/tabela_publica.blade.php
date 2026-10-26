@@ -57,8 +57,29 @@
             $grupos = $dados['grupos']; 
             $equipesParticipantes = $dados['equipes'];
             $jogosTodos = $dados['jogos_todos'];
+            $seriesPlayoffs = $dados['series_playoffs'] ?? [];
+            $temPlayoffs = $dados['tem_playoffs'] ?? false;
         @endphp
 
+        @if($temPlayoffs)
+        <!-- Abas Interativas de Fases (Ativas quando há jogos de Semi-finais / Finais) -->
+        <div class="bg-gray-100 border-b border-gray-300 px-4 pt-3 flex space-x-2 overflow-x-auto table-scroll shadow-inner" id="page-tabs-bar">
+            <button onclick="changePageTab('classificatoria')" id="page-tab-btn-classificatoria" 
+                    class="page-tab-btn px-4 py-2.5 font-black text-sm uppercase rounded-t-lg transition-all flex items-center gap-2 bg-white text-principal border-t-2 border-l border-r border-secundario shadow-sm">
+                <svg class="w-4 h-4 text-principal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                Fase Classificatória
+            </button>
+            @foreach($seriesPlayoffs as $sKey => $serie)
+                <button onclick="changePageTab('{{ $serie['slug'] }}')" id="page-tab-btn-{{ $serie['slug'] }}" 
+                        class="page-tab-btn px-4 py-2.5 font-black text-sm uppercase rounded-t-lg transition-all flex items-center gap-2 bg-gray-200 text-gray-600 hover:bg-gray-300">
+                    @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @else ⚔️ @endif
+                    {{ $serie['nome'] }}
+                </button>
+            @endforeach
+        </div>
+        @endif
+
+        <div id="page-tab-content-classificatoria" class="page-tab-content block">
         <!-- EQUIPES PARTICIPANTES -->
         <div class="px-6 pt-6 pb-4 bg-white">
             <h3 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 mb-4 uppercase flex items-center">
@@ -143,7 +164,7 @@
                             <!-- Placar / Times -->
                             <div class="flex flex-col space-y-1 relative mb-2">
                                 <!-- Mandante -->
-                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ $jogo->jgo_vencedor_mandante === 1 ? 'border border-green-300 ring-1 ring-green-300' : '' }}">
+                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ (int)$jogo->jgo_vencedor_mandante === 1 ? 'border border-green-300 ring-1 ring-green-300' : '' }}">
                                     <span class="font-bold text-gray-800 text-[11px] truncate max-w-[70%]" title="{{ $jogo->mandante->equipe->time->tim_nome ?? 'A Definir' }}">
                                         {{ $jogo->mandante->equipe->time->tim_nome ?? 'A Definir' }}
                                     </span>
@@ -154,12 +175,12 @@
                                                 @php if(($set->set_pontos_mandante ?? 0) > ($set->set_pontos_visitante ?? 0)) $setsM++; @endphp
                                                 <span class="text-[9px] w-4 h-4 flex items-center justify-center bg-gray-200 text-gray-700 rounded-sm">{{ $set->set_pontos_mandante ?? 0 }}</span>
                                             @endforeach
-                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 1 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1 bg-white border border-gray-200' }}">{{ $setsM }}</span>
+                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ (int)$jogo->jgo_vencedor_mandante === 1 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1 bg-white border border-gray-200' }}">{{ $setsM }}</span>
                                         </div>
                                     @endif
                                 </div>
                                 <!-- Vis -->
-                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ $jogo->jgo_vencedor_mandante === 0 ? 'border border-green-300 ring-1 ring-green-300' : '' }}">
+                                <div class="flex justify-between items-center bg-gray-50 rounded p-1.5 {{ (int)$jogo->jgo_vencedor_mandante === 0 ? 'border border-green-300 ring-1 ring-green-300' : '' }}">
                                     <span class="font-bold text-gray-800 text-[11px] truncate max-w-[70%]" title="{{ $jogo->visitante->equipe->time->tim_nome ?? 'A Definir' }}">
                                         {{ $jogo->visitante->equipe->time->tim_nome ?? 'A Definir' }}
                                     </span>
@@ -170,7 +191,7 @@
                                                 @php if(($set->set_pontos_visitante ?? 0) > ($set->set_pontos_mandante ?? 0)) $setsV++; @endphp
                                                 <span class="text-[9px] w-4 h-4 flex items-center justify-center bg-gray-200 text-gray-700 rounded-sm">{{ $set->set_pontos_visitante ?? 0 }}</span>
                                             @endforeach
-                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 0 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1 bg-white border border-gray-200' }}">{{ $setsV }}</span>
+                                            <span class="text-xs font-black w-5 h-5 flex items-center justify-center {{ (int)$jogo->jgo_vencedor_mandante === 0 ? 'bg-principal text-white rounded ml-1' : 'text-gray-400 ml-1 bg-white border border-gray-200' }}">{{ $setsV }}</span>
                                         </div>
                                     @endif
                                 </div>
@@ -297,74 +318,140 @@
             <span><strong>SA:</strong> Set Average (SP/SC)</span>
             <span><strong>PP:</strong> Pontos Pró</span>
             <span><strong>PC:</strong> Pontos Contra</span>
-            <span><strong>PA:</strong> Ponto Average (PP/PC)</span>
-            <span class="w-full mt-1 text-gray-400 italic">* Regra: 3x0 ou 3x1 (3 pts vencedor). 3x2 (2 pts vencedor, 1 pt perdedor). Empate desempata por SA e PA.</span>
+            <span class="w-full mt-1 text-gray-400 italic">* Regra: 3x0 ou 3x1 (3 pts vencedor). 3x2 (2 pts vencedor, 1 pt perdedor).</span>
         </div>
+        </div> <!-- Fim #page-tab-content-classificatoria -->
 
-        <!-- Seção de Eliminatórias (Opcional - se hover jogos nas finais) -->
-        @if(count($dados['finais']) > 0)
-        <div class="border-t-4 border-secundario bg-white mt-4">
-            <div class="p-6 bg-gradient-to-r from-gray-100 to-white">
-                <h3 class="text-xl font-extrabold text-principal uppercase mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-secundario" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-                    Fases Finais Eliminatórias
-                </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($dados['finais'] as $jogo)
-                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 relative overflow-hidden">
-                            <!-- Faixa decorativa com o tipo de fase -->
-                            <div class="absolute top-0 right-0 bg-secundario text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase">
-                                {{ str_replace('_', ' ', $jogo->jgo_fase_tipo) }}
-                            </div>
-                            
-                            <div class="text-xs text-gray-500 mb-3 mt-1 font-medium">
-                                {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') }} às {{ \Carbon\Carbon::parse($jogo->jgo_hora_jogo)->format('H:i') }}
-                            </div>
-                            
-                            <div class="flex flex-col space-y-2">
-                                <!-- Mandante -->
-                                <div class="flex justify-between items-center bg-gray-50 rounded-lg p-2 {{ $jogo->jgo_vencedor_mandante === 1 ? 'border border-green-300' : '' }}">
-                                    <span class="font-bold text-gray-800 text-sm truncate max-w-[70%]">
-                                        {{ $jogo->mandante->equipe->time->tim_nome ?? 'A Definir' }}
-                                    </span>
-                                    @if(in_array($jogo->jgo_res_status, ['pendente', 'aprovado']))
-                                        <div class="flex space-x-1">
-                                            @php $setsM = 0; @endphp
-                                            @foreach($jogo->resultadoSets as $set)
-                                                @php if(($set->set_pontos_mandante ?? 0) > ($set->set_pontos_visitante ?? 0)) $setsM++; @endphp
-                                                <span class="text-[10px] w-5 h-5 flex items-center justify-center bg-gray-200 text-gray-700 rounded-sm">{{ $set->set_pontos_mandante ?? 0 }}</span>
-                                            @endforeach
-                                            <span class="text-sm font-black w-6 h-6 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 1 ? 'bg-principal text-white rounded-md ml-1' : 'text-gray-400 ml-1' }}">{{ $setsM }}</span>
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-gray-400 italic">Vs</span>
-                                    @endif
-                                </div>
-                                
-                                <!-- Visitante -->
-                                <div class="flex justify-between items-center bg-gray-50 rounded-lg p-2 {{ $jogo->jgo_vencedor_mandante === 0 ? 'border border-green-300' : '' }}">
-                                    <span class="font-bold text-gray-800 text-sm truncate max-w-[70%]">
-                                        {{ $jogo->visitante->equipe->time->tim_nome ?? 'A Definir' }}
-                                    </span>
-                                    @if(in_array($jogo->jgo_res_status, ['pendente', 'aprovado']))
-                                        <div class="flex space-x-1">
-                                            @php $setsV = 0; @endphp
-                                            @foreach($jogo->resultadoSets as $set)
-                                                @php if(($set->set_pontos_visitante ?? 0) > ($set->set_pontos_mandante ?? 0)) $setsV++; @endphp
-                                                <span class="text-[10px] w-5 h-5 flex items-center justify-center bg-gray-200 text-gray-700 rounded-sm">{{ $set->set_pontos_visitante ?? 0 }}</span>
-                                            @endforeach
-                                            <span class="text-sm font-black w-6 h-6 flex items-center justify-center {{ $jogo->jgo_vencedor_mandante === 0 ? 'bg-principal text-white rounded-md ml-1' : 'text-gray-400 ml-1' }}">{{ $setsV }}</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-
+        @if($temPlayoffs)
+            @foreach($seriesPlayoffs as $sKey => $serie)
+                <div id="page-tab-content-{{ $serie['slug'] }}" class="page-tab-content hidden p-4 sm:p-6 bg-gray-50 border-t border-gray-200">
+                    
+                    <!-- Header da Série -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-200 mb-6 gap-2">
+                        <div>
+                            <h2 class="text-2xl font-black uppercase text-principal tracking-tight flex items-center gap-2">
+                                @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @else ⚔️ @endif
+                                {{ $serie['nome'] }}
+                            </h2>
+                            <p class="text-xs text-gray-500 font-medium">Confrontos eliminatórios da Categoria: <span class="font-bold text-secundario">{{ $categoria->cto_nome }}</span></p>
                         </div>
-                    @endforeach
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase bg-secundario text-white shadow-sm w-fit">
+                            Fase Eliminatória
+                        </span>
+                    </div>
+
+                    @if($sKey === 'quartas' && !empty($serie['jogos']))
+                        <!-- Quartas de Final -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-black text-gray-800 uppercase mb-4 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                                Quartas de Final
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                @foreach($serie['jogos'] as $jogo)
+                                    @include('tabelas.partials.card_jogo_playoff', ['jogo' => $jogo])
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <!-- Semifinal -->
+                        @if(!empty($serie['semifinal']))
+                            <div class="mb-8">
+                                <h3 class="text-lg font-black text-gray-800 uppercase mb-4 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                                    {{ $serie['nome'] }} - Semifinal
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    @foreach($serie['semifinal'] as $jogo)
+                                        @include('tabelas.partials.card_jogo_playoff', ['jogo' => $jogo])
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Final -->
+                        @if(!empty($serie['final']))
+                            <div class="mb-8">
+                                <h3 class="text-lg font-black text-gray-800 uppercase mb-4 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                                    {{ $serie['nome'] }} - Final
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    @foreach($serie['final'] as $jogo)
+                                        @include('tabelas.partials.card_jogo_playoff', ['jogo' => $jogo])
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Disputa de 3º e 4º Colocados -->
+                        @if(!empty($serie['disputa_3']))
+                            <div class="mb-8">
+                                <h3 class="text-lg font-black text-gray-800 uppercase mb-4 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
+                                    {{ $serie['nome'] }} - Disputa de 3º e 4º Colocados
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    @foreach($serie['disputa_3'] as $jogo)
+                                        @include('tabelas.partials.card_jogo_playoff', ['jogo' => $jogo])
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Classificação Final / Pódio da Série -->
+                        <div class="mt-10 mb-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                            <h3 class="text-xl font-black text-center text-gray-800 uppercase tracking-tight mb-8 flex items-center justify-center gap-2">
+                                <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                Classificação Final - {{ $serie['nome'] }}
+                            </h3>
+
+                            <div class="flex flex-col md:flex-row items-end justify-center gap-4 max-w-2xl mx-auto pt-6">
+                                <!-- 2º Lugar -->
+                                <div class="w-full md:w-1/3 flex flex-col items-center order-2 md:order-1">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 border-2 border-gray-400 flex items-center justify-center font-black text-gray-700 text-lg shadow-sm mb-2">
+                                        2º
+                                    </div>
+                                    <div class="text-center font-bold text-sm text-gray-800 mb-2 truncate w-full px-2" title="{{ $serie['podio']['segundo'] ?? 'A Definir' }}">
+                                        {{ $serie['podio']['segundo'] ?? 'A Definir' }}
+                                    </div>
+                                    <div class="w-full bg-gradient-to-t from-gray-300 to-gray-200 h-28 rounded-t-xl flex items-center justify-center text-gray-600 font-extrabold uppercase text-xs shadow-inner">
+                                        Vice-Campeão
+                                    </div>
+                                </div>
+
+                                <!-- 1º Lugar (Campeão) -->
+                                <div class="w-full md:w-1/3 flex flex-col items-center order-1 md:order-2">
+                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 border-4 border-yellow-200 flex items-center justify-center font-black text-white text-2xl shadow-lg mb-2 transform -translate-y-2">
+                                        🏆
+                                    </div>
+                                    <div class="text-center font-black text-base text-principal mb-2 truncate w-full px-2" title="{{ $serie['podio']['primeiro'] ?? 'A Definir' }}">
+                                        {{ $serie['podio']['primeiro'] ?? 'A Definir' }}
+                                    </div>
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-amber-400 h-40 rounded-t-xl flex flex-col items-center justify-center text-white font-black uppercase text-sm shadow-md">
+                                        <span>1º Lugar</span>
+                                        <span class="text-[10px] text-yellow-100 font-semibold tracking-wider">CAMPEÃO</span>
+                                    </div>
+                                </div>
+
+                                <!-- 3º Lugar -->
+                                <div class="w-full md:w-1/3 flex flex-col items-center order-3">
+                                    <div class="w-12 h-12 rounded-full bg-amber-100 border-2 border-amber-600 flex items-center justify-center font-black text-amber-800 text-lg shadow-sm mb-2">
+                                        3º
+                                    </div>
+                                    <div class="text-center font-bold text-sm text-gray-800 mb-2 truncate w-full px-2" title="{{ $serie['podio']['terceiro'] ?? 'A Definir' }}">
+                                        {{ $serie['podio']['terceiro'] ?? 'A Definir' }}
+                                    </div>
+                                    <div class="w-full bg-gradient-to-t from-amber-200 to-amber-100 h-20 rounded-t-xl flex items-center justify-center text-amber-800 font-extrabold uppercase text-xs shadow-inner">
+                                        3º Lugar
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                 </div>
-            </div>
-        </div>
+            @endforeach
         @endif
 
         <div class="bg-gray-800 text-center py-3 text-xs text-gray-400 rounded-b-2xl">
@@ -375,6 +462,29 @@
 
     <!-- JS Limitado Estrito para Tabs -->
     <script>
+        // Troca de Abas Principais (Classificatória x Séries dos Playoffs)
+        function changePageTab(targetSlug) {
+            document.querySelectorAll('.page-tab-content').forEach(c => {
+                c.classList.add('hidden');
+                c.classList.remove('block');
+            });
+            document.querySelectorAll('.page-tab-btn').forEach(b => {
+                b.classList.remove('bg-white', 'text-principal', 'border-t-2', 'border-l', 'border-r', 'border-secundario', 'shadow-sm');
+                b.classList.add('bg-gray-200', 'text-gray-600');
+            });
+
+            const targetContent = document.getElementById('page-tab-content-' + targetSlug);
+            if(targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('block');
+            }
+            const targetBtn = document.getElementById('page-tab-btn-' + targetSlug);
+            if(targetBtn) {
+                targetBtn.classList.remove('bg-gray-200', 'text-gray-600');
+                targetBtn.classList.add('bg-white', 'text-principal', 'border-t-2', 'border-l', 'border-r', 'border-secundario', 'shadow-sm');
+            }
+        }
+
         function changeTab(targetSlug) {
             // Esconde todo conteúdo
             const contents = document.querySelectorAll('.tab-content');
