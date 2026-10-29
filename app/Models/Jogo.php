@@ -122,8 +122,34 @@ class Jogo extends Model
             'semi_final_ouro', 'final_ouro', 'disputa_3_ouro',
             'semi_final_prata', 'final_prata', 'disputa_3_prata',
             'semi_final_bronze', 'final_bronze', 'disputa_3_bronze',
+            'semi_final_especial', 'final_especial', 'disputa_3_especial',
             'quartas_de_final'
-        ]) || str_contains($tipo, 'semi_final') || str_contains($tipo, 'final');
+        ]) || str_contains($tipo, 'semi_final') || str_contains($tipo, 'final') || str_contains($tipo, 'especial');
+    }
+
+    /**
+     * Retorna a descrição amigável do tipo de fase
+     */
+    public function getFaseTipoFormatadaAttribute(): string
+    {
+        $tipos = [
+            'classificatoria' => 'Fase Classificatória',
+            'quartas_de_final' => 'Quartas de Final',
+            'semi_final_ouro' => 'Semi-Final (Série Ouro)',
+            'final_ouro' => 'Final (Série Ouro)',
+            'disputa_3_ouro' => 'Disputa 3º e 4º Lugar (Série Ouro)',
+            'semi_final_prata' => 'Semi-Final (Série Prata)',
+            'final_prata' => 'Final (Série Prata)',
+            'disputa_3_prata' => 'Disputa 3º e 4º Lugar (Série Prata)',
+            'semi_final_bronze' => 'Semi-Final (Série Bronze)',
+            'final_bronze' => 'Final (Série Bronze)',
+            'disputa_3_bronze' => 'Disputa 3º e 4º Lugar (Série Bronze)',
+            'semi_final_especial' => 'Semi-Final (Série Especial)',
+            'final_especial' => 'Final (Série Especial)',
+            'disputa_3_especial' => 'Disputa 3º e 4º Lugar (Série Especial)',
+        ];
+
+        return $tipos[$this->jgo_fase_tipo] ?? str_replace('_', ' ', $this->jgo_fase_tipo ?? '');
     }
 
     /**

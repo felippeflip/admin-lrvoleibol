@@ -56,7 +56,9 @@
         @php 
             $grupos = $dados['grupos']; 
             $equipesParticipantes = $dados['equipes'];
-            $jogosTodos = $dados['jogos_todos'];
+            $jogosTodos = collect($dados['jogos_todos'])->filter(function($j) {
+                return empty($j->jgo_fase_tipo) || $j->jgo_fase_tipo === 'classificatoria';
+            });
             $seriesPlayoffs = $dados['series_playoffs'] ?? [];
             $temPlayoffs = $dados['tem_playoffs'] ?? false;
         @endphp
@@ -72,7 +74,7 @@
             @foreach($seriesPlayoffs as $sKey => $serie)
                 <button onclick="changePageTab('{{ $serie['slug'] }}')" id="page-tab-btn-{{ $serie['slug'] }}" 
                         class="page-tab-btn px-4 py-2.5 font-black text-sm uppercase rounded-t-lg transition-all flex items-center gap-2 bg-gray-200 text-gray-600 hover:bg-gray-300">
-                    @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @else ⚔️ @endif
+                    @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @elseif($sKey == 'especial') ⭐ @else ⚔️ @endif
                     {{ $serie['nome'] }}
                 </button>
             @endforeach
@@ -330,7 +332,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-200 mb-6 gap-2">
                         <div>
                             <h2 class="text-2xl font-black uppercase text-principal tracking-tight flex items-center gap-2">
-                                @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @else ⚔️ @endif
+                                @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @elseif($sKey == 'especial') ⭐ @else ⚔️ @endif
                                 {{ $serie['nome'] }}
                             </h2>
                             <p class="text-xs text-gray-500 font-medium">Confrontos eliminatórios da Categoria: <span class="font-bold text-secundario">{{ $categoria->cto_nome }}</span></p>

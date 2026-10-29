@@ -146,10 +146,12 @@ class ClassificacaoController extends Controller
             ->orderByRaw('ISNULL(jgo_hora_jogo), jgo_hora_jogo ASC')
             ->get();
 
-        if ($usaGrupos) {
-            // Mapeia o grupo usando os jogos da classificatória que já estão no $todosJogosCategoria
-            $todosJogosClassificatoria = $todosJogosCategoria->where('jgo_fase_tipo', 'classificatoria');
+        // Apenas jogos da fase classificatória para listagem na aba correspondente
+        $todosJogosClassificatoria = $todosJogosCategoria->filter(function ($j) {
+            return empty($j->jgo_fase_tipo) || $j->jgo_fase_tipo === 'classificatoria';
+        });
 
+        if ($usaGrupos) {
             foreach ($todosJogosClassificatoria as $tj) {
                 $mId = $tj->jgo_eqp_cpo_mandante_id;
                 $vId = $tj->jgo_eqp_cpo_visitante_id;
@@ -277,7 +279,7 @@ class ClassificacaoController extends Controller
             'series_playoffs' => $seriesPlayoffs,
             'tem_playoffs' => !empty($seriesPlayoffs),
             'equipes' => $equipesCamp,
-            'jogos_todos' => $todosJogosCategoria
+            'jogos_todos' => $todosJogosClassificatoria
         ];
     }
 
@@ -311,6 +313,15 @@ class ClassificacaoController extends Controller
                 'disputa_3' => [],
                 'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
             ],
+            'especial' => [
+                'slug' => 'serie-especial',
+                'nome' => 'Série Especial',
+                'cor' => 'blue',
+                'semifinal' => [],
+                'final' => [],
+                'disputa_3' => [],
+                'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
+            ],
             'quartas' => [
                 'slug' => 'quartas-de-final',
                 'nome' => 'Quartas de Final',
@@ -333,13 +344,17 @@ class ClassificacaoController extends Controller
                 if (str_contains($tipo, 'semi')) $series['bronze']['semifinal'][] = $j;
                 elseif (str_contains($tipo, 'disputa')) $series['bronze']['disputa_3'][] = $j;
                 elseif (str_contains($tipo, 'final')) $series['bronze']['final'][] = $j;
+            } elseif (str_contains($tipo, 'especial')) {
+                if (str_contains($tipo, 'semi')) $series['especial']['semifinal'][] = $j;
+                elseif (str_contains($tipo, 'disputa')) $series['especial']['disputa_3'][] = $j;
+                elseif (str_contains($tipo, 'final')) $series['especial']['final'][] = $j;
             } elseif ($tipo === 'quartas_de_final') {
                 $series['quartas']['jogos'][] = $j;
             }
         }
 
-        // Calcula pódio para cada série (ouro, prata, bronze)
-        foreach (['ouro', 'prata', 'bronze'] as $sKey) {
+        // Calcula pódio para cada série (ouro, prata, bronze, especial)
+        foreach (['ouro', 'prata', 'bronze', 'especial'] as $sKey) {
             // Final
             $finais = $series[$sKey]['final'];
             if (!empty($finais)) {

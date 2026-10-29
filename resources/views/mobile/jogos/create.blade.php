@@ -84,6 +84,11 @@
                         <option value="final_bronze" {{ old('jgo_fase_tipo') == 'final_bronze' ? 'selected' : '' }}>Final (Série Bronze)</option>
                         <option value="disputa_3_bronze" {{ old('jgo_fase_tipo') == 'disputa_3_bronze' ? 'selected' : '' }}>Disputa 3º/4º (Série Bronze)</option>
                     </optgroup>
+                    <optgroup label="Série Especial">
+                        <option value="semi_final_especial" {{ old('jgo_fase_tipo') == 'semi_final_especial' ? 'selected' : '' }}>Semi-Final (Especial)</option>
+                        <option value="final_especial" {{ old('jgo_fase_tipo') == 'final_especial' ? 'selected' : '' }}>Final (Série Especial)</option>
+                        <option value="disputa_3_especial" {{ old('jgo_fase_tipo') == 'disputa_3_especial' ? 'selected' : '' }}>Disputa 3º/4º (Série Especial)</option>
+                    </optgroup>
                 </select>
             </div>
 

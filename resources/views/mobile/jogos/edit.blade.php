@@ -82,12 +82,26 @@
                         class="w-full bg-gray-50 border border-gray-300 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="classificatoria" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'classificatoria' ? 'selected' : '' }}>Fase Classificatória / Grupos</option>
                     <option value="quartas_de_final" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'quartas_de_final' ? 'selected' : '' }}>Quartas de Final</option>
-                    <option value="semi_final_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_ouro' ? 'selected' : '' }}>Semi-Final (Ouro)</option>
-                    <option value="semi_final_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_prata' ? 'selected' : '' }}>Semi-Final (Prata)</option>
-                    <option value="semi_final_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_bronze' ? 'selected' : '' }}>Semi-Final (Bronze)</option>
-                    <option value="final_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_ouro' ? 'selected' : '' }}>Final (Série Ouro)</option>
-                    <option value="final_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_prata' ? 'selected' : '' }}>Final (Série Prata)</option>
-                    <option value="final_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_bronze' ? 'selected' : '' }}>Final (Série Bronze)</option>
+                    <optgroup label="Série Ouro">
+                        <option value="semi_final_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_ouro' ? 'selected' : '' }}>Semi-Final (Ouro)</option>
+                        <option value="final_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_ouro' ? 'selected' : '' }}>Final (Série Ouro)</option>
+                        <option value="disputa_3_ouro" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'disputa_3_ouro' ? 'selected' : '' }}>Disputa 3º/4º (Série Ouro)</option>
+                    </optgroup>
+                    <optgroup label="Série Prata">
+                        <option value="semi_final_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_prata' ? 'selected' : '' }}>Semi-Final (Prata)</option>
+                        <option value="final_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_prata' ? 'selected' : '' }}>Final (Série Prata)</option>
+                        <option value="disputa_3_prata" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'disputa_3_prata' ? 'selected' : '' }}>Disputa 3º/4º (Série Prata)</option>
+                    </optgroup>
+                    <optgroup label="Série Bronze">
+                        <option value="semi_final_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_bronze' ? 'selected' : '' }}>Semi-Final (Bronze)</option>
+                        <option value="final_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_bronze' ? 'selected' : '' }}>Final (Série Bronze)</option>
+                        <option value="disputa_3_bronze" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'disputa_3_bronze' ? 'selected' : '' }}>Disputa 3º/4º (Série Bronze)</option>
+                    </optgroup>
+                    <optgroup label="Série Especial">
+                        <option value="semi_final_especial" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'semi_final_especial' ? 'selected' : '' }}>Semi-Final (Especial)</option>
+                        <option value="final_especial" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'final_especial' ? 'selected' : '' }}>Final (Série Especial)</option>
+                        <option value="disputa_3_especial" {{ old('jgo_fase_tipo', $jogo->jgo_fase_tipo) == 'disputa_3_especial' ? 'selected' : '' }}>Disputa 3º/4º (Série Especial)</option>
+                    </optgroup>
                 </select>
             </div>
 

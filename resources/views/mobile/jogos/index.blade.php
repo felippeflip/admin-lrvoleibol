@@ -172,7 +172,7 @@
                     @if($jogo->jgo_fase)
                         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-bold uppercase mb-3">{{ $jogo->jgo_fase }}</p>
                     @elseif($jogo->jgo_fase_tipo && $jogo->jgo_fase_tipo !== 'classificatoria')
-                        <p class="text-[11px] text-purple-600 dark:text-purple-400 font-bold uppercase mb-3">({{ str_replace('_', ' ', $jogo->jgo_fase_tipo) }})</p>
+                        <p class="text-[11px] text-blue-600 dark:text-blue-400 font-bold uppercase mb-3">({{ $jogo->fase_tipo_formatada ?? str_replace('_', ' ', $jogo->jgo_fase_tipo) }})</p>
                     @endif
 
                     {{-- Data e Local Box --}}
