@@ -1,7 +1,16 @@
 @extends('mobile.layouts.app')
 
 @section('content')
-<div class="w-full pb-24">
+<div class="w-full pb-24" x-data="{
+    historyModalOpen: false,
+    modalAtletaNome: '',
+    modalHistorico: [],
+    openHistoryModal(nome, hist) {
+        this.modalAtletaNome = nome;
+        this.modalHistorico = hist;
+        this.historyModalOpen = true;
+    }
+}">
     {{-- Header --}}
     <div class="flex items-center gap-4 mb-8 px-1">
         <a href="{{ route('relatorios.index') }}" class="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 active:scale-90 transition-all">
@@ -42,6 +51,7 @@
 
     {{-- Listagem Agrupada --}}
     <div class="space-y-10">
+        @forelse($atletas as $timeId => $grupoAtletas)
             @php 
                 $allIds = $grupoAtletas->pluck('atl_id')->toArray();
                 $timeNome = $grupoAtletas->first()->time->tim_nome ?? 'Sem Time'; 
@@ -102,6 +112,32 @@
                                     <div class="w-1 h-1 rounded-full bg-gray-200"></div>
                                     <span class="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{{ $atleta->categoria->cto_nome ?? 'Geral' }}</span>
                                 </div>
+                                @hasrole('Administrador')
+                                    @php
+                                        $transferencias = $atleta->historicoTransferencias ?? collect();
+                                        $totalTransf = $transferencias->count();
+                                        $ultimaTransf = $transferencias->first();
+                                        $historicoJson = $transferencias->map(function($t) {
+                                            return [
+                                                'origem' => $t->timeOrigem->tim_nome ?? 'N/A',
+                                                'destino' => $t->timeDestino->tim_nome ?? 'N/A',
+                                                'data' => $t->created_at ? $t->created_at->format('d/m/Y H:i') : 'S/D'
+                                            ];
+                                        })->values();
+                                    @endphp
+                                    @if($totalTransf > 0 && $ultimaTransf)
+                                        <div class="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+                                            <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-300 truncate">
+                                                🔁 Veio de: <strong class="text-indigo-600 dark:text-indigo-400">{{ $ultimaTransf->timeOrigem->tim_nome ?? 'Time Anterior' }}</strong>
+                                            </span>
+                                            <button type="button"
+                                                    @click="openHistoryModal('{{ addslashes($atleta->atl_nome) }}', {{ json_encode($historicoJson) }})"
+                                                    class="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md ml-2 shrink-0">
+                                                {{ $totalTransf > 1 ? '+' . ($totalTransf - 1) . ' anteriores' : 'Detalhes' }}
+                                            </button>
+                                        </div>
+                                    @endif
+                                @endhasrole
                             </div>
                             <div class="flex-shrink-0">
                                 @if($atleta->cartaoImpresso())
@@ -132,5 +168,78 @@
             Exportar Protocolo (CSV)
         </a>
     </div>
+
+    {{-- Modal Histórico Mobile (Admin) --}}
+    @hasrole('Administrador')
+    <div x-show="historyModalOpen" 
+         style="display: none;"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         role="dialog" 
+         aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-6 text-center sm:block sm:p-0">
+            <div x-show="historyModalOpen" 
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="historyModalOpen = false" 
+                 class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"></div>
+
+            <div x-show="historyModalOpen" 
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-8"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-8"
+                 class="inline-block w-full bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all border border-gray-100 dark:border-gray-700">
+                
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Histórico de Transferências</span>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white" x-text="modalAtletaNome"></h3>
+                    </div>
+                    <button @click="historyModalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-6 max-h-[60vh] overflow-y-auto">
+                    <div class="relative border-l-2 border-indigo-200 dark:border-indigo-800 ml-3 space-y-5">
+                        <template x-for="(item, index) in modalHistorico" :key="index">
+                            <div class="relative pl-5">
+                                <div class="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white dark:border-gray-800"></div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400" x-text="item.data"></span>
+                                    <span x-show="index === 0" class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Mais recente</span>
+                                </div>
+                                <div class="mt-1 text-xs text-gray-800 dark:text-gray-200">
+                                    <span class="font-medium text-gray-500 dark:text-gray-400">De:</span> 
+                                    <span class="font-bold text-red-600 dark:text-red-400" x-text="item.origem"></span>
+                                    <span class="mx-1 font-bold">➔</span>
+                                    <span class="font-medium text-gray-500 dark:text-gray-400">Para:</span> 
+                                    <span class="font-bold text-green-600 dark:text-green-400" x-text="item.destino"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
+                    <button type="button" 
+                            @click="historyModalOpen = false" 
+                            class="w-full py-3 bg-gray-900 dark:bg-gray-700 text-white text-xs font-bold rounded-2xl active:scale-95 transition-all text-center">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endhasrole
 </div>
 @endsection

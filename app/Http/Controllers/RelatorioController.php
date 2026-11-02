@@ -30,11 +30,20 @@ class RelatorioController extends Controller
      */
     public function atletasPorTime(Request $request)
     {
-        $query = Atleta::with(['time', 'categoria', 'cartoes'])
+        $isAdmin = auth()->user()->hasRole('Administrador');
+
+        $relations = ['time', 'categoria', 'cartoes'];
+        if ($isAdmin) {
+            $relations['historicoTransferencias'] = function ($q) {
+                $q->with(['timeOrigem', 'timeDestino'])->orderBy('created_at', 'desc');
+            };
+        }
+
+        $query = Atleta::with($relations)
             ->where('atl_ativo', 1);
 
         // RBAC: Se não for administrador, filtra pelo time vinculado ao usuário
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!$isAdmin) {
             $userTimeId = auth()->user()->time_id;
             
             if (!$userTimeId) {
@@ -86,11 +95,20 @@ class RelatorioController extends Controller
      */
     public function exportAtletasPorTime(Request $request)
     {
-        $query = Atleta::with(['time', 'categoria', 'cartoes'])
+        $isAdmin = auth()->user()->hasRole('Administrador');
+
+        $relations = ['time', 'categoria', 'cartoes'];
+        if ($isAdmin) {
+            $relations['historicoTransferencias'] = function ($q) {
+                $q->with(['timeOrigem', 'timeDestino'])->orderBy('created_at', 'desc');
+            };
+        }
+
+        $query = Atleta::with($relations)
             ->where('atl_ativo', 1);
 
         // RBAC: Se não for administrador, filtra pelo time vinculado ao usuário
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!$isAdmin) {
             $userTimeId = auth()->user()->time_id;
             if (!$userTimeId) {
                 return redirect()->route('relatorios.index')->with('error', 'Usuário não vinculado a um time.');
@@ -122,10 +140,14 @@ class RelatorioController extends Controller
         $csv->setOutputBOM(Writer::BOM_UTF8);
 
         // Cabeçalho
-        $csv->insertOne(['Time', 'Atleta', 'Registro LRV', 'Categoria', 'CPF', 'RG', 'Data Nasc.', 'Cartão Impresso']);
+        $headers = ['Time', 'Atleta', 'Registro LRV', 'Categoria', 'CPF', 'RG', 'Data Nasc.', 'Cartão Impresso'];
+        if ($isAdmin) {
+            $headers[] = 'Transferências (Histórico)';
+        }
+        $csv->insertOne($headers);
 
         foreach ($atletas as $atleta) {
-            $csv->insertOne([
+            $row = [
                 $atleta->time->tim_nome ?? 'N/A',
                 $atleta->atl_nome,
                 $atleta->atl_resg ?? 'N/A',
@@ -134,7 +156,23 @@ class RelatorioController extends Controller
                 $atleta->atl_rg,
                 $atleta->atl_dt_nasc ? date('d/m/Y', strtotime($atleta->atl_dt_nasc)) : 'N/A',
                 $atleta->cartaoImpresso() ? 'SIM' : 'NÃO',
-            ]);
+            ];
+
+            if ($isAdmin) {
+                if ($atleta->historicoTransferencias && $atleta->historicoTransferencias->isNotEmpty()) {
+                    $transferenciasTexto = $atleta->historicoTransferencias->map(function ($htr) {
+                        $origem = $htr->timeOrigem->tim_nome ?? 'N/A';
+                        $destino = $htr->timeDestino->tim_nome ?? 'N/A';
+                        $data = $htr->created_at ? $htr->created_at->format('d/m/Y') : 'S/D';
+                        return "De {$origem} p/ {$destino} ({$data})";
+                    })->implode('; ');
+                } else {
+                    $transferenciasTexto = 'Sem transferências';
+                }
+                $row[] = $transferenciasTexto;
+            }
+
+            $csv->insertOne($row);
         }
 
         $filename = 'relatorio_atletas_por_time_' . date('Ymd_His') . '.csv';

@@ -23,7 +23,16 @@
         </div>
     </x-slot>
 
-    <div class="py-6">
+    <div class="py-6" x-data="{
+        historyModalOpen: false,
+        modalAtletaNome: '',
+        modalHistorico: [],
+        openHistoryModal(nome, hist) {
+            this.modalAtletaNome = nome;
+            this.modalHistorico = hist;
+            this.historyModalOpen = true;
+        }
+    }">
         <div class="w-full mx-auto sm:px-6 lg:px-8">
             <!-- Filtros (Não aparece na impressão) -->
             <!-- Filtros (Não aparece na impressão) -->
@@ -130,6 +139,9 @@
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Atleta</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoria / DN</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status Cartão</th>
+                                    @hasrole('Administrador')
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transferência</th>
+                                    @endhasrole
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider print-only">Documentação</th>
                                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider print-only w-1/4">Assinatura de Recebimento</th>
                                 </tr>
@@ -163,6 +175,52 @@
                                                 </span>
                                             @endif
                                         </td>
+                                        @hasrole('Administrador')
+                                        <td class="px-3 py-2 whitespace-nowrap text-xs">
+                                            @php
+                                                $transferencias = $atleta->historicoTransferencias ?? collect();
+                                                $totalTransf = $transferencias->count();
+                                                $ultimaTransf = $transferencias->first();
+                                                $historicoJson = $transferencias->map(function($t) {
+                                                    return [
+                                                        'origem' => $t->timeOrigem->tim_nome ?? 'N/A',
+                                                        'destino' => $t->timeDestino->tim_nome ?? 'N/A',
+                                                        'data' => $t->created_at ? $t->created_at->format('d/m/Y H:i') : 'S/D'
+                                                    ];
+                                                })->values();
+                                            @endphp
+
+                                            @if($totalTransf > 0 && $ultimaTransf)
+                                                <div class="flex flex-col gap-0.5">
+                                                    <span class="inline-flex items-center gap-1 font-semibold text-gray-800 dark:text-gray-200">
+                                                        <svg class="w-3.5 h-3.5 text-amber-500 shrink-0 no-print" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                                        </svg>
+                                                        <span>Veio de: <strong class="text-indigo-600 dark:text-indigo-400">{{ $ultimaTransf->timeOrigem->tim_nome ?? 'Time Anterior' }}</strong></span>
+                                                    </span>
+                                                    <div class="flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                                        <span>{{ $ultimaTransf->created_at ? $ultimaTransf->created_at->format('d/m/Y') : '' }}</span>
+                                                        @if($totalTransf > 1)
+                                                            <button type="button" 
+                                                                    @click="openHistoryModal('{{ addslashes($atleta->atl_nome) }}', {{ json_encode($historicoJson) }})" 
+                                                                    class="no-print inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 transition cursor-pointer">
+                                                                +{{ $totalTransf - 1 }} anterior{{ $totalTransf - 1 > 1 ? 'es' : '' }}
+                                                            </button>
+                                                            <span class="print-only text-[10px]">({{ $totalTransf }} transf.)</span>
+                                                        @else
+                                                            <button type="button" 
+                                                                    @click="openHistoryModal('{{ addslashes($atleta->atl_nome) }}', {{ json_encode($historicoJson) }})" 
+                                                                    class="no-print text-indigo-500 hover:underline text-[10px] cursor-pointer">
+                                                                detalhes
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400 dark:text-gray-500 font-medium">—</span>
+                                            @endif
+                                        </td>
+                                        @endhasrole
                                         <td class="px-3 py-2 whitespace-nowrap text-[10px] text-gray-600 dark:text-gray-400 print-only">
                                             <span class="block">RG: {{ $atleta->atl_rg }}</span>
                                             <span class="block">CPF: {{ $atleta->atl_cpf ?? 'N/A' }}</span>
@@ -200,6 +258,82 @@
                 </div>
             @endforelse
         </div>
+
+        <!-- Modal Histórico de Transferências (Admin) -->
+        @hasrole('Administrador')
+        <div x-show="historyModalOpen" 
+             style="display: none;"
+             x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto no-print" 
+             aria-labelledby="modal-title" 
+             role="dialog" 
+             aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="historyModalOpen" 
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     @click="historyModalOpen = false" 
+                     class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="historyModalOpen" 
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700">
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Histórico de Transferências</span>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white" x-text="modalAtletaNome"></h3>
+                        </div>
+                        <button @click="historyModalOpen = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="relative border-l-2 border-indigo-200 dark:border-indigo-800 ml-4 space-y-6">
+                            <template x-for="(item, index) in modalHistorico" :key="index">
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-indigo-600 border-2 border-white dark:border-gray-800"></div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-gray-500 dark:text-gray-400" x-text="item.data"></span>
+                                        <span x-show="index === 0" class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Mais recente</span>
+                                    </div>
+                                    <div class="mt-1 text-sm text-gray-800 dark:text-gray-200">
+                                        <span class="font-medium text-gray-500 dark:text-gray-400">De:</span> 
+                                        <span class="font-bold text-red-600 dark:text-red-400" x-text="item.origem"></span>
+                                        <span class="mx-1 font-bold">➔</span>
+                                        <span class="font-medium text-gray-500 dark:text-gray-400">Para:</span> 
+                                        <span class="font-bold text-green-600 dark:text-green-400" x-text="item.destino"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 flex justify-end border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" 
+                                @click="historyModalOpen = false" 
+                                class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endhasrole
     </div>
 
     <style>
