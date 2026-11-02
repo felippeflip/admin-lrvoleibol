@@ -12,6 +12,7 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
         </div>
     </div>
+
     {{-- Filtros Retráteis no Mobile (Admin) --}}
     @if(auth()->user()->hasRole('Administrador'))
     <div x-data="{ openFilters: {{ request()->hasAny(['periodo', 'tipo_periodo', 'categoria_id', 'time_id']) ? 'true' : 'false' }} }" class="mb-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -84,7 +85,7 @@
     </div>
     @endif
 
-    {{-- Widget: Próximos Jogos (Admin ou Global) --}}
+    {{-- Widget: Próximos Jogos (Admin) --}}
     @if(isset($adminJogos) && count($adminJogos) > 0)
         <div class="mb-8">
             <div class="flex justify-between items-center mb-4 ml-1">
@@ -97,9 +98,14 @@
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-400 rounded-lg">{{ $jogo->mandante->campeonato->cpo_nome }}</span>
-                            <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px]">
+                        <div class="flex justify-between items-center mb-4 gap-2">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
+                                    #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                </span>
+                                <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-400 rounded-lg truncate">{{ $jogo->mandante->campeonato->cpo_nome }}</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px] shrink-0">
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
                             </div>
@@ -113,6 +119,107 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-2 h-2 rounded-full bg-gray-200"></div>
                                 <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-4 border-t border-gray-50 dark:border-gray-700/50">
+                            <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter truncate">{{ $jogo->ginasio->gin_nome ?? 'Local a definir' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- Widget: Minhas Escalações (Juiz / Árbitro) --}}
+    @if(isset($juizJogos) && count($juizJogos) > 0)
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4 ml-1">
+                <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Minhas Escalações</h3>
+                <a href="{{ route('jogos.index') }}" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest cursor-pointer active:scale-95 transition-all">Ver Todas</a>
+            </div>
+            
+            <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+                @foreach($juizJogos->take(5) as $jogo)
+                    <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-20 h-20 bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div class="flex justify-between items-center mb-4 gap-2">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
+                                    #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                </span>
+                                <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-400 rounded-lg truncate">{{ $jogo->mandante->campeonato->cpo_nome ?? 'Camp. N/A' }}</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px] shrink-0">
+                                <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-gray-200"></div>
+                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-gray-700/50">
+                            <div class="flex items-center gap-2 truncate">
+                                <svg class="w-3 h-3 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter truncate">{{ $jogo->ginasio->gin_nome ?? 'Local a definir' }}</span>
+                            </div>
+                            @if(Auth::id() == $jogo->jgo_apontador)
+                                <a href="{{ route('resultados.create', $jogo->jgo_id) }}" class="text-[9px] font-black bg-indigo-600 text-white px-2 py-1 rounded-md shrink-0">
+                                    Apontar
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- Widget: Jogos do Time (ResponsavelTime / ComissaoTecnica) --}}
+    @if(isset($timeJogos) && count($timeJogos) > 0)
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4 ml-1">
+                <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Próximos Jogos do Time</h3>
+                <a href="{{ route('jogos.index') }}" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest cursor-pointer active:scale-95 transition-all">Ver Todos</a>
+            </div>
+            
+            <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+                @foreach($timeJogos->take(5) as $jogo)
+                    <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-20 h-20 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div class="flex justify-between items-center mb-4 gap-2">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
+                                    #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                </span>
+                                <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-400 rounded-lg truncate">{{ $jogo->mandante->campeonato->cpo_nome ?? 'Camp. N/A' }}</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px] shrink-0">
+                                <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
+                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-gray-200"></div>
+                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
                             </div>
                         </div>
 
@@ -145,6 +252,48 @@
                         <span class="text-3xl font-black text-white">{{ $adminStats[0]['sem_apontamento'] ?? '0' }}</span>
                         <span class="text-[10px] font-bold text-red-400 pb-1 animate-pulse">ALERTA</span>
                     </div>
+                 </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Resumo Árbitro (Juiz) --}}
+    @if(isset($juizStats))
+        <div class="mb-8">
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-4 ml-1">Minhas Estatísticas</h3>
+            <div class="grid grid-cols-3 gap-2">
+                 <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 text-center">
+                    <p class="text-[8px] font-black uppercase text-gray-400 mb-1">Escalações</p>
+                    <span class="text-xl font-black text-gray-900 dark:text-white">{{ $juizStats['total_participacao'] ?? '0' }}</span>
+                 </div>
+                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 text-center">
+                    <p class="text-[8px] font-black uppercase text-blue-500 mb-1">Futuros</p>
+                    <span class="text-xl font-black text-blue-600">{{ $juizStats['novos'] ?? '0' }}</span>
+                 </div>
+                 <div class="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 text-center">
+                    <p class="text-[8px] font-black uppercase text-green-500 mb-1">Realizados</p>
+                    <span class="text-xl font-black text-green-600">{{ $juizStats['realizados'] ?? '0' }}</span>
+                 </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Resumo Time (ResponsavelTime / ComissaoTecnica) --}}
+    @if(isset($timeStats) && count($timeStats) > 0)
+        <div class="mb-8">
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-4 ml-1">Estatísticas do Time</h3>
+            <div class="grid grid-cols-3 gap-2">
+                 <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 text-center">
+                    <p class="text-[8px] font-black uppercase text-gray-400 mb-1">Total</p>
+                    <span class="text-xl font-black text-gray-900 dark:text-white">{{ $timeStats['escalado_total'] ?? '0' }}</span>
+                 </div>
+                 <div class="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 text-center">
+                    <p class="text-[8px] font-black uppercase text-green-500 mb-1">Concluídos</p>
+                    <span class="text-xl font-black text-green-600">{{ $timeStats['concluidos'] ?? '0' }}</span>
+                 </div>
+                 <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-4 text-center">
+                    <p class="text-[8px] font-black uppercase text-indigo-500 mb-1">Agendados</p>
+                    <span class="text-xl font-black text-indigo-600">{{ $timeStats['proximos'] ?? '0' }}</span>
                  </div>
             </div>
         </div>

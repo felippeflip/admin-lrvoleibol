@@ -176,9 +176,14 @@
 
                                             <!-- Header: Date & Camp -->
                                             <div class="mb-3">
-                                                 <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
-                                                    {{ $campeonatoNome }}
-                                                </span>
+                                                <div class="flex items-center justify-between gap-2 mb-1">
+                                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate">
+                                                        {{ $campeonatoNome }}
+                                                    </span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-700 shrink-0">
+                                                        Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                                    </span>
+                                                </div>
                                                 <!-- Badges: Categoria e Turno -->
                                                 <div class="flex flex-wrap gap-1 mb-1">
                                                     @if($categoriaNome)
@@ -390,9 +395,14 @@
                                                 
                                                 <!-- Header: Date & Camp -->
                                                 <div class="mb-3">
-                                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
-                                                        {{ $campeonatoNome }}
-                                                    </span>
+                                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate">
+                                                            {{ $campeonatoNome }}
+                                                        </span>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-700 shrink-0">
+                                                            Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                                        </span>
+                                                    </div>
                                                     <!-- Badges: Categoria e Turno -->
                                                     <div class="flex flex-wrap gap-1 mb-1">
                                                         @if($categoriaNome)
@@ -631,9 +641,14 @@
                                                     
                                                     <!-- Header: Date & Camp -->
                                                     <div class="mb-3">
-                                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-600 mb-1">
-                                                            {{ $campeonatoNome }}
-                                                        </span>
+                                                        <div class="flex items-center justify-between gap-2 mb-1">
+                                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate">
+                                                                {{ $campeonatoNome }}
+                                                            </span>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-700 shrink-0">
+                                                                Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                                            </span>
+                                                        </div>
                                                         <!-- Badges: Categoria e Turno -->
                                                         <div class="flex flex-wrap gap-1 mb-1">
                                                             @if($categoriaNome)

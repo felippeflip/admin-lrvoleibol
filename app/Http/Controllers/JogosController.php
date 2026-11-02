@@ -262,8 +262,8 @@ class JogosController extends Controller
                 });
             }
 
-            $adminJogos = $query->orderBy('jgo_dt_jogo', 'asc')
-                ->orderBy('jgo_hora_jogo', 'asc')
+            $adminJogos = $query->orderBy('jgo_dt_jogo', 'desc')
+                ->orderBy('jgo_hora_jogo', 'desc')
                 ->get();
 
             $data['adminJogos'] = $adminJogos;
@@ -312,6 +312,7 @@ class JogosController extends Controller
 
             // Pagination - Changed to get() for card view
             $juizJogos = $juizQuery->orderBy('jgo_dt_jogo', 'desc')
+                ->orderBy('jgo_hora_jogo', 'desc')
                 ->get(); // Using get() for card view instead of pagination
 
             $data['juizJogos'] = $juizJogos;
@@ -386,7 +387,9 @@ class JogosController extends Controller
                     });
                 }
 
-                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'asc')->get();
+                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'desc')
+                    ->orderBy('jgo_hora_jogo', 'desc')
+                    ->get();
 
                 // Categorias e Turnos disponíveis para os filtros
                 $data['timeCategorias'] = \App\Models\Categoria::orderBy('cto_nome')->get(['cto_id', 'cto_nome']);

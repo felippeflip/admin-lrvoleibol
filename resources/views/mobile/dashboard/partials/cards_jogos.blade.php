@@ -56,11 +56,9 @@
 
             <div class="p-3 bg-gray-50/50 dark:bg-gray-800/80 border-b border-gray-100 dark:border-gray-700 px-4">
                 <div class="flex items-center gap-2 overflow-hidden mb-1.5">
-                    @if($jogo->jgo_numero_jogo)
-                        <span class="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 text-[11px] font-bold px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/50 shrink-0">
-                            #{{ $jogo->jgo_numero_jogo }}
-                        </span>
-                    @endif
+                    <span class="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 text-[11px] font-bold px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/50 shrink-0">
+                        #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                    </span>
                     <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest truncate">
                         {{ $campeonatoNome }}
                     </span>
