@@ -63,15 +63,24 @@
                         {{ $campeonatoNome }}
                     </span>
                 </div>
-                <!-- Badges extras (Categoria e Turno) -->
-                <div class="flex flex-wrap gap-1.5">
+                <!-- Badges extras (Fase do Jogo, Etapa, Categoria e Turno) -->
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_badge_class }}">
+                        <span>{{ $jogo->fase_icone }}</span>
+                        <span>{{ $jogo->fase_principal }}</span>
+                    </span>
+                    @if($jogo->fase_etapa)
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_etapa_badge_class }}">
+                            {{ $jogo->fase_etapa }}
+                        </span>
+                    @endif
                     @if($categoriaNome)
                         <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
                             {{ $categoriaNome }}
                         </span>
                     @endif
-                    @if($turnoNome)
-                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400">
+                    @if($turnoNome && (!$jogo->fase_etapa || !str_contains(strtolower($turnoNome), strtolower($jogo->fase_etapa))))
+                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                             {{ $turnoNome }}
                         </span>
                     @endif

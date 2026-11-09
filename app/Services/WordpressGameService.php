@@ -170,12 +170,12 @@ class WordpressGameService
                     'body' => $response->body(),
                     'status' => $response->status()
                 ]);
-                return $wpPostId;
+                return null;
             }
 
         } catch (\Exception $e) {
             Log::error('Exceção ao ligar com WP REST API: ' . $e->getMessage());
-            return $wpPostId;
+            return null;
         }
     }
 

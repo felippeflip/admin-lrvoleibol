@@ -775,13 +775,15 @@ class JogosController extends Controller
             $categoria = Categoria::find($request->categoria_id);
 
             $wpService = new WordpressGameService();
+            $realWpId = ($localJogo->jgo_wp_id && (int)$localJogo->jgo_wp_id !== (int)$localJogo->jgo_id) ? $localJogo->jgo_wp_id : null;
+
             $wpPostId = $wpService->sync($localJogo, [
                 'event_number' => $localJogo->jgo_numero_jogo,
                 'event_type'   => $campeonato->cpo_term_tx_id ?? null,
                 'event_category' => $categoria->cto_term_tx_id ?? null,
-            ], $localJogo->jgo_wp_id ?: $id);
+            ], $realWpId);
 
-            if ($wpPostId && !$localJogo->jgo_wp_id) {
+            if ($wpPostId && (int)$localJogo->jgo_wp_id !== (int)$wpPostId) {
                 $localJogo->update(['jgo_wp_id' => $wpPostId]);
             }
         }

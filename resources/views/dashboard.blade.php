@@ -202,15 +202,24 @@
                                                         Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
                                                     </span>
                                                 </div>
-                                                <!-- Badges: Categoria e Turno -->
-                                                <div class="flex flex-wrap gap-1 mb-1">
+                                                <!-- Badges: Fase do Jogo, Etapa, Categoria e Turno -->
+                                                <div class="flex flex-wrap items-center gap-1 mb-1">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_badge_class }}">
+                                                        <span>{{ $jogo->fase_icone }}</span>
+                                                        <span>{{ $jogo->fase_principal }}</span>
+                                                    </span>
+                                                    @if($jogo->fase_etapa)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_etapa_badge_class }}">
+                                                            {{ $jogo->fase_etapa }}
+                                                        </span>
+                                                    @endif
                                                     @if($categoriaNome)
                                                         <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
                                                             {{ $categoriaNome }}
                                                          </span>
                                                     @endif
-                                                    @if($turnoNome)
-                                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                                    @if($turnoNome && (!$jogo->fase_etapa || !str_contains(strtolower($turnoNome), strtolower($jogo->fase_etapa))))
+                                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                                             {{ $turnoNome }}
                                                         </span>
                                                     @endif
@@ -465,15 +474,24 @@
                                                             Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
                                                         </span>
                                                     </div>
-                                                    <!-- Badges: Categoria e Turno -->
-                                                    <div class="flex flex-wrap gap-1 mb-1">
+                                                    <!-- Badges: Fase do Jogo, Etapa, Categoria e Turno -->
+                                                    <div class="flex flex-wrap items-center gap-1 mb-1">
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_badge_class }}">
+                                                            <span>{{ $jogo->fase_icone }}</span>
+                                                            <span>{{ $jogo->fase_principal }}</span>
+                                                        </span>
+                                                        @if($jogo->fase_etapa)
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_etapa_badge_class }}">
+                                                                {{ $jogo->fase_etapa }}
+                                                            </span>
+                                                        @endif
                                                         @if($categoriaNome)
                                                             <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
                                                                 {{ $categoriaNome }}
                                                              </span>
                                                         @endif
-                                                        @if($turnoNome)
-                                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                                        @if($turnoNome && (!$jogo->fase_etapa || !str_contains(strtolower($turnoNome), strtolower($jogo->fase_etapa))))
+                                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                                                 {{ $turnoNome }}
                                                             </span>
                                                         @endif
@@ -755,15 +773,24 @@
                                                                 Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
                                                             </span>
                                                         </div>
-                                                        <!-- Badges: Categoria e Turno -->
-                                                        <div class="flex flex-wrap gap-1 mb-1">
+                                                        <!-- Badges: Fase do Jogo, Etapa, Categoria e Turno -->
+                                                        <div class="flex flex-wrap items-center gap-1 mb-1">
+                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_badge_class }}">
+                                                                <span>{{ $jogo->fase_icone }}</span>
+                                                                <span>{{ $jogo->fase_principal }}</span>
+                                                            </span>
+                                                            @if($jogo->fase_etapa)
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $jogo->fase_etapa_badge_class }}">
+                                                                    {{ $jogo->fase_etapa }}
+                                                                </span>
+                                                            @endif
                                                             @if($categoriaNome)
                                                                 <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
                                                                     {{ $categoriaNome }}
                                                                 </span>
                                                             @endif
-                                                            @if($turnoNome)
-                                                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                                            @if($turnoNome && (!$jogo->fase_etapa || !str_contains(strtolower($turnoNome), strtolower($jogo->fase_etapa))))
+                                                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                                                     {{ $turnoNome }}
                                                                 </span>
                                                             @endif

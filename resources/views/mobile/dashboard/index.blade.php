@@ -123,7 +123,7 @@
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
-                        <div class="flex justify-between items-center mb-4 gap-2">
+                        <div class="flex justify-between items-center mb-2 gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
                                     #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
@@ -134,6 +134,29 @@
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') . ' ' . substr($jogo->jgo_hora_jogo, 0, 5) : 'A definir' }}
                             </div>
+                        </div>
+
+                        <!-- Badges: Fase do Jogo, Etapa, Categoria e Turno -->
+                        <div class="flex items-center gap-1 mb-3 overflow-hidden flex-wrap">
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight {{ $jogo->fase_badge_class }} shrink-0">
+                                <span>{{ $jogo->fase_icone }}</span>
+                                <span>{{ $jogo->fase_principal }}</span>
+                            </span>
+                            @if($jogo->fase_etapa)
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight {{ $jogo->fase_etapa_badge_class }} shrink-0">
+                                    {{ $jogo->fase_etapa }}
+                                </span>
+                            @endif
+                            @if($jogo->mandante && $jogo->mandante->equipe && $jogo->mandante->equipe->categoria)
+                                <span class="text-[8px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded truncate">
+                                    {{ $jogo->mandante->equipe->categoria->cto_nome }}
+                                </span>
+                            @endif
+                            @if($jogo->jgo_fase && (!$jogo->fase_etapa || !str_contains(strtolower($jogo->jgo_fase), strtolower($jogo->fase_etapa))))
+                                <span class="text-[8px] font-bold text-gray-400 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1 py-0.5 rounded truncate">
+                                    {{ $jogo->jgo_fase }}
+                                </span>
+                            @endif
                         </div>
 
                         <div class="space-y-3 mb-4">
@@ -184,7 +207,7 @@
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
-                        <div class="flex justify-between items-center mb-4 gap-2">
+                        <div class="flex justify-between items-center mb-2 gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
                                     #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
@@ -195,6 +218,29 @@
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') . ' ' . substr($jogo->jgo_hora_jogo, 0, 5) : 'A definir' }}
                             </div>
+                        </div>
+
+                        <!-- Badges: Fase do Jogo, Etapa, Categoria e Turno -->
+                        <div class="flex items-center gap-1 mb-3 overflow-hidden flex-wrap">
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight {{ $jogo->fase_badge_class }} shrink-0">
+                                <span>{{ $jogo->fase_icone }}</span>
+                                <span>{{ $jogo->fase_principal }}</span>
+                            </span>
+                            @if($jogo->fase_etapa)
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight {{ $jogo->fase_etapa_badge_class }} shrink-0">
+                                    {{ $jogo->fase_etapa }}
+                                </span>
+                            @endif
+                            @if($jogo->mandante && $jogo->mandante->equipe && $jogo->mandante->equipe->categoria)
+                                <span class="text-[8px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded truncate">
+                                    {{ $jogo->mandante->equipe->categoria->cto_nome }}
+                                </span>
+                            @endif
+                            @if($jogo->jgo_fase && (!$jogo->fase_etapa || !str_contains(strtolower($jogo->jgo_fase), strtolower($jogo->fase_etapa))))
+                                <span class="text-[8px] font-bold text-gray-400 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1 py-0.5 rounded truncate">
+                                    {{ $jogo->jgo_fase }}
+                                </span>
+                            @endif
                         </div>
 
                         <div class="space-y-3 mb-4">
@@ -252,7 +298,7 @@
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
-                        <div class="flex justify-between items-center mb-4 gap-2">
+                        <div class="flex justify-between items-center mb-2 gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
                                     #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
@@ -263,6 +309,29 @@
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') . ' ' . substr($jogo->jgo_hora_jogo, 0, 5) : 'A definir' }}
                             </div>
+                        </div>
+
+                        <!-- Badges: Fase do Jogo, Etapa, Categoria e Turno -->
+                        <div class="flex items-center gap-1 mb-3 overflow-hidden flex-wrap">
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight {{ $jogo->fase_badge_class }} shrink-0">
+                                <span>{{ $jogo->fase_icone }}</span>
+                                <span>{{ $jogo->fase_principal }}</span>
+                            </span>
+                            @if($jogo->fase_etapa)
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight {{ $jogo->fase_etapa_badge_class }} shrink-0">
+                                    {{ $jogo->fase_etapa }}
+                                </span>
+                            @endif
+                            @if($jogo->mandante && $jogo->mandante->equipe && $jogo->mandante->equipe->categoria)
+                                <span class="text-[8px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded truncate">
+                                    {{ $jogo->mandante->equipe->categoria->cto_nome }}
+                                </span>
+                            @endif
+                            @if($jogo->jgo_fase && (!$jogo->fase_etapa || !str_contains(strtolower($jogo->jgo_fase), strtolower($jogo->fase_etapa))))
+                                <span class="text-[8px] font-bold text-gray-400 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1 py-0.5 rounded truncate">
+                                    {{ $jogo->jgo_fase }}
+                                </span>
+                            @endif
                         </div>
 
                         <div class="space-y-3 mb-4">

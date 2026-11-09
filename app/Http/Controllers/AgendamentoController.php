@@ -445,13 +445,14 @@ class AgendamentoController extends Controller
                 $eventType = $jogo->mandante->campeonato->cpo_term_tx_id ?? null;
                 $eventCategory = $jogo->mandante->equipe->categoria->cto_term_tx_id ?? null;
                 
+                $realWpId = ($jogo->jgo_wp_id && (int)$jogo->jgo_wp_id !== (int)$jogo->jgo_id) ? $jogo->jgo_wp_id : null;
                 $wpPostId = $wpService->sync($jogo, [
-                    'event_number' => $jogo->jgo_id,
+                    'event_number' => $jogo->jgo_numero_jogo ?: $jogo->jgo_id,
                     'event_type' => $eventType,
                     'event_category' => $eventCategory,
-                ]);
+                ], $realWpId);
 
-                if ($wpPostId) {
+                if ($wpPostId && (int)$jogo->jgo_wp_id !== (int)$wpPostId) {
                     $jogo->update(['jgo_wp_id' => $wpPostId]);
                 }
             } catch (\Exception $e) {
@@ -483,13 +484,14 @@ class AgendamentoController extends Controller
             $eventType = $jogo->mandante->campeonato->cpo_term_tx_id ?? null;
             $eventCategory = $jogo->mandante->equipe->categoria->cto_term_tx_id ?? null;
             
+            $realWpId = ($jogo->jgo_wp_id && (int)$jogo->jgo_wp_id !== (int)$jogo->jgo_id) ? $jogo->jgo_wp_id : null;
             $wpPostId = $wpService->sync($jogo, [
-                'event_number' => $jogo->jgo_id,
+                'event_number' => $jogo->jgo_numero_jogo ?: $jogo->jgo_id,
                 'event_type' => $eventType,
                 'event_category' => $eventCategory,
-            ]);
+            ], $realWpId);
 
-            if ($wpPostId) {
+            if ($wpPostId && (int)$jogo->jgo_wp_id !== (int)$wpPostId) {
                 $jogo->update(['jgo_wp_id' => $wpPostId]);
             }
         } catch (\Exception $e) {
