@@ -15,12 +15,12 @@
 
     {{-- Filtros Retráteis no Mobile (Admin) --}}
     @if(auth()->user()->hasRole('Administrador'))
-    <div x-data="{ openFilters: {{ request()->hasAny(['periodo', 'tipo_periodo', 'categoria_id', 'time_id']) ? 'true' : 'false' }} }" class="mb-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <div x-data="{ openFilters: {{ request()->hasAny(['periodo', 'tipo_periodo', 'categoria_id', 'time_id', 'fase', 'ordem']) ? 'true' : 'false' }} }" class="mb-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <button @click="openFilters = !openFilters" class="w-full px-4 py-3 flex items-center justify-between text-gray-700 dark:text-gray-300 font-medium bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
             <span class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                 Filtros do Painel
-                @if(request()->hasAny(['periodo', 'tipo_periodo', 'categoria_id', 'time_id']))
+                @if(request()->hasAny(['periodo', 'tipo_periodo', 'categoria_id', 'time_id', 'fase', 'ordem']))
                     <span class="w-2 h-2 rounded-full md:w-3 md:h-3 bg-red-500 ml-1"></span>
                 @endif
             </span>
@@ -42,8 +42,29 @@
                         <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Mostrar</label>
                         <select name="tipo_periodo" class="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="futuros" {{ request('tipo_periodo', 'futuros') == 'futuros' ? 'selected' : '' }}>Futuros/Atuais</option>
-                            <option value="anteriores" {{ request('tipo_periodo') == 'anteriores' ? 'selected' : '' }}>Anteriores</option>
-                            <option value="ambos" {{ request('tipo_periodo') == 'ambos' ? 'selected' : '' }}>Ambos</option>
+                            <option value="anteriores" {{ request('tipo_periodo', 'anteriores') == 'anteriores' ? 'selected' : '' }}>Anteriores</option>
+                            <option value="ambos" {{ request('tipo_periodo', 'ambos') == 'ambos' ? 'selected' : '' }}>Ambos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Ordem</label>
+                        <select name="ordem" class="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="asc" {{ request('ordem', $adminOrdem ?? 'asc') == 'asc' ? 'selected' : '' }}>⬇ Mais Próximos</option>
+                            <option value="desc" {{ request('ordem', $adminOrdem ?? 'asc') == 'desc' ? 'selected' : '' }}>⬆ Mais Distantes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Fase</label>
+                        <select name="fase" class="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Todas as Fases</option>
+                            <option value="classificatoria" {{ request('fase', $adminFase ?? '') == 'classificatoria' ? 'selected' : '' }}>Classificatória</option>
+                            <option value="ouro" {{ request('fase', $adminFase ?? '') == 'ouro' ? 'selected' : '' }}>Série Ouro</option>
+                            <option value="prata" {{ request('fase', $adminFase ?? '') == 'prata' ? 'selected' : '' }}>Série Prata</option>
+                            <option value="bronze" {{ request('fase', $adminFase ?? '') == 'bronze' ? 'selected' : '' }}>Série Bronze</option>
+                            <option value="especial" {{ request('fase', $adminFase ?? '') == 'especial' ? 'selected' : '' }}>Série Especial</option>
                         </select>
                     </div>
                 </div>
@@ -95,6 +116,10 @@
             
             <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
                 @foreach($adminJogos->take(5) as $jogo)
+                    @php
+                        $placar = $jogo->placar;
+                        $temPlacar = !empty($placar);
+                    @endphp
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
@@ -103,22 +128,32 @@
                                 <span class="text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 rounded border border-purple-200 dark:border-purple-800 shrink-0">
                                     #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
                                 </span>
-                                <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-400 rounded-lg truncate">{{ $jogo->mandante->campeonato->cpo_nome }}</span>
+                                <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-400 rounded-lg truncate">{{ $jogo->mandante->campeonato->cpo_nome ?? 'Camp. N/A' }}</span>
                             </div>
                             <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px] shrink-0">
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') . ' ' . substr($jogo->jgo_hora_jogo, 0, 5) : 'A definir' }}
                             </div>
                         </div>
 
                         <div class="space-y-3 mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
-                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado }}</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-indigo-600 shrink-0"></div>
+                                    <span class="text-xs font-black {{ $temPlacar && $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-700 dark:text-gray-300' }} truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                                </div>
+                                @if($temPlacar)
+                                    <span class="text-xs font-black {{ $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }} px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{{ $placar['mandante'] }}</span>
+                                @endif
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-gray-200"></div>
-                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado }}</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-gray-200 shrink-0"></div>
+                                    <span class="text-xs font-black {{ $temPlacar && $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-700 dark:text-gray-300' }} truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
+                                </div>
+                                @if($temPlacar)
+                                    <span class="text-xs font-black {{ $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }} px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{{ $placar['visitante'] }}</span>
+                                @endif
                             </div>
                         </div>
 
@@ -142,6 +177,10 @@
             
             <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
                 @foreach($juizJogos->take(5) as $jogo)
+                    @php
+                        $placar = $jogo->placar;
+                        $temPlacar = !empty($placar);
+                    @endphp
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
@@ -154,18 +193,28 @@
                             </div>
                             <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px] shrink-0">
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') . ' ' . substr($jogo->jgo_hora_jogo, 0, 5) : 'A definir' }}
                             </div>
                         </div>
 
                         <div class="space-y-3 mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-yellow-500 shrink-0"></div>
+                                    <span class="text-xs font-black {{ $temPlacar && $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-700 dark:text-gray-300' }} truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                                </div>
+                                @if($temPlacar)
+                                    <span class="text-xs font-black {{ $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }} px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{{ $placar['mandante'] }}</span>
+                                @endif
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-gray-200"></div>
-                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-gray-200 shrink-0"></div>
+                                    <span class="text-xs font-black {{ $temPlacar && $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-700 dark:text-gray-300' }} truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
+                                </div>
+                                @if($temPlacar)
+                                    <span class="text-xs font-black {{ $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }} px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{{ $placar['visitante'] }}</span>
+                                @endif
                             </div>
                         </div>
 
@@ -196,6 +245,10 @@
             
             <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
                 @foreach($timeJogos->take(5) as $jogo)
+                    @php
+                        $placar = $jogo->placar;
+                        $temPlacar = !empty($placar);
+                    @endphp
                     <div class="shrink-0 w-[240px] bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 shadow-sm border border-gray-50 dark:border-gray-700 relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
@@ -208,18 +261,28 @@
                             </div>
                             <div class="flex items-center gap-1 text-gray-900 dark:text-white font-black text-[10px] shrink-0">
                                 <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
+                                {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m') . ' ' . substr($jogo->jgo_hora_jogo, 0, 5) : 'A definir' }}
                             </div>
                         </div>
 
                         <div class="space-y-3 mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
-                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-indigo-600 shrink-0"></div>
+                                    <span class="text-xs font-black {{ $temPlacar && $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-700 dark:text-gray-300' }} truncate">{{ $jogo->mandante->equipe->eqp_nome_detalhado ?? 'Mandante' }}</span>
+                                </div>
+                                @if($temPlacar)
+                                    <span class="text-xs font-black {{ $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }} px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{{ $placar['mandante'] }}</span>
+                                @endif
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-gray-200"></div>
-                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-gray-200 shrink-0"></div>
+                                    <span class="text-xs font-black {{ $temPlacar && $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-700 dark:text-gray-300' }} truncate">{{ $jogo->visitante->equipe->eqp_nome_detalhado ?? 'Visitante' }}</span>
+                                </div>
+                                @if($temPlacar)
+                                    <span class="text-xs font-black {{ $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }} px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{{ $placar['visitante'] }}</span>
+                                @endif
                             </div>
                         </div>
 

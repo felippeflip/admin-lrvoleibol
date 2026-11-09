@@ -1,10 +1,15 @@
 <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-3 relative overflow-hidden flex flex-col justify-between">
-    <!-- Tipo de Fase e Turno -->
-    <div class="flex items-center justify-between mb-2">
-        <span class="text-[10px] font-bold uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-            {{ $jogo->jgo_fase ?: 'TURNO ÚNICO' }}
-        </span>
-        <div class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider {{ in_array($jogo->jgo_res_status, ['pendente', 'aprovado']) ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800' }}">
+    <!-- Tipo de Fase, Turno e Número do Jogo -->
+    <div class="flex items-center justify-between mb-2 gap-1">
+        <div class="flex items-center gap-1.5 overflow-hidden">
+            <span class="text-[10px] font-extrabold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 shrink-0">
+                Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+            </span>
+            <span class="text-[10px] font-bold uppercase text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 truncate" title="{{ $jogo->jgo_fase ?: 'TURNO ÚNICO' }}">
+                {{ $jogo->jgo_fase ?: 'TURNO ÚNICO' }}
+            </span>
+        </div>
+        <div class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 {{ in_array($jogo->jgo_res_status, ['pendente', 'aprovado']) ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800' }}">
             {{ in_array($jogo->jgo_res_status, ['pendente', 'aprovado']) ? 'REALIZADO' : 'A REALIZAR' }}
         </div>
     </div>

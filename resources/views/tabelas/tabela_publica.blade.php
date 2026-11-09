@@ -74,7 +74,7 @@
             @foreach($seriesPlayoffs as $sKey => $serie)
                 <button onclick="changePageTab('{{ $serie['slug'] }}')" id="page-tab-btn-{{ $serie['slug'] }}" 
                         class="page-tab-btn px-4 py-2.5 font-black text-sm uppercase rounded-t-lg transition-all flex items-center gap-2 bg-gray-200 text-gray-600 hover:bg-gray-300">
-                    @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @elseif($sKey == 'especial') ⭐ @else ⚔️ @endif
+                    @if($sKey == 'especial') ⭐ @elseif($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @else ⚔️ @endif
                     {{ $serie['nome'] }}
                 </button>
             @endforeach
@@ -145,17 +145,22 @@
                             }
                         @endphp
                         <div class="jogo-card bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 relative overflow-hidden flex flex-col justify-between" data-fase="{{ Str::slug($fSimplificada) }}" data-mandante="{{ $jogo->jgo_eqp_cpo_mandante_id }}" data-visitante="{{ $jogo->jgo_eqp_cpo_visitante_id }}">
-                            <!-- Tipo de Fase -->
-                            <div class="absolute top-0 right-0 bg-gray-100 text-gray-500 text-[9px] font-bold px-2 py-1 rounded-bl-lg uppercase border-l border-b border-gray-200">
-                                {{ $jogo->jgo_fase ?? 'classificatoria' }}
+                            <!-- Número do Jogo e Tipo de Fase -->
+                            <div class="flex items-center justify-between mb-2 gap-1">
+                                <span class="text-[10px] font-extrabold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 shrink-0">
+                                    Jogo #{{ $jogo->jgo_numero_jogo ?: $jogo->jgo_id }}
+                                </span>
+                                <span class="text-[9px] font-bold uppercase text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 truncate" title="{{ $jogo->jgo_fase ?? 'classificatoria' }}">
+                                    {{ $jogo->jgo_fase ?? 'classificatoria' }}
+                                </span>
                             </div>
                             
                             <!-- Data e Status -->
-                            <div class="text-[11px] text-gray-500 mb-2 font-medium flex items-center mt-1">
+                            <div class="text-[11px] text-gray-500 mb-2 font-medium flex items-center">
                                 @if(in_array($jogo->jgo_res_status, ['pendente', 'aprovado']))
-                                    <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded mr-2 font-bold tracking-tight">REALIZADO</span>
+                                    <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded mr-2 font-bold tracking-tight text-[10px]">REALIZADO</span>
                                 @else
-                                    <span class="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded mr-2 font-bold tracking-tight">A REALIZAR</span>
+                                    <span class="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded mr-2 font-bold tracking-tight text-[10px]">A REALIZAR</span>
                                 @endif
                                 <span class="truncate">
                                     {{ $jogo->jgo_dt_jogo ? \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') : 'A Definir' }} 
@@ -332,7 +337,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-200 mb-6 gap-2">
                         <div>
                             <h2 class="text-2xl font-black uppercase text-principal tracking-tight flex items-center gap-2">
-                                @if($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @elseif($sKey == 'especial') ⭐ @else ⚔️ @endif
+                                @if($sKey == 'especial') ⭐ @elseif($sKey == 'ouro') 🏆 @elseif($sKey == 'prata') 🥈 @elseif($sKey == 'bronze') 🥉 @else ⚔️ @endif
                                 {{ $serie['nome'] }}
                             </h2>
                             <p class="text-xs text-gray-500 font-medium">Confrontos eliminatórios da Categoria: <span class="font-bold text-secundario">{{ $categoria->cto_nome }}</span></p>

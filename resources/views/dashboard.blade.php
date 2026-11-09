@@ -95,6 +95,24 @@
                                                 <option value="ambos" {{ request('tipo_periodo') == 'ambos' ? 'selected' : '' }}>Ambos (Anteriores e Futuros)</option>
                                             </select>
                                         </div>
+                                        <div class="w-full sm:w-auto">
+                                            <label for="ordem" class="sr-only">Ordem</label>
+                                            <select name="ordem" id="ordem" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="asc" {{ request('ordem', $adminOrdem ?? 'asc') == 'asc' ? 'selected' : '' }}>⬇ Mais Próximos (Crescente)</option>
+                                                <option value="desc" {{ request('ordem', $adminOrdem ?? 'asc') == 'desc' ? 'selected' : '' }}>⬆ Mais Distantes (Decrescente)</option>
+                                            </select>
+                                        </div>
+                                        <div class="w-full sm:w-auto">
+                                            <label for="fase" class="sr-only">Fase</label>
+                                            <select name="fase" id="fase" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="">Todas as Fases</option>
+                                                <option value="classificatoria" {{ request('fase', $adminFase ?? '') == 'classificatoria' ? 'selected' : '' }}>Fase Classificatória</option>
+                                                <option value="ouro" {{ request('fase', $adminFase ?? '') == 'ouro' ? 'selected' : '' }}>Série Ouro</option>
+                                                <option value="prata" {{ request('fase', $adminFase ?? '') == 'prata' ? 'selected' : '' }}>Série Prata</option>
+                                                <option value="bronze" {{ request('fase', $adminFase ?? '') == 'bronze' ? 'selected' : '' }}>Série Bronze</option>
+                                                <option value="especial" {{ request('fase', $adminFase ?? '') == 'especial' ? 'selected' : '' }}>Série Especial</option>
+                                            </select>
+                                        </div>
                                         @if(isset($adminCategorias) && $adminCategorias->count())
                                         <div class="w-full sm:w-auto">
                                             <label for="categoria_id" class="sr-only">Categoria</label>
@@ -197,24 +215,50 @@
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
-                                                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                    {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
-                                                    <span class="mx-2 text-gray-300">|</span>
-                                                    {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
-                                                </div>
+                                                @if($jogo->jgo_dt_jogo)
+                                                    <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
+                                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                        {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
+                                                        <span class="mx-2 text-gray-300">|</span>
+                                                        {{ $jogo->jgo_hora_jogo ? substr($jogo->jgo_hora_jogo, 0, 5) : 'Horário a definir' }}
+                                                    </div>
+                                                @else
+                                                    <div class="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center mt-1">
+                                                        <svg class="w-4 h-4 mr-1 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                        Data a definir (Aguardando agendamento)
+                                                    </div>
+                                                @endif
                                             </div>
                                             
-                                            <!-- Teams -->
-                                            <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-                                                <div class="flex flex-col items-center w-[45%]">
-                                                    <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                            <!-- Teams & Placar -->
+                                            @php
+                                                $placar = $jogo->placar;
+                                                $temPlacar = !empty($placar);
+                                            @endphp
+                                            <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                                                <div class="flex flex-col items-center w-[40%] text-center">
+                                                    <div class="font-bold text-sm {{ $temPlacar && $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-900 dark:text-white' }} break-words leading-tight">
                                                         {{ $mandanteNome }}
                                                     </div>
                                                 </div>
-                                                <div class="text-xs font-bold text-gray-400">VS</div>
-                                                <div class="flex flex-col items-center w-[45%]">
-                                                    <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                <div class="flex flex-col items-center justify-center shrink-0 w-[20%]">
+                                                    @if($temPlacar)
+                                                        <div class="flex items-center justify-center gap-1.5 px-2.5 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-200 dark:border-gray-600">
+                                                            <span class="text-base font-black {{ $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                {{ $placar['mandante'] }}
+                                                            </span>
+                                                            <span class="text-xs font-bold text-gray-400">×</span>
+                                                            <span class="text-base font-black {{ $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                {{ $placar['visitante'] }}
+                                                            </span>
+                                                        </div>
+                                                        <span class="text-[9px] font-bold text-gray-400 uppercase mt-0.5 tracking-wider">Final</span>
+                                                    @else
+                                                        <span class="text-xs font-black text-gray-400 bg-gray-200/60 dark:bg-gray-600 px-2 py-0.5 rounded">VS</span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex flex-col items-center w-[40%] text-center">
+                                                    <div class="font-bold text-sm {{ $temPlacar && $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-900 dark:text-white' }} break-words leading-tight">
                                                         {{ $visitanteNome }}
                                                     </div>
                                                 </div>
@@ -323,20 +367,38 @@
 
                                 {{-- Filters for Juiz --}}
                                 <div class="mb-4 mt-6">
-                                    <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row gap-4">
-                                        <div class="w-full sm:w-1/3">
+                                    <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row flex-wrap gap-4">
+                                        <div class="w-full sm:w-auto flex-1">
                                             <label for="search" class="sr-only">Buscar</label>
                                             <input type="text" name="search" id="search" value="{{ request('search') }}"
                                                 placeholder="Buscar por ID ou Campeonato..."
                                                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
-                                        <div class="w-full sm:w-1/3">
+                                        <div class="w-full sm:w-auto">
                                             <label for="status" class="sr-only">Status</label>
                                             <select name="status" id="status"
                                                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                                 <option value="ativo" {{ request('status', 'ativo') == 'ativo' ? 'selected' : '' }}>Ativo</option>
                                                 <option value="inativo" {{ request('status') == 'inativo' ? 'selected' : '' }}>Inativo</option>
                                                 <option value="todos" {{ request('status') == 'todos' ? 'selected' : '' }}>Todos</option>
+                                            </select>
+                                        </div>
+                                        <div class="w-full sm:w-auto">
+                                            <label for="ordem" class="sr-only">Ordem</label>
+                                            <select name="ordem" id="ordem" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="asc" {{ request('ordem', $juizOrdem ?? 'asc') == 'asc' ? 'selected' : '' }}>⬇ Mais Próximos (Crescente)</option>
+                                                <option value="desc" {{ request('ordem', $juizOrdem ?? 'asc') == 'desc' ? 'selected' : '' }}>⬆ Mais Distantes (Decrescente)</option>
+                                            </select>
+                                        </div>
+                                        <div class="w-full sm:w-auto">
+                                            <label for="fase" class="sr-only">Fase</label>
+                                            <select name="fase" id="fase" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="">Todas as Fases</option>
+                                                <option value="classificatoria" {{ request('fase', $juizFase ?? '') == 'classificatoria' ? 'selected' : '' }}>Fase Classificatória</option>
+                                                <option value="ouro" {{ request('fase', $juizFase ?? '') == 'ouro' ? 'selected' : '' }}>Série Ouro</option>
+                                                <option value="prata" {{ request('fase', $juizFase ?? '') == 'prata' ? 'selected' : '' }}>Série Prata</option>
+                                                <option value="bronze" {{ request('fase', $juizFase ?? '') == 'bronze' ? 'selected' : '' }}>Série Bronze</option>
+                                                <option value="especial" {{ request('fase', $juizFase ?? '') == 'especial' ? 'selected' : '' }}>Série Especial</option>
                                             </select>
                                         </div>
                                         <div class="flex gap-2">
@@ -416,24 +478,50 @@
                                                             </span>
                                                         @endif
                                                     </div>
-                                                    <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
-                                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                        {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
-                                                        <span class="mx-2 text-gray-300">|</span>
-                                                        {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
-                                                    </div>
+                                                    @if($jogo->jgo_dt_jogo)
+                                                        <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
+                                                            <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
+                                                            <span class="mx-2 text-gray-300">|</span>
+                                                            {{ $jogo->jgo_hora_jogo ? substr($jogo->jgo_hora_jogo, 0, 5) : 'Horário a definir' }}
+                                                        </div>
+                                                    @else
+                                                        <div class="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center mt-1">
+                                                            <svg class="w-4 h-4 mr-1 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                            Data a definir (Aguardando agendamento)
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 
-                                                <!-- Teams -->
-                                                <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-                                                    <div class="flex flex-col items-center w-[45%]">
-                                                        <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                <!-- Teams & Placar -->
+                                                @php
+                                                    $placar = $jogo->placar;
+                                                    $temPlacar = !empty($placar);
+                                                @endphp
+                                                <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                                                    <div class="flex flex-col items-center w-[40%] text-center">
+                                                        <div class="font-bold text-sm {{ $temPlacar && $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-900 dark:text-white' }} break-words leading-tight">
                                                             {{ $mandanteNome }}
                                                         </div>
                                                     </div>
-                                                    <div class="text-xs font-bold text-gray-400">VS</div>
-                                                    <div class="flex flex-col items-center w-[45%]">
-                                                        <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                    <div class="flex flex-col items-center justify-center shrink-0 w-[20%]">
+                                                        @if($temPlacar)
+                                                            <div class="flex items-center justify-center gap-1.5 px-2.5 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-200 dark:border-gray-600">
+                                                                <span class="text-base font-black {{ $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                    {{ $placar['mandante'] }}
+                                                                </span>
+                                                                <span class="text-xs font-bold text-gray-400">×</span>
+                                                                <span class="text-base font-black {{ $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                    {{ $placar['visitante'] }}
+                                                                </span>
+                                                            </div>
+                                                            <span class="text-[9px] font-bold text-gray-400 uppercase mt-0.5 tracking-wider">Final</span>
+                                                        @else
+                                                            <span class="text-xs font-black text-gray-400 bg-gray-200/60 dark:bg-gray-600 px-2 py-0.5 rounded">VS</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex flex-col items-center w-[40%] text-center">
+                                                        <div class="font-bold text-sm {{ $temPlacar && $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-900 dark:text-white' }} break-words leading-tight">
                                                             {{ $visitanteNome }}
                                                         </div>
                                                     </div>
@@ -559,6 +647,24 @@
                                                     <option value="todos" {{ request('status') == 'todos' ? 'selected' : '' }}>Todos</option>
                                                 </select>
                                             </div>
+                                            <div class="w-full sm:w-auto">
+                                                <label for="ordem" class="sr-only">Ordem</label>
+                                                <select name="ordem" id="ordem" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                    <option value="asc" {{ request('ordem', $timeOrdem ?? 'asc') == 'asc' ? 'selected' : '' }}>⬇ Mais Próximos (Crescente)</option>
+                                                    <option value="desc" {{ request('ordem', $timeOrdem ?? 'asc') == 'desc' ? 'selected' : '' }}>⬆ Mais Distantes (Decrescente)</option>
+                                                </select>
+                                            </div>
+                                            <div class="w-full sm:w-auto">
+                                                <label for="fase" class="sr-only">Fase</label>
+                                                <select name="fase" id="fase" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                    <option value="">Todas as Fases</option>
+                                                    <option value="classificatoria" {{ request('fase', $timeFase ?? '') == 'classificatoria' ? 'selected' : '' }}>Fase Classificatória</option>
+                                                    <option value="ouro" {{ request('fase', $timeFase ?? '') == 'ouro' ? 'selected' : '' }}>Série Ouro</option>
+                                                    <option value="prata" {{ request('fase', $timeFase ?? '') == 'prata' ? 'selected' : '' }}>Série Prata</option>
+                                                    <option value="bronze" {{ request('fase', $timeFase ?? '') == 'bronze' ? 'selected' : '' }}>Série Bronze</option>
+                                                    <option value="especial" {{ request('fase', $timeFase ?? '') == 'especial' ? 'selected' : '' }}>Série Especial</option>
+                                                </select>
+                                            </div>
                                             @if(isset($timeCategorias) && $timeCategorias->count())
                                             <div class="w-full sm:w-auto">
                                                 <label for="categoria_id" class="sr-only">Categoria</label>
@@ -662,24 +768,50 @@
                                                                 </span>
                                                             @endif
                                                         </div>
-                                                        <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
-                                                            <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                            {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
-                                                            <span class="mx-2 text-gray-300">|</span>
-                                                            {{ substr($jogo->jgo_hora_jogo, 0, 5) }}
-                                                        </div>
+                                                        @if($jogo->jgo_dt_jogo)
+                                                            <div class="text-sm font-bold text-gray-900 dark:text-white flex items-center mt-1">
+                                                                <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                                {{ \Carbon\Carbon::parse($jogo->jgo_dt_jogo)->format('d/m/Y') }} 
+                                                                <span class="mx-2 text-gray-300">|</span>
+                                                                {{ $jogo->jgo_hora_jogo ? substr($jogo->jgo_hora_jogo, 0, 5) : 'Horário a definir' }}
+                                                            </div>
+                                                        @else
+                                                            <div class="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center mt-1">
+                                                                <svg class="w-4 h-4 mr-1 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                Data a definir (Aguardando agendamento)
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     
-                                                    <!-- Teams -->
-                                                    <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-                                                        <div class="flex flex-col items-center w-[45%]">
-                                                            <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                    <!-- Teams & Placar -->
+                                                    @php
+                                                        $placar = $jogo->placar;
+                                                        $temPlacar = !empty($placar);
+                                                    @endphp
+                                                    <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                                                        <div class="flex flex-col items-center w-[40%] text-center">
+                                                            <div class="font-bold text-sm {{ $temPlacar && $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-900 dark:text-white' }} break-words leading-tight">
                                                                 {{ $mandanteNome }}
                                                             </div>
                                                         </div>
-                                                        <div class="text-xs font-bold text-gray-400">VS</div>
-                                                        <div class="flex flex-col items-center w-[45%]">
-                                                            <div class="font-bold text-sm text-gray-900 dark:text-white text-center break-words leading-tight">
+                                                        <div class="flex flex-col items-center justify-center shrink-0 w-[20%]">
+                                                            @if($temPlacar)
+                                                                <div class="flex items-center justify-center gap-1.5 px-2.5 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-200 dark:border-gray-600">
+                                                                    <span class="text-base font-black {{ $placar['vencedor'] === 'mandante' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                        {{ $placar['mandante'] }}
+                                                                    </span>
+                                                                    <span class="text-xs font-bold text-gray-400">×</span>
+                                                                    <span class="text-base font-black {{ $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                        {{ $placar['visitante'] }}
+                                                                    </span>
+                                                                </div>
+                                                                <span class="text-[9px] font-bold text-gray-400 uppercase mt-0.5 tracking-wider">Final</span>
+                                                            @else
+                                                                <span class="text-xs font-black text-gray-400 bg-gray-200/60 dark:bg-gray-600 px-2 py-0.5 rounded">VS</span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="flex flex-col items-center w-[40%] text-center">
+                                                            <div class="font-bold text-sm {{ $temPlacar && $placar['vencedor'] === 'visitante' ? 'text-green-600 dark:text-green-400 font-extrabold' : 'text-gray-900 dark:text-white' }} break-words leading-tight">
                                                                 {{ $visitanteNome }}
                                                             </div>
                                                         </div>

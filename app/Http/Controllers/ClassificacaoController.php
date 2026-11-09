@@ -101,7 +101,9 @@ class ClassificacaoController extends Controller
                 $q->where('eqp_categoria_id', $categoria_id);
             })
             ->where('jgo_fase_tipo', '!=', 'classificatoria')
-            ->orderBy('jgo_dt_jogo')
+            ->orderByRaw('ISNULL(jgo_dt_jogo), jgo_dt_jogo ASC')
+            ->orderByRaw('ISNULL(jgo_hora_jogo), jgo_hora_jogo ASC')
+            ->orderByRaw('CAST(COALESCE(jgo_numero_jogo, 999999) AS UNSIGNED) ASC, jgo_id ASC')
             ->get();
 
         // 3. Inicializa tabela
@@ -144,6 +146,7 @@ class ClassificacaoController extends Controller
             })
             ->orderByRaw('ISNULL(jgo_dt_jogo), jgo_dt_jogo ASC')
             ->orderByRaw('ISNULL(jgo_hora_jogo), jgo_hora_jogo ASC')
+            ->orderByRaw('CAST(COALESCE(jgo_numero_jogo, 999999) AS UNSIGNED) ASC, jgo_id ASC')
             ->get();
 
         // Apenas jogos da fase classificatória para listagem na aba correspondente
@@ -286,6 +289,15 @@ class ClassificacaoController extends Controller
     private function organizarPlayoffs($jogosFinais)
     {
         $series = [
+            'especial' => [
+                'slug' => 'serie-especial',
+                'nome' => 'Série Especial',
+                'cor' => 'blue',
+                'semifinal' => [],
+                'final' => [],
+                'disputa_3' => [],
+                'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
+            ],
             'ouro' => [
                 'slug' => 'serie-ouro',
                 'nome' => 'Série Ouro',
@@ -313,15 +325,6 @@ class ClassificacaoController extends Controller
                 'disputa_3' => [],
                 'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
             ],
-            'especial' => [
-                'slug' => 'serie-especial',
-                'nome' => 'Série Especial',
-                'cor' => 'blue',
-                'semifinal' => [],
-                'final' => [],
-                'disputa_3' => [],
-                'podio' => ['primeiro' => null, 'segundo' => null, 'terceiro' => null, 'quarto' => null],
-            ],
             'quartas' => [
                 'slug' => 'quartas-de-final',
                 'nome' => 'Quartas de Final',
@@ -332,7 +335,11 @@ class ClassificacaoController extends Controller
 
         foreach ($jogosFinais as $j) {
             $tipo = $j->jgo_fase_tipo;
-            if (str_contains($tipo, 'ouro')) {
+            if (str_contains($tipo, 'especial')) {
+                if (str_contains($tipo, 'semi')) $series['especial']['semifinal'][] = $j;
+                elseif (str_contains($tipo, 'disputa')) $series['especial']['disputa_3'][] = $j;
+                elseif (str_contains($tipo, 'final')) $series['especial']['final'][] = $j;
+            } elseif (str_contains($tipo, 'ouro')) {
                 if (str_contains($tipo, 'semi')) $series['ouro']['semifinal'][] = $j;
                 elseif (str_contains($tipo, 'disputa')) $series['ouro']['disputa_3'][] = $j;
                 elseif (str_contains($tipo, 'final')) $series['ouro']['final'][] = $j;
@@ -344,17 +351,13 @@ class ClassificacaoController extends Controller
                 if (str_contains($tipo, 'semi')) $series['bronze']['semifinal'][] = $j;
                 elseif (str_contains($tipo, 'disputa')) $series['bronze']['disputa_3'][] = $j;
                 elseif (str_contains($tipo, 'final')) $series['bronze']['final'][] = $j;
-            } elseif (str_contains($tipo, 'especial')) {
-                if (str_contains($tipo, 'semi')) $series['especial']['semifinal'][] = $j;
-                elseif (str_contains($tipo, 'disputa')) $series['especial']['disputa_3'][] = $j;
-                elseif (str_contains($tipo, 'final')) $series['especial']['final'][] = $j;
             } elseif ($tipo === 'quartas_de_final') {
                 $series['quartas']['jogos'][] = $j;
             }
         }
 
-        // Calcula pódio para cada série (ouro, prata, bronze, especial)
-        foreach (['ouro', 'prata', 'bronze', 'especial'] as $sKey) {
+        // Calcula pódio para cada série (especial, ouro, prata, bronze)
+        foreach (['especial', 'ouro', 'prata', 'bronze'] as $sKey) {
             // Final
             $finais = $series[$sKey]['final'];
             if (!empty($finais)) {

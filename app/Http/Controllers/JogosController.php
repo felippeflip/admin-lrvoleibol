@@ -226,8 +226,10 @@ class JogosController extends Controller
             $tipo_periodo = $request->input('tipo_periodo', 'futuros'); // anteriores, futuros, ambos
             $categoria_id = $request->input('categoria_id');
             $time_id = $request->input('time_id');
+            $fase = $request->input('fase');
+            $ordem = in_array(strtolower($request->input('ordem', 'asc')), ['asc', 'desc']) ? strtolower($request->input('ordem', 'asc')) : 'asc';
 
-            $query = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user']);
+            $query = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user', 'resultadoSets']);
 
             $days = (int) $periodo;
             if (!in_array($days, [7, 14, 30])) {
@@ -237,15 +239,21 @@ class JogosController extends Controller
             if ($tipo_periodo == 'anteriores') {
                 $startDate = now()->subDays($days)->startOfDay();
                 $endDate = now()->endOfDay();
-                $query->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
+                $query->whereNotNull('jgo_dt_jogo')->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
             } elseif ($tipo_periodo == 'ambos') {
                 $startDate = now()->subDays($days)->startOfDay();
                 $endDate = now()->addDays($days)->endOfDay();
-                $query->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
+                $query->where(function($q) use ($startDate, $endDate) {
+                    $q->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
+                      ->orWhereNull('jgo_dt_jogo');
+                });
             } else { // futuros
                 $startDate = now()->startOfDay();
                 $endDate = now()->addDays($days)->endOfDay();
-                $query->whereBetween('jgo_dt_jogo', [$startDate, $endDate]);
+                $query->where(function($q) use ($startDate, $endDate) {
+                    $q->whereBetween('jgo_dt_jogo', [$startDate, $endDate])
+                      ->orWhereNull('jgo_dt_jogo');
+                });
             }
 
             if ($categoria_id) {
@@ -262,19 +270,56 @@ class JogosController extends Controller
                 });
             }
 
-            $adminJogos = $query->orderBy('jgo_dt_jogo', 'desc')
-                ->orderBy('jgo_hora_jogo', 'desc')
+            if ($request->filled('fase')) {
+                $faseVal = $request->fase;
+                if ($faseVal === 'classificatoria') {
+                    $query->where(function($q) {
+                        $q->where('jgo_fase_tipo', 'classificatoria')
+                          ->orWhereNull('jgo_fase_tipo')
+                          ->orWhere('jgo_fase', 'like', '%classific%')
+                          ->orWhere('jgo_fase', 'like', '%turno%');
+                    });
+                } else {
+                    $query->where(function($q) use ($faseVal) {
+                        $q->where('jgo_fase_tipo', 'like', "%{$faseVal}%")
+                          ->orWhere('jgo_fase', 'like', "%{$faseVal}%");
+                    });
+                }
+            }
+
+            // Ordenação Inteligente em 3 Níveis:
+            // 1. Jogos com data futura ou hoje (dt_jogo >= hoje)
+            // 2. Jogos que já aconteceram (dt_jogo < hoje)
+            // 3. Jogos sem data (ficam no final da listagem, ordenados por número do jogo)
+            $query->orderByRaw("
+                CASE 
+                    WHEN jgo_dt_jogo IS NOT NULL AND jgo_dt_jogo >= CURDATE() THEN 1
+                    WHEN jgo_dt_jogo IS NOT NULL AND jgo_dt_jogo < CURDATE() THEN 2
+                    ELSE 3
+                END ASC
+            ");
+
+            if ($ordem === 'asc') {
+                $query->orderBy('jgo_dt_jogo', 'asc')->orderBy('jgo_hora_jogo', 'asc');
+            } else {
+                $query->orderBy('jgo_dt_jogo', 'desc')->orderBy('jgo_hora_jogo', 'desc');
+            }
+
+            $adminJogos = $query->orderByRaw("CAST(COALESCE(jgo_numero_jogo, 999999) AS UNSIGNED) ASC")
+                ->orderBy('jgo_id', 'asc')
                 ->get();
 
             $data['adminJogos'] = $adminJogos;
             $data['adminCategorias'] = Categoria::orderBy('cto_nome')->get();
             $data['adminTimes'] = Time::where('tim_status', 1)->orderBy('tim_nome')->get();
+            $data['adminOrdem'] = $ordem;
+            $data['adminFase'] = $fase;
         }
 
         // --- 2. JUIZ ---
         if ($user->hasRole('Juiz') || $user->is_arbitro) {
             // Base Query for User's Games
-            $juizQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador'])
+            $juizQuery = Jogo::aprovadosOuNormais()->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'resultadoSets'])
                 ->where(function ($q) use ($user) {
                     $q->where('jgo_arbitro_principal', $user->id)
                         ->orWhere('jgo_arbitro_secundario', $user->id)
@@ -310,17 +355,48 @@ class JogosController extends Controller
                 });
             }
 
-            // Pagination - Changed to get() for card view
-            $juizJogos = $juizQuery->orderBy('jgo_dt_jogo', 'desc')
-                ->orderBy('jgo_hora_jogo', 'desc')
-                ->get(); // Using get() for card view instead of pagination
+            if ($request->filled('fase')) {
+                $faseVal = $request->fase;
+                if ($faseVal === 'classificatoria') {
+                    $juizQuery->where(function($q) {
+                        $q->where('jgo_fase_tipo', 'classificatoria')
+                          ->orWhereNull('jgo_fase_tipo')
+                          ->orWhere('jgo_fase', 'like', '%classific%')
+                          ->orWhere('jgo_fase', 'like', '%turno%');
+                    });
+                } else {
+                    $juizQuery->where(function($q) use ($faseVal) {
+                        $q->where('jgo_fase_tipo', 'like', "%{$faseVal}%")
+                          ->orWhere('jgo_fase', 'like', "%{$faseVal}%");
+                    });
+                }
+            }
+
+            $juizOrdem = in_array(strtolower($request->input('ordem', 'asc')), ['asc', 'desc']) ? strtolower($request->input('ordem', 'asc')) : 'asc';
+
+            // Ordenação Inteligente em 3 Níveis
+            $juizQuery->orderByRaw("
+                CASE 
+                    WHEN jgo_dt_jogo IS NOT NULL AND jgo_dt_jogo >= CURDATE() THEN 1
+                    WHEN jgo_dt_jogo IS NOT NULL AND jgo_dt_jogo < CURDATE() THEN 2
+                    ELSE 3
+                END ASC
+            ");
+
+            if ($juizOrdem === 'asc') {
+                $juizQuery->orderBy('jgo_dt_jogo', 'asc')->orderBy('jgo_hora_jogo', 'asc');
+            } else {
+                $juizQuery->orderBy('jgo_dt_jogo', 'desc')->orderBy('jgo_hora_jogo', 'desc');
+            }
+
+            $juizJogos = $juizQuery->orderByRaw("CAST(COALESCE(jgo_numero_jogo, 999999) AS UNSIGNED) ASC")
+                ->orderBy('jgo_id', 'asc')
+                ->get();
 
             $data['juizJogos'] = $juizJogos;
-
-            // Shared filter for View (if not already set)
-            if (!isset($data['statusFilter'])) {
-                $data['statusFilter'] = $statusFilter;
-            }
+            $data['statusFilter'] = $statusFilter;
+            $data['juizOrdem'] = $juizOrdem;
+            $data['juizFase'] = $request->input('fase');
         }
 
         // --- 3. RESPONSAVEL PELO TIME / COMISSAO TECNICA ---
@@ -335,7 +411,7 @@ class JogosController extends Controller
                     ->pluck('equipe_campeonato.eqp_cpo_id');
 
                 $jogosQuery = Jogo::aprovadosOuNormais()
-                    ->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user'])
+                    ->with(['mandante.campeonato', 'mandante.equipe.categoria', 'visitante.equipe', 'ginasio', 'arbitroPrincipal', 'arbitroSecundario', 'apontador', 'solicitacoesAlteracao.user', 'resultadoSets'])
                     ->where(function ($query) use ($equipeIds) {
                         $query->whereIn('jgo_eqp_cpo_mandante_id', $equipeIds)
                             ->orWhereIn('jgo_eqp_cpo_visitante_id', $equipeIds);
@@ -372,8 +448,23 @@ class JogosController extends Controller
                     });
                 }
 
-                // Filter: Turno (jgo_fase)
-                if ($request->filled('turno')) {
+                // Filter: Fase
+                if ($request->filled('fase')) {
+                    $faseVal = $request->fase;
+                    if ($faseVal === 'classificatoria') {
+                        $jogosQuery->where(function($q) {
+                            $q->where('jgo_fase_tipo', 'classificatoria')
+                              ->orWhereNull('jgo_fase_tipo')
+                              ->orWhere('jgo_fase', 'like', '%classific%')
+                              ->orWhere('jgo_fase', 'like', '%turno%');
+                        });
+                    } else {
+                        $jogosQuery->where(function($q) use ($faseVal) {
+                            $q->where('jgo_fase_tipo', 'like', "%{$faseVal}%")
+                              ->orWhere('jgo_fase', 'like', "%{$faseVal}%");
+                        });
+                    }
+                } elseif ($request->filled('turno')) {
                     $jogosQuery->where('jgo_fase', $request->turno);
                 }
 
@@ -387,8 +478,25 @@ class JogosController extends Controller
                     });
                 }
 
-                $timeJogos = $jogosQuery->orderBy('jgo_dt_jogo', 'desc')
-                    ->orderBy('jgo_hora_jogo', 'desc')
+                $timeOrdem = in_array(strtolower($request->input('ordem', 'asc')), ['asc', 'desc']) ? strtolower($request->input('ordem', 'asc')) : 'asc';
+
+                // Ordenação Inteligente em 3 Níveis
+                $jogosQuery->orderByRaw("
+                    CASE 
+                        WHEN jgo_dt_jogo IS NOT NULL AND jgo_dt_jogo >= CURDATE() THEN 1
+                        WHEN jgo_dt_jogo IS NOT NULL AND jgo_dt_jogo < CURDATE() THEN 2
+                        ELSE 3
+                    END ASC
+                ");
+
+                if ($timeOrdem === 'asc') {
+                    $jogosQuery->orderBy('jgo_dt_jogo', 'asc')->orderBy('jgo_hora_jogo', 'asc');
+                } else {
+                    $jogosQuery->orderBy('jgo_dt_jogo', 'desc')->orderBy('jgo_hora_jogo', 'desc');
+                }
+
+                $timeJogos = $jogosQuery->orderByRaw("CAST(COALESCE(jgo_numero_jogo, 999999) AS UNSIGNED) ASC")
+                    ->orderBy('jgo_id', 'asc')
                     ->get();
 
                 // Categorias e Turnos disponíveis para os filtros
@@ -400,6 +508,8 @@ class JogosController extends Controller
 
                 $data['timeJogos'] = $timeJogos;
                 $data['statusFilter'] = $statusFilter;
+                $data['timeOrdem'] = $timeOrdem;
+                $data['timeFase'] = $request->input('fase');
 
             } else {
                 $data['timeStats'] = []; // Has role but no team assigned

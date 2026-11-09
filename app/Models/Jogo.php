@@ -167,4 +167,37 @@ class Jogo extends Model
     {
         return $this->resultadoSets->where('set_numero', '<=', 5);
     }
+
+    /**
+     * Retorna o placar geral dos sets calculados
+     */
+    public function getPlacarAttribute()
+    {
+        if (!$this->resultadoSets || $this->resultadoSets->isEmpty()) {
+            return null;
+        }
+
+        $mandante = 0;
+        $visitante = 0;
+
+        foreach ($this->resultadoSets as $set) {
+            if ($set->set_pontos_mandante !== null && $set->set_pontos_visitante !== null) {
+                if ($set->set_pontos_mandante > $set->set_pontos_visitante) {
+                    $mandante++;
+                } elseif ($set->set_pontos_visitante > $set->set_pontos_mandante) {
+                    $visitante++;
+                }
+            }
+        }
+
+        if ($mandante === 0 && $visitante === 0) {
+            return null;
+        }
+
+        return [
+            'mandante' => $mandante,
+            'visitante' => $visitante,
+            'vencedor' => $mandante > $visitante ? 'mandante' : ($visitante > $mandante ? 'visitante' : 'empate'),
+        ];
+    }
 }
